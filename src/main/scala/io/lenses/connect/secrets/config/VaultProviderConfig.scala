@@ -41,7 +41,7 @@ object VaultProviderConfig {
   val KUBERNETES_DEFAULT_TOKEN_PATH: String =
     "/var/run/secrets/kubernetes.io/serviceaccount/token"
 
-  val APP_ROLE: String = "app.role"
+  val APP_ROLE: String = "app.role.id"
   val APP_ROLE_SECRET_ID: String = "app.role.secret.id"
 
   val AWS_ROLE: String = "aws.role"
@@ -74,7 +74,7 @@ object VaultProviderConfig {
     .define(
       VAULT_ADDR,
       ConfigDef.Type.STRING,
-      "localhost",
+      "http://localhost:8200",
       Importance.HIGH,
       "Address of the Vault server"
     )
@@ -150,14 +150,14 @@ object VaultProviderConfig {
     .define(
       APP_ROLE,
       Type.STRING,
-      "",
+      null,
       Importance.HIGH,
-      s"Vault App role name. $AUTH_METHOD must be 'approle' or 'kubernetes'"
+      s"Vault App role id. $AUTH_METHOD must be 'approle'"
     )
     .define(
       APP_ROLE_SECRET_ID,
       Type.PASSWORD,
-      "",
+      null,
       Importance.HIGH,
       s"Vault App role name secret id. $AUTH_METHOD must be 'approle'"
     )
@@ -165,14 +165,14 @@ object VaultProviderConfig {
     .define(
       USERNAME,
       Type.STRING,
-      "",
+      null,
       Importance.HIGH,
       s"Username to connect to Vault with. $AUTH_METHOD must be 'userpass'"
     )
     .define(
       PASSWORD,
       Type.PASSWORD,
-      "",
+      null,
       Importance.HIGH,
       s"Password for the username. $AUTH_METHOD must be 'uerspass'"
     )
@@ -187,7 +187,7 @@ object VaultProviderConfig {
     .define(
       KUBERNETES_ROLE,
       Type.STRING,
-      "",
+      null,
       Importance.HIGH,
       s"The kubernetes role used for authentication. $AUTH_METHOD must be 'kubernetes'"
     )
@@ -206,7 +206,7 @@ object VaultProviderConfig {
     .define(
       AWS_ROLE,
       Type.STRING,
-      "",
+      null,
       Importance.HIGH,
       s"""
           |Name of the role against which the login is being attempted. If role is not specified, then the login endpoint
@@ -218,7 +218,7 @@ object VaultProviderConfig {
     .define(
       AWS_REQUEST_URL,
       Type.STRING,
-      "",
+      null,
       Importance.HIGH,
       s"""
         |PKCS7 signature of the identity document with all \n characters removed.Base64-encoded HTTP URL used in the signed request.
@@ -229,14 +229,14 @@ object VaultProviderConfig {
     .define(
       AWS_REQUEST_HEADERS,
       Type.PASSWORD,
-      "",
+      null,
       Importance.HIGH,
       s"Request headers. $AUTH_METHOD must be 'awsiam'"
     )
     .define(
       AWS_REQUEST_BODY,
       Type.PASSWORD,
-      "",
+      null,
       Importance.HIGH,
       s"""
            |Base64-encoded body of the signed request. 
@@ -255,14 +255,14 @@ object VaultProviderConfig {
     .define(
       LDAP_USERNAME,
       Type.STRING,
-      "",
+      null,
       Importance.HIGH,
       s"LDAP username to connect to Vault with. $AUTH_METHOD must be 'ldap'"
     )
     .define(
       LDAP_PASSWORD,
       Type.PASSWORD,
-      "",
+      null,
       Importance.HIGH,
       s"LDAP Password for the username. $AUTH_METHOD must be 'ldap'"
     )
@@ -277,21 +277,21 @@ object VaultProviderConfig {
     .define(
       JWT_ROLE,
       Type.STRING,
-      "",
+      null,
       Importance.HIGH,
       s"Role the JWT token belongs to. $AUTH_METHOD must be 'jwt'"
     )
     .define(
       JWT_PROVIDER,
       Type.STRING,
-      "",
+      null,
       Importance.HIGH,
       s"Provider of JWT token. $AUTH_METHOD must be 'jwt'"
     )
     .define(
       JWT,
       Type.PASSWORD,
-      "",
+      null,
       Importance.HIGH,
       s"JWT token. $AUTH_METHOD must be 'jwt'"
     )
@@ -299,14 +299,14 @@ object VaultProviderConfig {
     .define(
       GCP_ROLE,
       Type.STRING,
-      "",
+      null,
       Importance.HIGH,
       s"The gcp role used for authentication. $AUTH_METHOD must be 'gcp'"
     )
     .define(
       GCP_JWT,
       Type.PASSWORD,
-      "",
+      null,
       Importance.HIGH,
       s"JWT token. $AUTH_METHOD must be 'gcp'"
     )
@@ -321,7 +321,7 @@ object VaultProviderConfig {
     .define(
       GITHUB_TOKEN,
       Type.PASSWORD,
-      "",
+      null,
       Importance.HIGH,
       s"The github app-id used for authentication. $AUTH_METHOD must be 'github'"
     )

@@ -9,6 +9,8 @@ package io.lenses.connect.secrets.config
 import com.typesafe.scalalogging.StrictLogging
 import io.lenses.connect.secrets.config.VaultAuthMethod.VaultAuthMethod
 import io.lenses.connect.secrets.connect._
+import AbstractConfigExtensions._
+
 import org.apache.kafka.common.config.types.Password
 import org.apache.kafka.connect.errors.ConnectException
 
@@ -132,17 +134,17 @@ object VaultSettings extends StrictLogging {
     Cert(config.getString(VaultProviderConfig.CERT_MOUNT))
 
   def getGitHub(config: VaultProviderConfig): Github = {
-    val token = config.getPassword(VaultProviderConfig.GITHUB_TOKEN)
-    val mount = config.getString(VaultProviderConfig.GITHUB_MOUNT)
+    val token = config.getPasswordOrThrowOnNull(VaultProviderConfig.GITHUB_TOKEN)
+    val mount = config.getStringOrThrowOnNull(VaultProviderConfig.GITHUB_MOUNT)
     Github(token = token, mount = mount)
   }
 
   def getAWS(config: VaultProviderConfig): AwsIam = {
-    val role = config.getString(VaultProviderConfig.AWS_ROLE)
-    val url = config.getString(VaultProviderConfig.AWS_REQUEST_URL)
-    val headers = config.getPassword(VaultProviderConfig.AWS_REQUEST_HEADERS)
-    val body = config.getPassword(VaultProviderConfig.AWS_REQUEST_BODY)
-    val mount = config.getString(VaultProviderConfig.AWS_MOUNT)
+    val role = config.getStringOrThrowOnNull(VaultProviderConfig.AWS_ROLE)
+    val url = config.getStringOrThrowOnNull(VaultProviderConfig.AWS_REQUEST_URL)
+    val headers = config.getPasswordOrThrowOnNull(VaultProviderConfig.AWS_REQUEST_HEADERS)
+    val body = config.getPasswordOrThrowOnNull(VaultProviderConfig.AWS_REQUEST_BODY)
+    val mount = config.getStringOrThrowOnNull(VaultProviderConfig.AWS_MOUNT)
     AwsIam(
       role = role,
       url = url,
@@ -153,14 +155,14 @@ object VaultSettings extends StrictLogging {
   }
 
   def getAppRole(config: VaultProviderConfig): AppRole = {
-    val role = config.getString(VaultProviderConfig.APP_ROLE)
-    val secretId = config.getPassword(VaultProviderConfig.APP_ROLE_SECRET_ID)
+    val role = config.getStringOrThrowOnNull(VaultProviderConfig.APP_ROLE)
+    val secretId = config.getPasswordOrThrowOnNull(VaultProviderConfig.APP_ROLE_SECRET_ID)
     AppRole(role = role, secretId = secretId)
   }
 
   def getK8s(config: VaultProviderConfig): K8s = {
-    val role = config.getString(VaultProviderConfig.KUBERNETES_ROLE)
-    val path = config.getString(VaultProviderConfig.KUBERNETES_TOKEN_PATH)
+    val role = config.getStringOrThrowOnNull(VaultProviderConfig.KUBERNETES_ROLE)
+    val path = config.getStringOrThrowOnNull(VaultProviderConfig.KUBERNETES_TOKEN_PATH)
     val file = Try(Source.fromFile(path)) match {
       case Success(file) => file
       case Failure(exception) =>
@@ -175,29 +177,29 @@ object VaultSettings extends StrictLogging {
   }
 
   def getUserPass(config: VaultProviderConfig): UserPass = {
-    val user = config.getString(VaultProviderConfig.USERNAME)
-    val pass = config.getPassword(VaultProviderConfig.PASSWORD)
-    val mount = config.getString(VaultProviderConfig.UP_MOUNT)
+    val user = config.getStringOrThrowOnNull(VaultProviderConfig.USERNAME)
+    val pass = config.getPasswordOrThrowOnNull(VaultProviderConfig.PASSWORD)
+    val mount = config.getStringOrThrowOnNull(VaultProviderConfig.UP_MOUNT)
     UserPass(username = user, password = pass, mount = mount)
   }
 
   def getLDAP(config: VaultProviderConfig): Ldap = {
-    val user = config.getString(VaultProviderConfig.LDAP_USERNAME)
-    val pass = config.getPassword(VaultProviderConfig.LDAP_PASSWORD)
-    val mount = config.getString(VaultProviderConfig.LDAP_MOUNT)
+    val user = config.getStringOrThrowOnNull(VaultProviderConfig.LDAP_USERNAME)
+    val pass = config.getPasswordOrThrowOnNull(VaultProviderConfig.LDAP_PASSWORD)
+    val mount = config.getStringOrThrowOnNull(VaultProviderConfig.LDAP_MOUNT)
     Ldap(username = user, password = pass, mount = mount)
   }
 
   def getGCP(config: VaultProviderConfig): Gcp = {
-    val role = config.getString(VaultProviderConfig.GCP_ROLE)
-    val jwt = config.getPassword(VaultProviderConfig.GCP_JWT)
+    val role = config.getStringOrThrowOnNull(VaultProviderConfig.GCP_ROLE)
+    val jwt = config.getPasswordOrThrowOnNull(VaultProviderConfig.GCP_JWT)
     Gcp(role = role, jwt = jwt)
   }
 
   def getJWT(config: VaultProviderConfig): Jwt = {
-    val role = config.getString(VaultProviderConfig.JWT_ROLE)
-    val provider = config.getString(VaultProviderConfig.JWT_PROVIDER)
-    val jwt = config.getPassword(VaultProviderConfig.JWT)
+    val role = config.getStringOrThrowOnNull(VaultProviderConfig.JWT_ROLE)
+    val provider = config.getStringOrThrowOnNull(VaultProviderConfig.JWT_PROVIDER)
+    val jwt = config.getPasswordOrThrowOnNull(VaultProviderConfig.JWT)
     Jwt(role = role, provider = provider, jwt = jwt)
   }
 }

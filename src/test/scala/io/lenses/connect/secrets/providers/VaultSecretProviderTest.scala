@@ -80,7 +80,9 @@ class VaultSecretProviderTest
       VaultProviderConfig.VAULT_ADDR -> "https://127.0.0.1:9998",
       VaultProviderConfig.VAULT_TOKEN -> "mock_token",
       VaultProviderConfig.VAULT_PEM -> pemFile,
-      VaultProviderConfig.AUTH_METHOD -> VaultAuthMethod.USERPASS.toString
+      VaultProviderConfig.AUTH_METHOD -> VaultAuthMethod.USERPASS.toString,
+      VaultProviderConfig.USERNAME -> "user",
+      VaultProviderConfig.PASSWORD -> "password"
     ).asJava
 
     val settings = VaultSettings(VaultProviderConfig(props))
@@ -93,7 +95,9 @@ class VaultSecretProviderTest
       VaultProviderConfig.VAULT_TOKEN -> "mock_token",
       VaultProviderConfig.VAULT_PEM -> pemFile,
       VaultProviderConfig.VAULT_CLIENT_PEM -> pemFile,
-      VaultProviderConfig.AUTH_METHOD -> VaultAuthMethod.LDAP.toString
+      VaultProviderConfig.AUTH_METHOD -> VaultAuthMethod.LDAP.toString,
+      VaultProviderConfig.LDAP_USERNAME -> "username",
+      VaultProviderConfig.LDAP_PASSWORD -> "password"
     ).asJava
 
     val settings = VaultSettings(VaultProviderConfig(props))
@@ -105,7 +109,11 @@ class VaultSecretProviderTest
       VaultProviderConfig.VAULT_ADDR -> "https://127.0.0.1:9998",
       VaultProviderConfig.VAULT_TOKEN -> "mock_token",
       VaultProviderConfig.VAULT_PEM -> pemFile,
-      VaultProviderConfig.AUTH_METHOD -> VaultAuthMethod.AWSIAM.toString
+      VaultProviderConfig.AUTH_METHOD -> VaultAuthMethod.AWSIAM.toString,
+      VaultProviderConfig.AWS_REQUEST_BODY -> "body",
+      VaultProviderConfig.AWS_REQUEST_HEADERS -> "headers",
+      VaultProviderConfig.AWS_ROLE -> "role",
+      VaultProviderConfig.AWS_REQUEST_URL -> "url"
     ).asJava
 
     val settings = VaultSettings(VaultProviderConfig(props))
@@ -117,7 +125,9 @@ class VaultSecretProviderTest
       VaultProviderConfig.VAULT_ADDR -> "https://127.0.0.1:9998",
       VaultProviderConfig.VAULT_TOKEN -> "mock_token",
       VaultProviderConfig.VAULT_PEM -> pemFile,
-      VaultProviderConfig.AUTH_METHOD -> VaultAuthMethod.GCP.toString
+      VaultProviderConfig.AUTH_METHOD -> VaultAuthMethod.GCP.toString,
+      VaultProviderConfig.GCP_ROLE -> "role",
+      VaultProviderConfig.GCP_JWT -> "jwt"
     ).asJava
 
     val settings = VaultSettings(VaultProviderConfig(props))
@@ -129,7 +139,10 @@ class VaultSecretProviderTest
       VaultProviderConfig.VAULT_ADDR -> "https://127.0.0.1:9998",
       VaultProviderConfig.VAULT_TOKEN -> "mock_token",
       VaultProviderConfig.VAULT_PEM -> pemFile,
-      VaultProviderConfig.AUTH_METHOD -> VaultAuthMethod.JWT.toString
+      VaultProviderConfig.AUTH_METHOD -> VaultAuthMethod.JWT.toString,
+      VaultProviderConfig.JWT_PROVIDER -> "provider",
+      VaultProviderConfig.JWT_ROLE -> "role",
+      VaultProviderConfig.JWT -> "jwt"
     ).asJava
 
     val settings = VaultSettings(VaultProviderConfig(props))
@@ -141,7 +154,8 @@ class VaultSecretProviderTest
       VaultProviderConfig.VAULT_ADDR -> "https://127.0.0.1:9998",
       VaultProviderConfig.VAULT_TOKEN -> "mock_token",
       VaultProviderConfig.VAULT_PEM -> pemFile,
-      VaultProviderConfig.AUTH_METHOD -> VaultAuthMethod.GITHUB.toString
+      VaultProviderConfig.AUTH_METHOD -> VaultAuthMethod.GITHUB.toString,
+      VaultProviderConfig.GITHUB_TOKEN -> "token"
     ).asJava
 
     val settings = VaultSettings(VaultProviderConfig(props))
@@ -154,12 +168,29 @@ class VaultSecretProviderTest
       VaultProviderConfig.VAULT_TOKEN -> "mock_token",
       VaultProviderConfig.VAULT_PEM -> pemFile,
       VaultProviderConfig.AUTH_METHOD -> VaultAuthMethod.KUBERNETES.toString,
-      VaultProviderConfig.KUBERNETES_TOKEN_PATH -> k8sToken
+      VaultProviderConfig.KUBERNETES_TOKEN_PATH -> k8sToken,
+      VaultProviderConfig.KUBERNETES_ROLE -> "role"
     ).asJava
 
     val settings = VaultSettings(VaultProviderConfig(props))
     settings.k8s.isDefined shouldBe true
   }
+
+
+  "should be configured for approle auth" in {
+    val props = Map(
+      VaultProviderConfig.VAULT_ADDR -> "https://127.0.0.1:9998",
+      VaultProviderConfig.VAULT_TOKEN -> "mock_token",
+      VaultProviderConfig.VAULT_PEM -> pemFile,
+      VaultProviderConfig.AUTH_METHOD -> VaultAuthMethod.APPROLE.toString,
+      VaultProviderConfig.APP_ROLE -> "some-app-role",
+      VaultProviderConfig.APP_ROLE_SECRET_ID -> "secret"
+    ).asJava
+
+    val settings = VaultSettings(VaultProviderConfig(props))
+    settings.appRole.isDefined shouldBe true
+  }
+
 
   "should be configured for ssl with pem" in {
     val props = Map(
