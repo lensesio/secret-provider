@@ -1,0 +1,185 @@
+/*
+ *
+ *  * Copyright 2017-2020 Lenses.io Ltd
+ *
+ */
+
+package io.lenses.connect.secrets
+
+import java.io.{File, FileOutputStream}
+import java.time.OffsetDateTime
+import java.util.Base64
+
+import com.typesafe.scalalogging.StrictLogging
+import org.apache.kafka.common.config.ConfigData
+import org.apache.kafka.connect.errors.ConnectException
+
+import scala.util.{Failure, Success, Try}
+
+import scala.collection.JavaConverters._
+
+package object connect extends StrictLogging {
+
+  val FILE_ENCODING = "file-encoding"
+  val FILE_DIR = "file.dir"
+  val FILE_DIR_DESC =
+    """
+      | Location to write any files for any secrets that need to
+      | be written to disk. For example java keystores.
+      | Files will be written under this directory following the 
+      | pattern /file.dir/[path|keyvault]/key
+      |""".stripMargin
+
+  object AuthMode extends Enumeration {
+    type AuthMode = Value
+    val DEFAULT, CREDENTIALS = Value
+    def withNameOpt(s: String): Option[Value] = values.find(_.toString == s)
+  }
+
+  object Encoding extends Enumeration {
+    type Encoding = Value
+    val BASE64, BASE64_FILE, UTF8, UTF8_FILE = Value
+    def withNameOpt(s: String): Option[Value] = values.find(_.toString == s)
+  }
+
+  // get the authmethod
+  def getAuthenticationMethod(method: String): AuthMode.Value = {
+    AuthMode.withNameOpt(method.toUpperCase) match {
+      case Some(auth) => auth
+      case None =>
+        throw new ConnectException(
+          s"Unsupported authentication method"
+        )
+    }
+  }
+
+  // base64 decode secret
+  def decode(key: String, value: String): String = {
+    Try(Base64.getDecoder.decode(value)) match {
+      case Success(decoded) => decoded.map(_.toChar).mkString
+      case Failure(exception) =>
+        throw new ConnectException(
+          s"Failed to decode value for key [$key]",
+          exception
+        )
+    }
+  }
+
+  def decodeToBytes(key: String, value: String): Array[Byte] = {
+    Try(Base64.getDecoder.decode(value)) match {
+      case Success(decoded) => decoded
+      case Failure(exception) =>
+        throw new ConnectException(
+          s"Failed to decode value for key [$key]",
+          exception
+        )
+    }
+  }
+
+  // decode a key bases on the prefix encoding
+  def decodeKey(key: String, value: String, fileName: String): String = {
+
+    key.toLowerCase match {
+      case k
+          if k.startsWith(
+            s"${Encoding.BASE64_FILE.toString.toLowerCase}_"
+          ) =>
+        val decoded = decodeToBytes(key, value)
+        fileWriter(fileName, decoded, key)
+        fileName
+
+      case k
+          if k.startsWith(
+            s"${Encoding.BASE64.toString.toLowerCase}_"
+          ) =>
+        decode(key, value)
+
+      case k
+          if k.startsWith(
+            s"${Encoding.UTF8_FILE.toString.toLowerCase}_"
+          ) =>
+        fileWriter(fileName, value.getBytes(), key)
+        fileName
+
+      case _ =>
+        value
+    }
+  }
+
+  // write secrets to file
+  private def writer(file: File, payload: Array[Byte], key: String): Unit = {
+    Try(file.createNewFile()) match {
+      case Success(_) =>
+        Try(new FileOutputStream(file)) match {
+          case Success(fos) =>
+            fos.write(payload)
+            logger.info(
+              s"Payload written to [${file.getAbsolutePath}] for key [$key]"
+            )
+
+          case Failure(exception) =>
+            throw new ConnectException(
+              s"Failed to write payload to file [${file.getAbsolutePath}] for key [$key]",
+              exception
+            )
+        }
+
+      case Failure(exception) =>
+        throw new ConnectException(
+          s"Failed to create file [${file.getAbsolutePath}]  for key [$key]",
+          exception
+        )
+    }
+  }
+
+  // write secrets to a file
+  def fileWriter(
+      fileName: String,
+      payload: Array[Byte],
+      key: String,
+      overwrite: Boolean = false
+  ): Unit = {
+    val file = new File(fileName)
+    file.getParentFile.mkdirs()
+
+    if (file.exists()) {
+      logger.warn(s"File [$fileName] already exists")
+      if (overwrite) {
+        writer(file, payload, key)
+      }
+    } else {
+      writer(file, payload, key)
+    }
+  }
+
+  //calculate the max expiry for secrets and return the configData and expiry
+  def getSecretsAndExpiry(
+      secrets: Map[String, (String, Option[OffsetDateTime])])
+    : (Option[OffsetDateTime], ConfigData) = {
+    var ttlRes: Option[Long] = None
+    var expiryRes: Option[OffsetDateTime] = None
+    val now = OffsetDateTime.now()
+
+    val data = secrets
+      .map({
+        case (key, (value, expiry)) => {
+
+          // get the ttl in milliseconds
+          expiry.foreach(exp => {
+            // after the marker
+            if (exp.isAfter(expiryRes.getOrElse(now))) {
+              ttlRes =
+                Some(exp.toInstant.toEpochMilli - now.toInstant.toEpochMilli)
+              expiryRes = expiry
+            }
+          })
+          (key, value)
+        }
+      })
+      .asJava
+
+    ttlRes
+      .map(t => (expiryRes, new ConfigData(data, t)))
+      .getOrElse((None, new ConfigData(data)))
+  }
+}

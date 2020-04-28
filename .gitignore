@@ -1,0 +1,13 @@
+*.class
+*.log
+/.bloop/
+/.gradle/
+/.idea/
+/.metals/
+/.vscode/
+/out/
+/.settings/
+/bin/
+/build/
+/.classpath
+/.project

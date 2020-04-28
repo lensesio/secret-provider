@@ -1,0 +1,3 @@
+io.lenses.connect.secrets.providers.AzureSecretProvider
+io.lenses.connect.secrets.providers.VaultSecretProvider
+io.lenses.connect.secrets.providers.AWSSecretProvider
