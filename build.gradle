@@ -102,9 +102,6 @@ allprojects {
         compile "com.azure:azure-security-keyvault-secrets:${azureKeyVaultVersion}"
         compile "com.azure:azure-identity:${azureIdentityVersion}"
         compile "com.amazonaws:aws-java-sdk-secretsmanager:${awsSecretsVersion}"
-        //compile group: 'com.microsoft.azure', name: 'azure-keyvault-complete', version: '1.2.2', ext: 'pom'
-
-
 
         testImplementation "org.mockito:mockito-scala_${scalaMajorVersion}:${mockitoVersion}"
         testImplementation "org.scalacheck:scalacheck_${scalaMajorVersion}:${scalaCheck}"

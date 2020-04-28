@@ -25,7 +25,7 @@ libraryDependencies += "io.lenses" % "secret-provider" % "0.0.1"
 
 Gradle
 ```bash
-implementation 'io.lenses:secret-provider:0.0.1'
+compile 'io.lenses:secret-provider:0.0.1'
 ```
 
 ## Description
