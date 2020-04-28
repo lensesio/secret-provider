@@ -83,6 +83,7 @@ class AzureSecretProvider() extends ConfigProvider with AzureHelper {
         getSecretsAndExpiry(getSecrets(client, keys.asScala.toSet))
     }
 
+    expiry.foreach(exp => logger.info(s"Max expiry for TTL set to [${exp.toString}]"))
     cache += (keyVaultUrl -> (expiry, data))
     data
   }

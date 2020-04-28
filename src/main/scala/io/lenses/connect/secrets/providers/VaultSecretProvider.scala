@@ -65,7 +65,11 @@ class VaultSecretProvider() extends ConfigProvider with VaultHelper {
   override def get(path: String, keys: util.Set[String]): ConfigData = {
     // filter out for the keys we want
     val data = getSecretValues(path).filterKeys(k => keys.contains(k)).asJava
-    ttl.map(t => new ConfigData(data, t)).getOrElse(new ConfigData(data))
+
+    ttl.map(t => {
+      logger.info(s"TTL set to [$t] ms")
+      new ConfigData(data, t)
+    }).getOrElse(new ConfigData(data))
   }
 
   override def close(): Unit = {}

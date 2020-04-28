@@ -37,6 +37,7 @@ class AWSSecretProvider() extends ConfigProvider with AWSHelper {
       case Some(awsClient) =>
         //aws client caches so we don't need to check here
         val (expiry, data) = getSecretsAndExpiry(getSecrets(awsClient, path, keys.asScala.toSet))
+        expiry.foreach(exp => logger.info(s"Max expiry for TTL set to [${exp.toString}]"))
         cache += (path -> (expiry, data))
         data
 
