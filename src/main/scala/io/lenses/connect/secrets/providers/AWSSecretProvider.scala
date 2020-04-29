@@ -17,14 +17,11 @@ import org.apache.kafka.common.config.provider.ConfigProvider
 import org.apache.kafka.connect.errors.ConnectException
 
 import scala.collection.JavaConverters._
-import scala.collection.mutable
 
 class AWSSecretProvider() extends ConfigProvider with AWSHelper {
 
   var client: Option[AWSSecretsManager] = None
   var rootDir: String = ""
-
-  val cache = mutable.Map.empty[String, (Option[OffsetDateTime], ConfigData)]
 
   override def get(path: String): ConfigData =
     new ConfigData(Map.empty[String, String].asJava)
@@ -36,9 +33,10 @@ class AWSSecretProvider() extends ConfigProvider with AWSHelper {
     client match {
       case Some(awsClient) =>
         //aws client caches so we don't need to check here
-        val (expiry, data) = getSecretsAndExpiry(getSecrets(awsClient, path, keys.asScala.toSet))
-        expiry.foreach(exp => logger.info(s"Max expiry for TTL set to [${exp.toString}]"))
-        cache += (path -> (expiry, data))
+        val (expiry, data) = getSecretsAndExpiry(
+          getSecrets(awsClient, path, keys.asScala.toSet))
+        expiry.foreach(exp =>
+          logger.info(s"Min expiry for TTL set to [${exp.toString}]"))
         data
 
       case None => throw new ConnectException("AWS client is not set.")

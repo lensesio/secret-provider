@@ -8,6 +8,7 @@ package io.lenses.connect.secrets.providers
 
 import java.io.File
 import java.nio.file.FileSystems
+import java.time.OffsetDateTime
 import java.util.{Base64, ServiceLoader}
 
 import com.azure.core.http.HttpClientProvider
@@ -89,5 +90,17 @@ class DecodeTest extends AnyWordSpec with Matchers {
     result.getLines().mkString shouldBe "secret"
     result.close()
     cleanUp(fileName)
+  }
+
+  "min list test" in {
+    val now = OffsetDateTime.now()
+    val secrets = Map(
+      "ke3"->  ("value", Some(OffsetDateTime.now().plusHours(3))),
+      "key1"->  ("value", Some(now)),
+      "key2"->  ("value", Some(OffsetDateTime.now().plusHours(1)))
+    )
+
+    val (expiry, _) = connect.getSecretsAndExpiry(secrets)
+    expiry shouldBe Some(now)
   }
 }

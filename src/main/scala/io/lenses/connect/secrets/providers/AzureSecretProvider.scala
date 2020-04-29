@@ -73,7 +73,10 @@ class AzureSecretProvider() extends ConfigProvider with AzureHelper {
               .getOrElse(now.plusSeconds(1))
               .isAfter(now))) {
           logger.info("Fetching secrets from cache")
-          (expiresAt, data)
+          (expiresAt,
+           new ConfigData(
+             data.data().asScala.filterKeys(k => keys.contains(k)).asJava,
+             data.ttl()))
         } else {
           // missing some or expired so reload
           getSecretsAndExpiry(getSecrets(client, keys.asScala.toSet))
@@ -83,7 +86,8 @@ class AzureSecretProvider() extends ConfigProvider with AzureHelper {
         getSecretsAndExpiry(getSecrets(client, keys.asScala.toSet))
     }
 
-    expiry.foreach(exp => logger.info(s"Max expiry for TTL set to [${exp.toString}]"))
+    expiry.foreach(exp =>
+      logger.info(s"Min expiry for TTL set to [${exp.toString}]"))
     cache += (keyVaultUrl -> (expiry, data))
     data
   }

@@ -15,8 +15,8 @@ import org.apache.kafka.common.config.ConfigData
 import org.apache.kafka.connect.errors.ConnectException
 
 import scala.util.{Failure, Success, Try}
-
 import scala.collection.JavaConverters._
+import scala.collection.mutable
 
 package object connect extends StrictLogging {
 
@@ -152,34 +152,27 @@ package object connect extends StrictLogging {
     }
   }
 
-  //calculate the max expiry for secrets and return the configData and expiry
+  //calculate the min expiry for secrets and return the configData and expiry
   def getSecretsAndExpiry(
       secrets: Map[String, (String, Option[OffsetDateTime])])
     : (Option[OffsetDateTime], ConfigData) = {
-    var ttlRes: Option[Long] = None
-    var expiryRes: Option[OffsetDateTime] = None
-    val now = OffsetDateTime.now()
+    var expiryList = mutable.ListBuffer.empty[OffsetDateTime]
 
     val data = secrets
       .map({
-        case (key, (value, expiry)) => {
-
-          // get the ttl in milliseconds
-          expiry.foreach(exp => {
-            // after the marker
-            if (exp.isAfter(expiryRes.getOrElse(now))) {
-              ttlRes =
-                Some(exp.toInstant.toEpochMilli - now.toInstant.toEpochMilli)
-              expiryRes = expiry
-            }
-          })
+        case (key, (value, expiry)) =>
+          expiry.foreach(e => expiryList.append(e))
           (key, value)
-        }
       })
       .asJava
 
-    ttlRes
-      .map(t => (expiryRes, new ConfigData(data, t)))
-      .getOrElse((None, new ConfigData(data)))
+    if (expiryList.isEmpty) {
+      (None, new ConfigData(data))
+    } else {
+      val minExpiry = expiryList.min
+      val ttl = minExpiry.toInstant.toEpochMilli - OffsetDateTime.now.toInstant
+        .toEpochMilli
+      (Some(minExpiry), new ConfigData(data, ttl))
+    }
   }
 }

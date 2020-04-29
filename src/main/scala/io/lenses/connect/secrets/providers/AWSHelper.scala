@@ -10,9 +10,19 @@ import java.nio.file.FileSystems
 import java.time.{Instant, OffsetDateTime, ZoneOffset}
 import java.util.Calendar
 
-import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials, DefaultAWSCredentialsProviderChain}
-import com.amazonaws.services.secretsmanager.{AWSSecretsManager, AWSSecretsManagerClientBuilder}
-import com.amazonaws.services.secretsmanager.model.{DescribeSecretRequest, GetSecretValueRequest}
+import com.amazonaws.auth.{
+  AWSStaticCredentialsProvider,
+  BasicAWSCredentials,
+  DefaultAWSCredentialsProviderChain
+}
+import com.amazonaws.services.secretsmanager.{
+  AWSSecretsManager,
+  AWSSecretsManagerClientBuilder
+}
+import com.amazonaws.services.secretsmanager.model.{
+  DescribeSecretRequest,
+  GetSecretValueRequest
+}
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.typesafe.scalalogging.StrictLogging
 import io.lenses.connect.secrets.config.AWSProviderSettings
@@ -70,7 +80,8 @@ trait AWSHelper extends StrictLogging {
           cal.setTime(lastRotation)
           //increment
           cal.add(Calendar.DAY_OF_MONTH, nextRotationInDays.toInt)
-          Some(OffsetDateTime.ofInstant(cal.toInstant, cal.getTimeZone.toZoneId))
+          Some(
+            OffsetDateTime.ofInstant(cal.toInstant, cal.getTimeZone.toZoneId))
 
         } else None
 

@@ -16,9 +16,9 @@ import org.apache.kafka.connect.errors.ConnectException
 trait VaultHelper extends StrictLogging {
 
   // initialize the vault client
-  def createClient(settings: VaultSettings): (Vault, Option[Long]) = {
+  def createClient(settings: VaultSettings): Vault = {
 
-    val config =
+    var config =
       new VaultConfig().address(settings.addr)
 
     // set ssl if configured
@@ -37,25 +37,28 @@ trait VaultHelper extends StrictLogging {
       s"Initializing client with mode [${settings.authMode.toString}]"
     )
 
-    val ttl: Option[Long] = settings.authMode match {
+    val token = settings.authMode match {
       case VaultAuthMethod.USERPASS =>
         settings.userPass
           .map(
             up =>
               vault
                 .auth()
-                .loginByUserPass(up.username, up.password.value(), up.mount))
-          .map(r => r.getAuthLeaseDuration)
+                .loginByUserPass(up.username, up.password.value(), up.mount)
+                .getAuthClientToken)
 
       case VaultAuthMethod.APPROLE =>
         settings.appRole
-          .map(ar => vault.auth().loginByAppRole(ar.role, ar.secretId.value()))
-          .map(r => r.getAuthLeaseDuration)
+          .map(
+            ar =>
+              vault
+                .auth()
+                .loginByAppRole(ar.role, ar.secretId.value())
+                .getAuthClientToken)
 
       case VaultAuthMethod.CERT =>
         settings.cert
-          .map(c => vault.auth().loginByCert(c.mount))
-          .map(r => r.getAuthLeaseDuration)
+          .map(c => vault.auth().loginByCert(c.mount).getAuthClientToken)
 
       case VaultAuthMethod.AWSIAM =>
         settings.awsIam
@@ -69,45 +72,64 @@ trait VaultHelper extends StrictLogging {
                   aws.body.value(),
                   aws.headers.value(),
                   aws.mount
-              ))
-          .map(r => r.getAuthLeaseDuration)
+                )
+                .getAuthClientToken)
 
       case VaultAuthMethod.KUBERNETES =>
         settings.k8s
-          .map(k8s => vault.auth().loginByKubernetes(k8s.role, k8s.jwt.value()))
-          .map(r => r.getAuthLeaseDuration)
-
+          .map(
+            k8s =>
+              vault
+                .auth()
+                .loginByKubernetes(k8s.role, k8s.jwt.value())
+                .getAuthClientToken)
       case VaultAuthMethod.GCP =>
         settings.gcp
-          .map(gcp => vault.auth().loginByGCP(gcp.role, gcp.jwt.value()))
-          .map(r => r.getAuthLeaseDuration)
+          .map(
+            gcp =>
+              vault
+                .auth()
+                .loginByGCP(gcp.role, gcp.jwt.value())
+                .getAuthClientToken)
 
       case VaultAuthMethod.LDAP =>
         settings.ldap
-          .map(l =>
-            vault.auth().loginByLDAP(l.username, l.password.value(), l.mount))
-          .map(r => r.getAuthLeaseDuration)
+          .map(
+            l =>
+              vault
+                .auth()
+                .loginByLDAP(l.username, l.password.value(), l.mount)
+                .getAuthClientToken)
 
       case VaultAuthMethod.JWT =>
         settings.jwt
-          .map(j => vault.auth().loginByJwt(j.provider, j.role, j.jwt.value()))
-          .map(r => r.getAuthLeaseDuration)
+          .map(
+            j =>
+              vault
+                .auth()
+                .loginByJwt(j.provider, j.role, j.jwt.value())
+                .getAuthClientToken)
 
       case VaultAuthMethod.TOKEN =>
-        config.token(settings.token.value())
-        None
+        Some(settings.token.value())
 
       case VaultAuthMethod.GITHUB =>
         settings.github
-          .map(gh => vault.auth().loginByGithub(gh.token.value(), gh.mount))
-          .map(r => r.getAuthLeaseDuration)
+          .map(
+            gh =>
+              vault
+                .auth()
+                .loginByGithub(gh.token.value(), gh.mount)
+                .getAuthClientToken)
 
       case _ =>
         throw new ConnectException(
           s"Unsupported auth method [${settings.authMode.toString}]")
     }
 
-    (vault, ttl)
+    config.token(token.get)
+    config.build()
+    new Vault(config)
   }
 
   // set up tls
