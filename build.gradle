@@ -91,6 +91,14 @@ allprojects {
                     "Docs" : "https://docs.lenses.io/connectors/"
             )
         }
+
+        dependencies {
+            exclude(dependency("org.apache.avro:.*"))
+            exclude(dependency("org.apache.kafka:.*"))
+            exclude(dependency("io.confluent:.*"))
+            exclude(dependency("org.apache.kafka:.*"))
+            exclude(dependency("org.apache.zookeeper:.*"))
+        }
     }
 
     dependencies {
