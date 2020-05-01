@@ -175,4 +175,7 @@ package object connect extends StrictLogging {
       (Some(minExpiry), new ConfigData(data, ttl))
     }
   }
+
+  def getFileName(rootDir: String, path: String, key: String, separator: String): String =
+    s"${rootDir.stripSuffix(separator)}$separator$path$separator${key.toLowerCase}"
 }

@@ -125,8 +125,7 @@ class VaultSecretProvider() extends ConfigProvider with VaultHelper {
 
         response.getData.asScala.map {
           case (k, v) =>
-            val fileName =
-              s"${settings.fileDir}$separator$path$separator${k.toLowerCase}"
+            val fileName = getFileName(settings.fileDir, path, k.toLowerCase, separator)
             val decoded =
               decodeKey(key = k, value = v, fileName = fileName)
 

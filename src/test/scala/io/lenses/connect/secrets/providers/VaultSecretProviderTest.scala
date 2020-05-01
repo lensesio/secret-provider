@@ -338,25 +338,6 @@ class VaultSecretProviderTest
     provider.close()
   }
 
-  "should real" ignore {
-    val props = Map(
-      VaultProviderConfig.VAULT_ADDR -> "http://127.0.0.1:8200",
-      VaultProviderConfig.AUTH_METHOD -> VaultAuthMethod.APPROLE.toString,
-//      VaultProviderConfig.VAULT_TOKEN -> "s.vvY2BMERjGwiKdn9dD1PBsVH",
-      VaultProviderConfig.APP_ROLE -> "token",
-      VaultProviderConfig.APP_ROLE_SECRET_ID -> "token",
-    ).asJava
-
-    val secretKey = "foo"
-    val secretValue = "secret-value"
-    val secretPath = "secret/hello"
-
-    val provider = new VaultSecretProvider()
-    provider.configure(props)
-    val data = provider.get(secretPath, Set(secretKey).asJava)
-
-  }
-
   "check transformer" in {
 
     val props = Map(

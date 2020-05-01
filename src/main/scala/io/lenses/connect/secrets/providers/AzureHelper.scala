@@ -23,7 +23,8 @@ import io.lenses.connect.secrets.connect.{
   FILE_ENCODING,
   decode,
   decodeToBytes,
-  fileWriter
+  fileWriter,
+  getFileName
 }
 import org.apache.kafka.connect.errors.ConnectException
 
@@ -59,7 +60,7 @@ trait AzureHelper extends StrictLogging {
             value
 
           case Encoding.UTF8_FILE =>
-            val fileName = getFileName(rootDir, path, key)
+            val fileName = getFileName(rootDir, path, key.toLowerCase, separator)
             fileWriter(
               fileName,
               value.getBytes,
@@ -72,7 +73,7 @@ trait AzureHelper extends StrictLogging {
 
           // write to file and set the file name as the value
           case Encoding.BASE64_FILE | Encoding.UTF8_FILE =>
-            val fileName = getFileName(rootDir, path, key)
+            val fileName = getFileName(rootDir, path, key.toLowerCase, separator)
             val decoded = decodeToBytes(key, value)
             fileWriter(
               fileName,
@@ -113,7 +114,4 @@ trait AzureHelper extends StrictLogging {
 
     }
   }
-
-  private def getFileName(rootDir: String, path: String, key: String): String =
-    s"$rootDir$separator$path$separator${key.toLowerCase}"
 }

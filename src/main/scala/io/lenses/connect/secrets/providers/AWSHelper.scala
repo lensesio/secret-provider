@@ -7,30 +7,20 @@
 package io.lenses.connect.secrets.providers
 
 import java.nio.file.FileSystems
-import java.time.{Instant, OffsetDateTime, ZoneOffset}
+import java.time.OffsetDateTime
 import java.util.Calendar
 
-import com.amazonaws.auth.{
-  AWSStaticCredentialsProvider,
-  BasicAWSCredentials,
-  DefaultAWSCredentialsProviderChain
-}
-import com.amazonaws.services.secretsmanager.{
-  AWSSecretsManager,
-  AWSSecretsManagerClientBuilder
-}
-import com.amazonaws.services.secretsmanager.model.{
-  DescribeSecretRequest,
-  GetSecretValueRequest
-}
+import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials, DefaultAWSCredentialsProviderChain}
+import com.amazonaws.services.secretsmanager.model.{DescribeSecretRequest, GetSecretValueRequest}
+import com.amazonaws.services.secretsmanager.{AWSSecretsManager, AWSSecretsManagerClientBuilder}
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.typesafe.scalalogging.StrictLogging
 import io.lenses.connect.secrets.config.AWSProviderSettings
-import io.lenses.connect.secrets.connect.{AuthMode, decodeKey}
+import io.lenses.connect.secrets.connect.{AuthMode, decodeKey, getFileName}
 import org.apache.kafka.connect.errors.ConnectException
 
-import scala.util.{Failure, Success, Try}
 import scala.collection.JavaConverters._
+import scala.util.{Failure, Success, Try}
 
 trait AWSHelper extends StrictLogging {
   private val separator: String = FileSystems.getDefault.getSeparator
@@ -125,8 +115,7 @@ trait AWSHelper extends StrictLogging {
           decodeKey(
             key = key,
             value = value,
-            fileName =
-              s"$rootDir$separator$secretId$separator${key.toLowerCase}"
+            fileName = getFileName(rootDir, secretId, key.toLowerCase, separator)
           ),
           getTTL(client, secretId)
         )
