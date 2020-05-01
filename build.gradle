@@ -8,7 +8,7 @@ plugins {
     id "com.github.maiflai.scalatest" version "0.26"
     id "com.github.johnrengelman.shadow" version "5.2.0"
     id 'io.codearte.nexus-staging' version '0.21.2'
-    id "com.github.harbby.gradle.serviceloader" version "1.1.5"
+    id "net.researchgate.release" version "2.8.1"
 }
 
 allprojects {
@@ -18,6 +18,7 @@ allprojects {
     apply plugin: 'java'
     apply plugin: 'scala'
     apply plugin: 'com.github.johnrengelman.shadow'
+    apply plugin: 'maven'
     apply plugin: 'maven-publish'
     apply plugin: 'signing'
     apply plugin: 'com.github.maiflai.scalatest'
