@@ -1,5 +1,5 @@
 ![Action Status](https://github.com/lensesio/secret-provider/workflows/CI/badge.svg)
-[<img src="https://img.shields.io/badge/docs--orange.svg?"/>](https://docs.lenses.io/connectors/)
+[<img src="https://img.shields.io/badge/docs--orange.svg?"/>](https://docs.lenses.io/connectors/secret-providers.html)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 # Secret Provider
