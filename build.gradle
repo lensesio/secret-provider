@@ -53,6 +53,11 @@ allprojects {
         gitCommitHash = ("git rev-parse HEAD").execute().text.trim()
         gitTag = ("git describe --abbrev=0 --tags").execute().text.trim()
         gitRepo = ("git remote get-url origin").execute().text.trim()
+
+        mavenUrl = project.hasProperty('mavenUrl') ? project.mavenUrl : 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
+        mavenUsername = project.hasProperty('mavenUsername') ? project.mavenUsername : ossrhUsername
+        mavenPassword = project.hasProperty('mavenPassword') ? project.mavenPassword : ossrhPassword
+
     }
 
     repositories {
@@ -182,8 +187,8 @@ allprojects {
                     // POM signature
                     beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
                     // Target repository
-                    repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                        authentication(userName: ossrhUsername, password: ossrhPassword)
+                    repository(url: "${mavenUrl}") {
+                        authentication(userName: "${mavenUsername}", password: "${mavenPassword}")
                     }
                     pom.project {
                         name project.name

@@ -6,7 +6,8 @@
 
 package io.lenses.connect.secrets.providers
 
-import java.io.File
+import java.io.{Closeable, File, FileInputStream}
+import java.security.KeyStore
 
 import com.bettercloud.vault.{SslConfig, Vault, VaultConfig}
 import com.typesafe.scalalogging.StrictLogging
@@ -145,8 +146,11 @@ trait VaultHelper extends StrictLogging {
     }
 
     if (settings.truststoreLoc != "") {
-      logger.info(s"Configuring keystore at [${settings.truststoreLoc}]")
-      ssl.trustStoreFile(new File(settings.truststoreLoc))
+      logger.info(s"Configuring truststore at [${settings.truststoreLoc}]")
+      ssl.trustStore(
+        readTrustStore(
+          settings.truststoreLoc,
+        settings.keystorePass.value()))
     }
 
     if (settings.clientPem != "") {
@@ -161,4 +165,19 @@ trait VaultHelper extends StrictLogging {
 
     ssl.build()
   }
+
+  private def readTrustStore(file: String, password: String): KeyStore = cleanly(new FileInputStream(file))
+  { is =>
+    val keyStore = KeyStore.getInstance("JKS")
+    keyStore.load(is, if (password == null) null else password.toCharArray)
+    keyStore
+  }
+
+  private def cleanly[A <: Closeable, B](resource: A)(bodyF: A => B): B =
+    try {
+      bodyF(resource)
+    } finally {
+      resource.close()
+    }
+
 }
