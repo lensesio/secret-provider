@@ -14,18 +14,18 @@ Maven
 <dependency>
 	<groupId>io.lenses</groupId>
 	<artifactId>secret-provider</artifactId>
-	<version>0.0.2</version>
+	<version>2.0.1</version>
 </dependency>
 ```
 
 SBT
 ```bash
-libraryDependencies += "io.lenses" % "secret-provider" % "0.0.2"
+libraryDependencies += "io.lenses" % "secret-provider" % "2.0.1"
 ```
 
 Gradle
 ```bash
-compile 'io.lenses:secret-provider:0.0.2'
+compile 'io.lenses:secret-provider:2.0.1'
 ```
 
 ## Description
