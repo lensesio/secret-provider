@@ -15,6 +15,7 @@ import scala.collection.JavaConverters._
 import scala.util.Try
 import io.lenses.connect.secrets.connect.Encoding
 import java.nio.file.FileSystems
+import java.util.UUID.randomUUID
 
 class Aes256DecodingProvider extends ConfigProvider {
 
@@ -41,7 +42,7 @@ class Aes256DecodingProvider extends ConfigProvider {
           decodeKey(
             key = keyPrefixedWithEncoding,
             value = decrypted,
-            fileName = getFileName(writeDir, "secrets", key.toLowerCase, FileSystems.getDefault.getSeparator)
+            fileName = getFileName(writeDir, "secrets", randomUUID().toString, FileSystems.getDefault.getSeparator)
           )
         }
           

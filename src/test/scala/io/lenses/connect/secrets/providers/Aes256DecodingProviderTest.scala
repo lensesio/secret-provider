@@ -30,8 +30,7 @@ class Aes256DecodingProviderTest
       val encrypted = encrypt(value, key)
 
       forAll(Table("encoding", "", "utf-8")) { encoding =>
-        val decrypted =
-          provider.get(encoding, Set(encrypted).asJava).data().asScala
+        val decrypted = provider.get(encoding, Set(encrypted).asJava).data().asScala
 
         decrypted.get(encrypted) shouldBe Some(value)
       }
@@ -45,19 +44,18 @@ class Aes256DecodingProviderTest
       decrypted.get(encrypted) shouldBe Some(value)
     }
 
-    "decrypt aes 256 encoded value stored in file with utf-8 encoding" in new TestContext
-      with ConfiguredProvider {
+    "decrypt aes 256 encoded value stored in file with utf-8 encoding" in new TestContext with ConfiguredProvider {
       val encrypted = encrypt(value, key)
 
       val providerData = provider.get("utf8_file", Set(encrypted).asJava).data().asScala
       val decryptedPath = providerData.get(encrypted).get
 
-      decryptedPath should startWith(s"$tmpDir/")
+      decryptedPath should startWith(s"$tmpDir/secrets/")
+      decryptedPath.toLowerCase.contains(encrypted.toLowerCase) shouldBe false
       Source.fromFile(decryptedPath).getLines.mkString shouldBe value
     }
 
-    "decrypt aes 256 encoded value stored in file with base64 encoding" in new TestContext
-      with ConfiguredProvider {
+    "decrypt aes 256 encoded value stored in file with base64 encoding" in new TestContext with ConfiguredProvider {
       val bytesAmount = 100
       val bytesInput = Array.fill[Byte](bytesAmount)(0)
       Random.nextBytes(bytesInput)
@@ -66,7 +64,8 @@ class Aes256DecodingProviderTest
       val providerData = provider.get("base64_file", Set(encrypted).asJava).data().asScala
       val decryptedPath = providerData.get(encrypted).get
 
-      decryptedPath should startWith(s"$tmpDir/")
+      decryptedPath should startWith(s"$tmpDir/secrets/")
+      decryptedPath.toLowerCase.contains(encrypted.toLowerCase) shouldBe false
       val bytesConsumed = Array.fill[Byte](bytesAmount)(0)
       new FileInputStream(decryptedPath).read(bytesConsumed)
 
@@ -81,8 +80,7 @@ class Aes256DecodingProviderTest
       val transformer = new ConfigTransformer(
         Map[String, ConfigProvider]("aes256" -> provider).asJava
       )
-      val props =
-        Map("mykey" -> ("$" + s"{aes256::$encrypted}")).asJava
+      val props = Map("mykey" -> ("$" + s"{aes256::$encrypted}")).asJava
       val data = transformer.transform(props)
       data.data().containsKey(encrypted)
       data.data().get("mykey") shouldBe value
