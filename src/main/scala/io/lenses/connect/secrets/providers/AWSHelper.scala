@@ -10,19 +10,9 @@ import java.nio.file.FileSystems
 import java.time.OffsetDateTime
 import java.util.Calendar
 
-import com.amazonaws.auth.{
-  AWSStaticCredentialsProvider,
-  BasicAWSCredentials,
-  DefaultAWSCredentialsProviderChain
-}
-import com.amazonaws.services.secretsmanager.model.{
-  DescribeSecretRequest,
-  GetSecretValueRequest
-}
-import com.amazonaws.services.secretsmanager.{
-  AWSSecretsManager,
-  AWSSecretsManagerClientBuilder
-}
+import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials, DefaultAWSCredentialsProviderChain}
+import com.amazonaws.services.secretsmanager.model.{DescribeSecretRequest, GetSecretValueRequest}
+import com.amazonaws.services.secretsmanager.{AWSSecretsManager, AWSSecretsManagerClientBuilder}
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.typesafe.scalalogging.StrictLogging
 import io.lenses.connect.secrets.config.AWSProviderSettings
@@ -44,12 +34,7 @@ trait AWSHelper extends StrictLogging {
 
     val credentialProvider = settings.authMode match {
       case AuthMode.CREDENTIALS =>
-        new AWSStaticCredentialsProvider(
-          new BasicAWSCredentials(
-            settings.accessKey,
-            settings.secretKey.value()
-          )
-        )
+        new AWSStaticCredentialsProvider(new BasicAWSCredentials(settings.accessKey, settings.secretKey.value()))
       case _ =>
         new DefaultAWSCredentialsProviderChain()
     }
@@ -84,8 +69,7 @@ trait AWSHelper extends StrictLogging {
           //increment
           cal.add(Calendar.DAY_OF_MONTH, nextRotationInDays.toInt)
           Some(
-            OffsetDateTime.ofInstant(cal.toInstant, cal.getTimeZone.toZoneId)
-          )
+            OffsetDateTime.ofInstant(cal.toInstant, cal.getTimeZone.toZoneId))
 
         } else None
 
@@ -129,8 +113,7 @@ trait AWSHelper extends StrictLogging {
           decodeKey(
             key = key,
             value = value,
-            fileName =
-              getFileName(rootDir, secretId, key.toLowerCase, separator)
+            fileName = getFileName(rootDir, secretId, key.toLowerCase, separator)
           ),
           getTTL(client, secretId)
         )
