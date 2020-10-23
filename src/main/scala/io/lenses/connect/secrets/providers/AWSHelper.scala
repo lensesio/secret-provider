@@ -34,16 +34,14 @@ trait AWSHelper extends StrictLogging {
 
     val credentialProvider = settings.authMode match {
       case AuthMode.CREDENTIALS =>
-        new BasicAWSCredentials(settings.accessKey, settings.secretKey.value())
+        new AWSStaticCredentialsProvider(new BasicAWSCredentials(settings.accessKey, settings.secretKey.value()))
       case _ =>
-        new DefaultAWSCredentialsProviderChain().getCredentials
+        new DefaultAWSCredentialsProviderChain()
     }
-
-    val credentials = new AWSStaticCredentialsProvider(credentialProvider)
 
     AWSSecretsManagerClientBuilder
       .standard()
-      .withCredentials(credentials)
+      .withCredentials(credentialProvider)
       .withRegion(settings.region)
       .build()
 
