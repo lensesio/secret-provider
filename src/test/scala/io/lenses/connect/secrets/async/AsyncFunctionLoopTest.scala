@@ -1,3 +1,9 @@
+/*
+ *
+ *  * Copyright 2017-2020 Lenses.io Ltd
+ *
+ */
+
 package io.lenses.connect.secrets.async
 
 import java.util.concurrent.CountDownLatch
