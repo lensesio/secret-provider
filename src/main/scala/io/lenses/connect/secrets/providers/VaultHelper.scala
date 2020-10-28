@@ -17,8 +17,7 @@ trait VaultHelper extends StrictLogging {
 
   // initialize the vault client
   def createClient(settings: VaultSettings): Vault = {
-
-    var config =
+    val config =
       new VaultConfig().address(settings.addr)
 
     // set ssl if configured
@@ -31,6 +30,7 @@ trait VaultHelper extends StrictLogging {
 
     logger.info(s"Setting engine version to ${settings.engineVersion}")
     config.engineVersion(settings.engineVersion)
+
     val vault = new Vault(config.build())
 
     logger.info(
@@ -114,6 +114,7 @@ trait VaultHelper extends StrictLogging {
         Some(settings.token.value())
 
       case VaultAuthMethod.GITHUB =>
+
         settings.github
           .map(
             gh =>

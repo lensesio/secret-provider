@@ -202,7 +202,7 @@ class VaultSecretProviderTest
     settings.pem shouldBe pemFile
     val provider = new VaultSecretProvider()
     provider.configure(props)
-    val response = provider.vaultClient.get.logical.read("secret/hello")
+    val response = provider.getClient.get.logical.read("secret/hello")
     response.getData.asScala("value") shouldBe "mock"
   }
 
@@ -223,7 +223,7 @@ class VaultSecretProviderTest
     settings.keystorePass.value() shouldBe "password"
     val provider = new VaultSecretProvider()
     provider.configure(props)
-    val response = provider.vaultClient.get.logical.read("secret/hello")
+    val response = provider.getClient.get.logical.read("secret/hello")
     response.getData.asScala("value") shouldBe "mock"
   }
 
