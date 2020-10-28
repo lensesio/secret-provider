@@ -70,6 +70,9 @@ object VaultProviderConfig {
   val GITHUB_TOKEN: String = "github.token"
   val GITHUB_MOUNT: String = "github.mount"
 
+  val TOKEN_RENEWAL: String = "token.renewal.ms"
+  val TOKEN_RENEWAL_DEFAULT: Int = 600000
+
   val config: ConfigDef = new ConfigDef()
     .define(
       VAULT_ADDR,
@@ -141,10 +144,10 @@ object VaultProviderConfig {
       "token",
       Importance.HIGH,
       """
-          |The authentication mode for Vault. 
-          |Available values are approle, userpass, kubernetes, cert, token, ldap, gcp, awsiam, jwt, github
-          |
-          |""".stripMargin
+        |The authentication mode for Vault.
+        |Available values are approle, userpass, kubernetes, cert, token, ldap, gcp, awsiam, jwt, github
+        |
+        |""".stripMargin
     )
     // app role auth mode
     .define(
@@ -197,10 +200,12 @@ object VaultProviderConfig {
       KUBERNETES_DEFAULT_TOKEN_PATH,
       Importance.HIGH,
       s"""
-          | s"Path to the service account token. $AUTH_METHOD must be 'kubernetes'.
-          | Defaults to $KUBERNETES_DEFAULT_TOKEN_PATH
-          | $AUTH_METHOD must be 'kubernetes'
-          |""".stripMargin
+         | s"Path to the service account token. $AUTH_METHOD must be 'kubernetes'.
+         | Defaults to $KUBERNETES_DEFAULT_TOKEN_PATH
+
+         | $AUTH_METHOD must be '
+
+         |""".stripMargin
     )
     // awsiam
     .define(
@@ -209,11 +214,15 @@ object VaultProviderConfig {
       null,
       Importance.HIGH,
       s"""
-          |Name of the role against which the login is being attempted. If role is not specified, then the login endpoint
-          |looks for a role bearing the name of the AMI ID of the EC2 instance that is trying to login if using the ec2
-          |auth method, or the "friendly name" (i.e., role name or username) of the IAM principal authenticated.
-          |If a matching role is not found, login fails. $AUTH_METHOD must be 'awsiam'
-          |""".stripMargin
+         |Name of the role against which the login is being attempted. If role is not specified, t
+         in endpoint
+         |looks for a role bearing the name of the AMI ID of the EC2 instance that is trying to
+         ing the ec2
+         |auth method, or the "friendly name" (i.e., role name or username) of the IAM pr
+         henticated.
+         |If a matching role is not found, login fails. $AUTH_METHOD
+ must be 'awsiam'
+         |""".stripMargin
     )
     .define(
       AWS_REQUEST_URL,
@@ -221,10 +230,10 @@ object VaultProviderConfig {
       null,
       Importance.HIGH,
       s"""
-        |PKCS7 signature of the identity document with all \n characters removed.Base64-encoded HTTP URL used in the signed request.
-        |Most likely just aHR0cHM6Ly9zdHMuYW1hem9uYXdzLmNvbS8= (base64-encoding of https://sts.amazonaws.com/) as most requests will
-        |probably use POST with an empty URI. $AUTH_METHOD must be 'awsiam'
-        |""".stripMargin
+         |PKCS7 signature of the identity document with all \n characters removed.Base64-encoded Hsed in the signed request.
+         |Most likely just aHR0cHM6Ly9zdHMuYW1hem9uYXdzLmNvbS8= (base64-encoding of https://sts.amom/) as most requests will
+         |probably use POST with an empty URI. $AUTH_METHOD must be 'awsiam'
+         |""".stripMargin
     )
     .define(
       AWS_REQUEST_HEADERS,
@@ -239,10 +248,13 @@ object VaultProviderConfig {
       null,
       Importance.HIGH,
       s"""
-           |Base64-encoded body of the signed request. 
-           |Most likely QWN0aW9uPUdldENhbGxlcklkZW50aXR5JlZlcnNpb249MjAxMS0wNi0xNQ== which is
-           |the base64 encoding of Action=GetCallerIdentity&amp;Version=2011-06-15. $AUTH_METHOD must be 'awsiam'
-           |""".stripMargin
+
+         ded body of the signed request.
+         |Most likely QWN0aW9uPUdldENhbGxlcklkZ
+         nNpb249MjAxMS0wNi0xNQ== which is
+         |the base64 encoding of Action=GetCallerIdentity&amp;Versi
+         5. $AUTH_METHOD must be 'awsiam'
+         |""".stripMargin
     )
     .define(
       AWS_MOUNT,
@@ -338,9 +350,13 @@ object VaultProviderConfig {
       "",
       Importance.MEDIUM,
       FILE_DIR_DESC
-    )
-
+    ).define(
+    TOKEN_RENEWAL,
+    Type.INT,
+    TOKEN_RENEWAL_DEFAULT,
+    Importance.MEDIUM,
+    "The time in milliseconds to renew the Vault token"
+  )
 }
-
 case class VaultProviderConfig(props: util.Map[String, _])
     extends AbstractConfig(VaultProviderConfig.config, props)

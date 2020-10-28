@@ -10,10 +10,12 @@ import com.typesafe.scalalogging.StrictLogging
 import io.lenses.connect.secrets.config.VaultAuthMethod.VaultAuthMethod
 import io.lenses.connect.secrets.connect._
 import AbstractConfigExtensions._
-
+import scala.concurrent.duration._
+import io.lenses.connect.secrets.config.VaultProviderConfig.TOKEN_RENEWAL
 import org.apache.kafka.common.config.types.Password
 import org.apache.kafka.connect.errors.ConnectException
 
+import scala.concurrent.duration.FiniteDuration
 import scala.io.Source
 import scala.util.{Failure, Success, Try}
 
@@ -53,7 +55,8 @@ case class VaultSettings(
     k8s: Option[K8s],
     cert: Option[Cert],
     github: Option[Github],
-    fileDir: String
+    fileDir: String,
+    tokenRenewal: FiniteDuration
 )
 
 object VaultSettings extends StrictLogging {
@@ -106,6 +109,7 @@ object VaultSettings extends StrictLogging {
 
     val fileDir = config.getString(FILE_DIR)
 
+    val tokenRenewal = config.getInt(TOKEN_RENEWAL).toInt.milliseconds
     VaultSettings(
       addr = addr,
       namespace = namespace,
@@ -126,7 +130,8 @@ object VaultSettings extends StrictLogging {
       k8s = k8s,
       cert = cert,
       github = github,
-      fileDir = fileDir
+      fileDir = fileDir,
+      tokenRenewal = tokenRenewal
     )
   }
 
