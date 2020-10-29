@@ -44,8 +44,8 @@ class VaultSecretProvider() extends ConfigProvider with VaultHelper {
     renewalLoop.start()
   }
 
-  def tokenRenewalSuccess:Long = tokenRenewal.map(_.successRate).getOrElse(-1)
-  def tokenRenewalFailure:Long = tokenRenewal.map(_.failureRate).getOrElse(-1)
+  def tokenRenewalSuccess: Long = tokenRenewal.map(_.successRate).getOrElse(-1)
+  def tokenRenewalFailure: Long = tokenRenewal.map(_.failureRate).getOrElse(-1)
 
   private def renewToken(): Unit = {
     vaultClient.foreach { client =>
