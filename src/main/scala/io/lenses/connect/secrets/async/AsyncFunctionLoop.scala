@@ -9,6 +9,7 @@ package io.lenses.connect.secrets.async
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicLong
 
 import com.typesafe.scalalogging.StrictLogging
 
@@ -19,6 +20,8 @@ class AsyncFunctionLoop(interval: Duration, description: String)(thunk: => Unit)
     with StrictLogging {
 
   private val running = new AtomicBoolean(false)
+  private val success = new AtomicLong(0L)
+  private val failure = new AtomicLong(0L)
   private val executorService = Executors.newFixedThreadPool(1)
 
   def start(): Unit = {
@@ -32,11 +35,13 @@ class AsyncFunctionLoop(interval: Duration, description: String)(thunk: => Unit)
           try {
             Thread.sleep(interval.toMillis)
             thunk
+            success.incrementAndGet()
           }
           catch {
             case _: InterruptedException =>
             case t: Throwable =>
               logger.warn("Failed to renew the Kerberos ticket", t)
+              failure.incrementAndGet()
           }
         }
       }
@@ -49,4 +54,7 @@ class AsyncFunctionLoop(interval: Duration, description: String)(thunk: => Unit)
       executorService.awaitTermination(10000, TimeUnit.MILLISECONDS)
     }
   }
+
+  def successRate: Long = success.get()
+  def failureRate: Long = failure.get()
 }

@@ -10,12 +10,17 @@ import java.io.File
 import java.nio.file.FileSystems
 import java.util.Base64
 
+import com.bettercloud.vault.json.JsonArray
 import com.bettercloud.vault.json.JsonObject
-import io.lenses.connect.secrets.config.{VaultAuthMethod, VaultProviderConfig, VaultSettings}
-import io.lenses.connect.secrets.{config, connect}
-import io.lenses.connect.secrets.vault.{MockVault, VaultTestUtils}
+import io.lenses.connect.secrets.config.VaultAuthMethod
+import io.lenses.connect.secrets.config.VaultProviderConfig
+import io.lenses.connect.secrets.config.VaultSettings
+import io.lenses.connect.secrets.connect
+import io.lenses.connect.secrets.vault.MockVault
+import io.lenses.connect.secrets.vault.VaultTestUtils
+import org.apache.kafka.common.config.ConfigData
+import org.apache.kafka.common.config.ConfigTransformer
 import org.apache.kafka.common.config.provider.ConfigProvider
-import org.apache.kafka.common.config.{ConfigData, ConfigTransformer}
 import org.eclipse.jetty.server.Server
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
@@ -25,7 +30,7 @@ import scala.collection.JavaConverters._
 import scala.io.Source
 
 class VaultSecretProviderTest
-    extends AnyWordSpec
+  extends AnyWordSpec
     with Matchers
     with BeforeAndAfterAll {
   val separator: String = FileSystems.getDefault.getSeparator
@@ -48,7 +53,12 @@ class VaultSecretProviderTest
       )
   )
 
-  val root: JsonObject = new JsonObject().add("data", data)
+  val auth: JsonObject = new JsonObject()
+    .add("lease_duration", 0)
+    .add("policies", new JsonArray())
+
+  val root: JsonObject = new JsonObject().add("data", data).add("auth", auth)
+    .add("renewable", true)
   val mockVault = new MockVault(200, root.toString)
   val server: Server = VaultTestUtils.initHttpsMockVault(mockVault)
   val jksFile: String =
@@ -68,6 +78,30 @@ class VaultSecretProviderTest
   override def beforeAll(): Unit = {
     cleanUp()
     server.start()
+  }
+
+  "should renew the token" in {
+
+    val props = Map(
+      VaultProviderConfig.VAULT_ADDR -> "https://127.0.0.1:9998",
+      VaultProviderConfig.VAULT_TOKEN -> "mock_token",
+      VaultProviderConfig.VAULT_PEM -> pemFile,
+      VaultProviderConfig.VAULT_CLIENT_PEM -> pemFile,
+      VaultProviderConfig.TOKEN_RENEWAL -> "1000"
+    ).asJava
+
+    val config = VaultProviderConfig(props)
+    val settings = VaultSettings(config)
+
+    settings.pem shouldBe pemFile
+    val provider = new VaultSecretProvider()
+    provider.configure(props)
+    val response = provider.getClient.get.logical.read("secret/hello")
+    response.getData.asScala("value") shouldBe "mock"
+
+    Thread.sleep(5000)
+    provider.tokenRenewalFailure shouldBe 0
+    provider.tokenRenewalSuccess >= 4 shouldBe true
   }
 
   "should be configured for username and password auth" in {
@@ -172,7 +206,6 @@ class VaultSecretProviderTest
     settings.k8s.isDefined shouldBe true
   }
 
-
   "should be configured for approle auth" in {
     val props = Map(
       VaultProviderConfig.VAULT_ADDR -> "https://127.0.0.1:9998",
@@ -186,7 +219,6 @@ class VaultSecretProviderTest
     val settings = VaultSettings(VaultProviderConfig(props))
     settings.appRole.isDefined shouldBe true
   }
-
 
   "should be configured for ssl with pem" in {
     val props = Map(

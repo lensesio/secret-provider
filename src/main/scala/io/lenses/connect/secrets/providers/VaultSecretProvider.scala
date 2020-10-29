@@ -39,8 +39,13 @@ class VaultSecretProvider() extends ConfigProvider with VaultHelper {
   override def configure(configs: util.Map[String, _]): Unit = {
     settings = VaultSettings(VaultProviderConfig(configs))
     vaultClient = Some(createClient(settings))
-    tokenRenewal = Some(new AsyncFunctionLoop(settings.tokenRenewal, "Vault Token Renewal")(renewToken()))
+    val renewalLoop = new AsyncFunctionLoop(settings.tokenRenewal, "Vault Token Renewal")(renewToken())
+    tokenRenewal = Some(renewalLoop)
+    renewalLoop.start()
   }
+
+  def tokenRenewalSuccess: Long = tokenRenewal.map(_.successRate).getOrElse(-1)
+  def tokenRenewalFailure: Long = tokenRenewal.map(_.failureRate).getOrElse(-1)
 
   private def renewToken(): Unit = {
     vaultClient.foreach { client =>
@@ -105,7 +110,9 @@ class VaultSecretProvider() extends ConfigProvider with VaultHelper {
     data
   }
 
-  override def close(): Unit = {}
+  override def close(): Unit = {
+    tokenRenewal.foreach(_.close())
+  }
 
   // get the secrets and ttl under a path
   def getSecrets(
