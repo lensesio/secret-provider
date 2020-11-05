@@ -7,6 +7,7 @@
 package io.lenses.connect.secrets.providers
 
 import java.nio.file.FileSystems
+import java.nio.file.Paths
 import java.time.OffsetDateTime
 import java.util.Calendar
 
@@ -16,7 +17,10 @@ import com.amazonaws.services.secretsmanager.{AWSSecretsManager, AWSSecretsManag
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.typesafe.scalalogging.StrictLogging
 import io.lenses.connect.secrets.config.AWSProviderSettings
-import io.lenses.connect.secrets.connect.{AuthMode, decodeKey, getFileName}
+import io.lenses.connect.secrets.connect.{decodeKey, getFileName, AuthMode}
+import io.lenses.connect.secrets.io.FileWriter
+import io.lenses.connect.secrets.io.FileWriterOnce
+import io.lenses.connect.secrets.utils.EncodingAndId
 import org.apache.kafka.connect.errors.ConnectException
 
 import scala.collection.JavaConverters._
@@ -108,12 +112,17 @@ trait AWSHelper extends StrictLogging {
               )
             )
 
+        val fileWriter:FileWriter = new FileWriterOnce(Paths.get(rootDir, secretId))
         // decode the value
+        val encodingAndId = EncodingAndId.from(key)
         (
           decodeKey(
             key = key,
             value = value,
-            fileName = getFileName(rootDir, secretId, key.toLowerCase, separator)
+            encoding = encodingAndId.encoding,
+            writeFileFn = content=>{
+              fileWriter.write(key.toLowerCase, content, key).toString
+            }
           ),
           getTTL(client, secretId)
         )

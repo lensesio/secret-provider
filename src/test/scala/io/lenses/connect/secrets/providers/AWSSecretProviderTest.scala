@@ -7,13 +7,18 @@
 package io.lenses.connect.secrets.providers
 
 import java.nio.file.FileSystems
-import java.util.{Base64, Date}
+import java.util.Base64
+import java.util.Date
 
 import com.amazonaws.services.secretsmanager.AWSSecretsManager
 import com.amazonaws.services.secretsmanager.model._
 import com.bettercloud.vault.json.JsonObject
-import io.lenses.connect.secrets.config.{AWSProviderConfig, AWSProviderSettings}
-import io.lenses.connect.secrets.connect.{AuthMode, Encoding, _}
+import io.lenses.connect.secrets.config.AWSProviderConfig
+import io.lenses.connect.secrets.config.AWSProviderSettings
+import io.lenses.connect.secrets.connect._
+import io.lenses.connect.secrets.connect.AuthMode
+import io.lenses.connect.secrets.connect.Encoding
+import io.lenses.connect.secrets.utils.EncodingAndId
 import org.apache.kafka.common.config.ConfigTransformer
 import org.apache.kafka.common.config.provider.ConfigProvider
 import org.apache.kafka.connect.errors.ConnectException
@@ -99,7 +104,7 @@ class AWSSecretProviderTest
       AWSProviderConfig.AWS_REGION -> "someregion"
     ).asJava
 
-    val secretKey = s"${Encoding.BASE64.toString}_my-secret-key"
+    val secretKey = Encoding.BASE64.toString
     val secretName = "my-secret-name"
     val secretValue = "base64-secret-value"
 
@@ -149,7 +154,7 @@ class AWSSecretProviderTest
       FILE_DIR -> tmp
     ).asJava
 
-    val secretKey = s"${Encoding.BASE64_FILE.toString}_my-secret-key"
+    val secretKey = Encoding.BASE64_FILE.toString
     val secretName = "my-secret-name"
     val secretValue = "base64-secret-value"
 
@@ -204,7 +209,8 @@ class AWSSecretProviderTest
       FILE_DIR -> tmp
     ).asJava
 
-    val secretKey = s"${Encoding.UTF8_FILE.toString}_my-secret-key"
+    val secretKey =
+      s"${Encoding.UTF8_FILE}${EncodingAndId.Separator}my-secret-key"
     val secretName = "my-secret-name"
     val secretValue = "utf8-secret-value"
 

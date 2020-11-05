@@ -6,7 +6,9 @@ import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.wordspec.AnyWordSpec
 import java.util.Base64
 import java.util.UUID.randomUUID
+
 import io.lenses.connect.secrets.config.Aes256ProviderConfig
+
 import scala.collection.JavaConverters._
 import org.apache.kafka.connect.errors.ConnectException
 import org.apache.kafka.common.config.ConfigException
@@ -14,9 +16,16 @@ import org.apache.kafka.common.config.ConfigTransformer
 import io.lenses.connect.secrets.connect.FILE_DIR
 import java.io.File
 import java.nio.file.Files
+
 import org.scalatest.compatible.Assertion
+
 import scala.io.Source
 import java.io.FileInputStream
+import java.util
+
+import io.lenses.connect.secrets.connect.Encoding
+import io.lenses.connect.secrets.utils.EncodingAndId
+
 import scala.util.Random
 
 class Aes256DecodingProviderTest
@@ -47,8 +56,8 @@ class Aes256DecodingProviderTest
     "decrypt aes 256 encoded value stored in file with utf-8 encoding" in new TestContext with ConfiguredProvider {
       val encrypted = encrypt(value, key)
 
-      val providerData = provider.get("utf8_file", Set(encrypted).asJava).data().asScala
-      val decryptedPath = providerData.get(encrypted).get
+      val providerData = provider.get(s"utf8_file${EncodingAndId.Separator}id1", Set(encrypted).asJava).data().asScala
+      val decryptedPath = providerData(encrypted)
 
       decryptedPath should startWith(s"$tmpDir/secrets/")
       decryptedPath.toLowerCase.contains(encrypted.toLowerCase) shouldBe false
@@ -61,8 +70,8 @@ class Aes256DecodingProviderTest
       Random.nextBytes(bytesInput)
       val encrypted = encrypt(Base64.getEncoder.encodeToString(bytesInput), key)
 
-      val providerData = provider.get("base64_file", Set(encrypted).asJava).data().asScala
-      val decryptedPath = providerData.get(encrypted).get
+      val providerData = provider.get(s"${Encoding.BASE64_FILE}${EncodingAndId.Separator}fileId1", Set(encrypted).asJava).data().asScala
+      val decryptedPath = providerData(encrypted)
 
       decryptedPath should startWith(s"$tmpDir/secrets/")
       decryptedPath.toLowerCase.contains(encrypted.toLowerCase) shouldBe false
@@ -71,6 +80,7 @@ class Aes256DecodingProviderTest
 
       bytesConsumed.toList shouldBe bytesInput.toList
     }
+
 
     "transform value referencing to the provider" in new TestContext {
       val value = "hi!"
@@ -133,19 +143,19 @@ class Aes256DecodingProviderTest
   trait ConfiguredProvider {
     self: TestContext =>
 
-    val value = randomUUID().toString()
+    val value: String = randomUUID().toString
 
     provider.configure(config)
   }
 
   trait TestContext {
-    val key = randomUUID.toString.take(32)
+    val key: String = randomUUID.toString.take(32)
     val tmpDir: String = Files
-      .createTempDirectory(randomUUID().toString())
-      .toFile()
-      .getAbsolutePath()
+      .createTempDirectory(randomUUID().toString)
+      .toFile
+      .getAbsolutePath
     val provider = new Aes256DecodingProvider()
-    val config = Map(
+    val config: util.Map[String, String] = Map(
       Aes256ProviderConfig.SECRET_KEY -> key,
       FILE_DIR -> tmpDir
     ).asJava

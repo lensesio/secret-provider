@@ -9,15 +9,13 @@ package io.lenses.connect.secrets.providers
 import java.io.File
 import java.nio.file.FileSystems
 import java.time.OffsetDateTime
-import java.util.{Base64, ServiceLoader}
+import java.util.Base64
 
-import com.azure.core.http.HttpClientProvider
 import io.lenses.connect.secrets.connect
+import io.lenses.connect.secrets.connect.Encoding
 import org.apache.commons.io.FileUtils
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-
-import scala.io.Source
 
 class DecodeTest extends AnyWordSpec with Matchers {
 
@@ -31,73 +29,78 @@ class DecodeTest extends AnyWordSpec with Matchers {
   }
 
   "should decode UTF" in {
-    connect.decodeKey("my-key", "secret", "") shouldBe "secret"
+    connect.decodeKey(None, "my-key", "secret", { _ =>
+      fail("No files here")
+    }) shouldBe "secret"
+    connect.decodeKey(Some(Encoding.UTF8), "my-key", "secret", { _ =>
+      fail("No files here")
+    }) shouldBe "secret"
   }
 
   "should decode BASE64" in {
     val value = Base64.getEncoder.encodeToString("secret".getBytes)
-    connect.decodeKey(s"${connect.Encoding.BASE64}_-my-key", value, "") shouldBe "secret"
+    connect.decodeKey(Some(Encoding.BASE64), s"my-key", value, { _ =>
+      fail("No files here")
+    }) shouldBe "secret"
   }
 
   "should decode BASE64 and write to a file" in {
     val fileName = s"${tmp}my-file-base64"
-    cleanUp(fileName)
 
     val value = Base64.getEncoder.encodeToString("secret".getBytes)
+    var written = false
     connect.decodeKey(
-      s"${connect.Encoding.BASE64_FILE}_-my-key",
-      value,
-      fileName
+      Some(Encoding.BASE64_FILE),
+      s"my-key",
+      value, { _ =>
+        written = true
+        fileName
+      }
     ) shouldBe fileName
-    val result = Source.fromFile(fileName)
-    result.getLines().mkString shouldBe "secret"
-    result.close()
-    cleanUp(fileName)
+    written shouldBe true
   }
 
   "should decode and write a jks" in {
     val fileName = s"${tmp}my-file-base64-jks"
-    cleanUp(fileName)
-
     val jksFile: String =
       getClass.getClassLoader.getResource("keystore.jks").getPath
     val fileContent = FileUtils.readFileToByteArray(new File(jksFile))
     val jksEncoded = Base64.getEncoder.encodeToString(fileContent)
 
+    var written = false
     connect.decodeKey(
-      s"${connect.Encoding.BASE64_FILE}_keystore.jks",
-      jksEncoded,
-      fileName
+      Some(Encoding.BASE64_FILE),
+      s"keystore.jks",
+      jksEncoded, { _ =>
+        written = true
+        fileName
+      }
     ) shouldBe fileName
 
-    val fileContentRes = FileUtils.readFileToByteArray(new File(fileName))
-    val jksEncodedRes = Base64.getEncoder.encodeToString(fileContentRes)
-
-    jksEncodedRes shouldBe jksEncoded
-    cleanUp(fileName)
+    written shouldBe true
   }
 
   "should decode UTF8 and write to a file" in {
     val fileName = s"${tmp}my-file-utf8"
-    cleanUp(fileName)
+    var written = false
 
     connect.decodeKey(
-      s"${connect.Encoding.UTF8_FILE}_-my-key",
-      "secret",
-      fileName
+      Some(Encoding.UTF8_FILE),
+      s"my-key",
+      "secret", { _ =>
+        written = true
+        fileName
+      }
     ) shouldBe fileName
-    val result = Source.fromFile(fileName)
-    result.getLines().mkString shouldBe "secret"
-    result.close()
-    cleanUp(fileName)
+    written shouldBe true
   }
 
   "min list test" in {
     val now = OffsetDateTime.now()
     val secrets = Map(
-      "ke3"->  ("value", Some(OffsetDateTime.now().plusHours(3))),
-      "key1"->  ("value", Some(now)),
-      "key2"->  ("value", Some(OffsetDateTime.now().plusHours(1)))
+      "ke3" -> ("value", Some(OffsetDateTime.now().plusHours(3))),
+      "key1" -> ("value", Some(now)),
+      "key2" -> ("value", Some(OffsetDateTime.now().plusHours(1)))
     )
 
     val (expiry, _) = connect.getSecretsAndExpiry(secrets)

@@ -7,6 +7,7 @@
 package io.lenses.connect.secrets.providers
 
 import java.nio.file.FileSystems
+import java.nio.file.Paths
 import java.time.OffsetDateTime
 import java.util
 
@@ -15,6 +16,8 @@ import _root_.io.lenses.connect.secrets.config.VaultSettings
 import _root_.io.lenses.connect.secrets.connect._
 import com.bettercloud.vault.Vault
 import io.lenses.connect.secrets.async.AsyncFunctionLoop
+import io.lenses.connect.secrets.io.FileWriterOnce
+import io.lenses.connect.secrets.utils.EncodingAndId
 import org.apache.kafka.common.config.ConfigData
 import org.apache.kafka.common.config.provider.ConfigProvider
 import org.apache.kafka.connect.errors.ConnectException
@@ -32,7 +35,6 @@ class VaultSecretProvider() extends ConfigProvider with VaultHelper {
   private var vaultClient: Option[Vault] = None
   private var tokenRenewal: Option[AsyncFunctionLoop] = None
   private val cache = mutable.Map.empty[String, (Option[OffsetDateTime], ConfigData)]
-
   def getClient: Option[Vault] = vaultClient
 
   // configure the vault client
@@ -86,9 +88,9 @@ class VaultSecretProvider() extends ConfigProvider with VaultHelper {
         // we have all the keys and are before the expiry
         val now = OffsetDateTime.now()
 
-        if (keys.asScala.subsetOf(data.data().asScala.keySet) && (expiresAt
+        if (keys.asScala.subsetOf(data.data().asScala.keySet) && expiresAt
           .getOrElse(now.plusSeconds(1))
-          .isAfter(now))) {
+          .isAfter(now)) {
           logger.info("Fetching secrets from cache")
           (expiresAt,
             new ConfigData(
@@ -115,12 +117,11 @@ class VaultSecretProvider() extends ConfigProvider with VaultHelper {
   }
 
   // get the secrets and ttl under a path
-  def getSecrets(
-                  path: String): Map[String, (String, Option[OffsetDateTime])] = {
+  def getSecrets(path: String): Map[String, (String, Option[OffsetDateTime])] = {
     val now = OffsetDateTime.now()
 
     logger.info(s"Looking up value at [$path]")
-
+    val fileWriter = new FileWriterOnce(Paths.get(settings.fileDir, path))
     Try(vaultClient.get.logical().read(path)) match {
       case Success(response) =>
         if (response.getRestResponse.getStatus != 200) {
@@ -145,9 +146,11 @@ class VaultSecretProvider() extends ConfigProvider with VaultHelper {
 
         response.getData.asScala.map {
           case (k, v) =>
-            val fileName = getFileName(settings.fileDir, path, k.toLowerCase, separator)
+            val encodingAndId = EncodingAndId.from(k)
             val decoded =
-              decodeKey(key = k, value = v, fileName = fileName)
+              decodeKey(encoding = encodingAndId.encoding, key = k, value = v, writeFileFn = { content =>
+                fileWriter.write(k.toLowerCase, content, k).toString
+              })
 
             (k, (decoded, ttl))
         }.toMap
