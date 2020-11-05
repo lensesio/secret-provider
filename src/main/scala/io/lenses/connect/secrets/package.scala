@@ -11,6 +11,8 @@ import java.time.OffsetDateTime
 import java.util.Base64
 
 import com.typesafe.scalalogging.StrictLogging
+import io.lenses.connect.secrets.connect.Encoding
+import io.lenses.connect.secrets.connect.Encoding.Encoding
 import org.apache.kafka.common.config.ConfigData
 import org.apache.kafka.connect.errors.ConnectException
 
@@ -20,9 +22,9 @@ import scala.collection.mutable
 
 package object connect extends StrictLogging {
 
-  val FILE_ENCODING = "file-encoding"
-  val FILE_DIR = "file.dir"
-  val FILE_DIR_DESC =
+  val FILE_ENCODING: String = "file-encoding"
+  val FILE_DIR: String = "file.dir"
+  val FILE_DIR_DESC: String =
     """
       | Location to write any files for any secrets that need to
       | be written to disk. For example java keystores.
@@ -77,32 +79,14 @@ package object connect extends StrictLogging {
   }
 
   // decode a key bases on the prefix encoding
-  def decodeKey(key: String, value: String, fileName: String): String = {
-
-    key.toLowerCase match {
-      case k
-          if k.startsWith(
-            s"${Encoding.BASE64_FILE.toString.toLowerCase}_"
-          ) =>
+  def decodeKey(encoding: Option[Encoding], key: String, value: String, writeFileFn: Array[Byte]=>String): String = {
+    encoding.fold(value) {
+      case io.lenses.connect.secrets.connect.Encoding.BASE64 => decode(key, value)
+      case io.lenses.connect.secrets.connect.Encoding.BASE64_FILE =>
         val decoded = decodeToBytes(key, value)
-        fileWriter(fileName, decoded, key)
-        fileName
-
-      case k
-          if k.startsWith(
-            s"${Encoding.BASE64.toString.toLowerCase}_"
-          ) =>
-        decode(key, value)
-
-      case k
-          if k.startsWith(
-            s"${Encoding.UTF8_FILE.toString.toLowerCase}_"
-          ) =>
-        fileWriter(fileName, value.getBytes(), key)
-        fileName
-
-      case _ =>
-        value
+        writeFileFn(decoded)
+      case io.lenses.connect.secrets.connect.Encoding.UTF8 =>value
+      case io.lenses.connect.secrets.connect.Encoding.UTF8_FILE => writeFileFn(value.getBytes())
     }
   }
 
