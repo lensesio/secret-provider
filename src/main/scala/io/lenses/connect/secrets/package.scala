@@ -6,19 +6,20 @@
 
 package io.lenses.connect.secrets
 
-import java.io.{File, FileOutputStream}
+import java.io.File
+import java.io.FileOutputStream
 import java.time.OffsetDateTime
 import java.util.Base64
 
 import com.typesafe.scalalogging.StrictLogging
-import io.lenses.connect.secrets.connect.Encoding
-import io.lenses.connect.secrets.connect.Encoding.Encoding
 import org.apache.kafka.common.config.ConfigData
 import org.apache.kafka.connect.errors.ConnectException
 
-import scala.util.{Failure, Success, Try}
 import scala.collection.JavaConverters._
 import scala.collection.mutable
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 package object connect extends StrictLogging {
 
@@ -79,14 +80,19 @@ package object connect extends StrictLogging {
   }
 
   // decode a key bases on the prefix encoding
-  def decodeKey(encoding: Option[Encoding], key: String, value: String, writeFileFn: Array[Byte]=>String): String = {
+  def decodeKey(
+      encoding: Option[Encoding.Value],
+      key: String,
+      value: String,
+      writeFileFn: Array[Byte] => String
+  ): String = {
     encoding.fold(value) {
-      case io.lenses.connect.secrets.connect.Encoding.BASE64 => decode(key, value)
-      case io.lenses.connect.secrets.connect.Encoding.BASE64_FILE =>
+      case Encoding.BASE64 => decode(key, value)
+      case Encoding.BASE64_FILE =>
         val decoded = decodeToBytes(key, value)
         writeFileFn(decoded)
-      case io.lenses.connect.secrets.connect.Encoding.UTF8 =>value
-      case io.lenses.connect.secrets.connect.Encoding.UTF8_FILE => writeFileFn(value.getBytes())
+      case Encoding.UTF8      => value
+      case Encoding.UTF8_FILE => writeFileFn(value.getBytes())
     }
   }
 
@@ -138,8 +144,8 @@ package object connect extends StrictLogging {
 
   //calculate the min expiry for secrets and return the configData and expiry
   def getSecretsAndExpiry(
-      secrets: Map[String, (String, Option[OffsetDateTime])])
-    : (Option[OffsetDateTime], ConfigData) = {
+      secrets: Map[String, (String, Option[OffsetDateTime])]
+  ): (Option[OffsetDateTime], ConfigData) = {
     var expiryList = mutable.ListBuffer.empty[OffsetDateTime]
 
     val data = secrets
@@ -160,6 +166,11 @@ package object connect extends StrictLogging {
     }
   }
 
-  def getFileName(rootDir: String, path: String, key: String, separator: String): String =
+  def getFileName(
+      rootDir: String,
+      path: String,
+      key: String,
+      separator: String
+  ): String =
     s"${rootDir.stripSuffix(separator)}$separator$path$separator${key.toLowerCase}"
 }
