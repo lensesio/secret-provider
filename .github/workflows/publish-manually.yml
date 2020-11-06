@@ -25,6 +25,8 @@ jobs:
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
       - name: Upload archive
         run: ./gradlew -Prelease -Pversion=${{ steps.get_tag.outputs.VERSION }} signArchives uploadArchives
+      - name: Wait for nexus to settle
+        run: sleep 30
       - name: Release archive
         run: ./gradlew -Prelease -Pversion=${{ steps.get_tag.outputs.VERSION }} closeAndReleaseRepository
       - name: Release to Github
