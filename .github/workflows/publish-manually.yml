@@ -25,12 +25,11 @@ jobs:
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
       - name: Upload archive
         run: ./gradlew -Prelease -Pversion=${{ steps.get_tag.outputs.VERSION }} signArchives uploadArchives
-      - name: Release archive
-        run: ./gradlew -Prelease -Pversion=${{ steps.get_tag.outputs.VERSION }} closeAndReleaseRepository
       - name: Release to Github
         uses: softprops/action-gh-release@v1
         with:
           files: build/libs/*-all.jar
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+      - name: Release archive
+        run: ./gradlew -Prelease -Pversion=${{ steps.get_tag.outputs.VERSION }} closeAndReleaseRepository
