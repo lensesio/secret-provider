@@ -26,15 +26,17 @@ jobs:
       - name: Get the tag
         id: get_tag
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
-      - name: Upload archive
-        run: ./gradlew -Prelease -Pversion=${{ steps.get_tag.outputs.VERSION }} signArchives uploadArchives
-      - name: Wait for nexus to settle
-        run: sleep 30
-      - name: Release archive
-        run: ./gradlew -Prelease -Pversion=${{ steps.get_tag.outputs.VERSION }} closeAndReleaseRepository
+      - name: Build shadowJar for Github
+        run: ./gradlew -Prelease -Pversion=${{ steps.get_tag.outputs.VERSION }} shadowJar
       - name: Release to Github
         uses: softprops/action-gh-release@v1
         with:
-          files: build/libs/*-all.jar
+          files: build/libs/secret-provider-${{ steps.get_tag.outputs.VERSION }}-all.jar
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and upload jar to nexus
+        run: ./gradlew -Prelease -Pversion=${{ steps.get_tag.outputs.VERSION }} signArchives uploadArchives
+      - name: Wait for nexus to settle
+        run: sleep 30
+      - name: Release to nexus
+        run: ./gradlew -Prelease -Pversion=${{ steps.get_tag.outputs.VERSION }} closeAndReleaseRepository
