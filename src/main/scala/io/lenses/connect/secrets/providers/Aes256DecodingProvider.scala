@@ -19,19 +19,18 @@ import scala.collection.JavaConverters._
 class Aes256DecodingProvider extends ConfigProvider {
 
   var decoder: Option[Aes256DecodingHelper] = None
-  var writeDir: String = ""
-
+  
   private var fileWriter: FileWriter = _
+  
   override def configure(configs: util.Map[String, _]): Unit = {
     val aes256Cfg = Aes256ProviderConfig(configs)
     val aes256Key = aes256Cfg.aes256Key
-    val targetFolder = aes256Cfg.writeDirectory
-    
+    val writeDir = aes256Cfg.writeDirectory
+
     decoder = Option(aes256Key)
       .map(Aes256DecodingHelper.init)
       .map(_.fold(e => throw new ConfigException(e), identity))
-    writeDir = aes256Cfg.writeDirectory
-    fileWriter = new FileWriterOnce(Paths.get(writeDir, targetFolder))
+    fileWriter = new FileWriterOnce(Paths.get(writeDir, "secrets"))
   }
 
   override def get(path: String): ConfigData = new ConfigData(Map.empty[String, String].asJava)

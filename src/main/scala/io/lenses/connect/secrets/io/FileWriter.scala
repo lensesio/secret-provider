@@ -15,6 +15,8 @@ import io.lenses.connect.secrets.utils.WithRetry
 
 import scala.concurrent.duration._
 import scala.util.Try
+import java.nio.file.attribute.PosixFilePermissions
+import java.nio.file.Files
 
 trait FileWriter {
   def write(fileName: String, content: Array[Byte], key: String): Path
@@ -24,17 +26,26 @@ class FileWriterOnce(rootPath: Path)
     extends FileWriter
     with WithRetry
     with StrictLogging {
-  rootPath.toFile.mkdirs()
+
+  private val folderPermissions = PosixFilePermissions.fromString("rwx------")
+  private val filePermissions   = PosixFilePermissions.fromString("rw-------")
+  private val folderAttributes  = PosixFilePermissions.asFileAttribute(folderPermissions)
+  private val fileAttributes    = PosixFilePermissions.asFileAttribute(filePermissions)
+
+  if (!rootPath.toFile.exists) Files.createDirectories(rootPath, folderAttributes)
+
   def write(fileName: String, content: Array[Byte], key: String): Path = {
     val fullPath = Paths.get(rootPath.toString, fileName)
     val file = fullPath.toFile
     if (file.exists()) fullPath
     else {
-      val tempFile = Paths.get(rootPath.toString, fileName + ".bak").toFile
+      val tempPath = Paths.get(rootPath.toString, fileName + ".bak")
+      val tempFile = tempPath.toFile
       withRetry(10, Some(500.milliseconds)) {
         if (tempFile.exists()) tempFile.delete()
-        tempFile.createNewFile()
-        val fos = new BufferedOutputStream(new FileOutputStream(tempFile))
+        Files.createFile(tempPath, fileAttributes)
+        val fos =
+          new BufferedOutputStream(new FileOutputStream(tempFile))
         try {
           fos.write(content)
           fos.flush()

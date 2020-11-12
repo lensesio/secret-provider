@@ -59,7 +59,7 @@ class Aes256DecodingProviderTest
       val providerData = provider.get(s"utf8_file${EncodingAndId.Separator}id1", Set(encrypted).asJava).data().asScala
       val decryptedPath = providerData(encrypted)
 
-      decryptedPath should startWith(tmpDir)
+      decryptedPath should startWith(s"$tmpDir/secrets/")
       decryptedPath.toLowerCase.contains(encrypted.toLowerCase) shouldBe false
       Source.fromFile(decryptedPath).getLines.mkString shouldBe value
     }
@@ -73,7 +73,7 @@ class Aes256DecodingProviderTest
       val providerData = provider.get(s"${Encoding.BASE64_FILE}${EncodingAndId.Separator}fileId1", Set(encrypted).asJava).data().asScala
       val decryptedPath = providerData(encrypted)
 
-      decryptedPath should startWith(tmpDir)
+      decryptedPath should startWith(s"$tmpDir/secrets/")
       decryptedPath.toLowerCase.contains(encrypted.toLowerCase) shouldBe false
       val bytesConsumed = Array.fill[Byte](bytesAmount)(0)
       new FileInputStream(decryptedPath).read(bytesConsumed)
