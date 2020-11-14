@@ -1,5 +1,5 @@
 ![Action Status](https://github.com/lensesio/secret-provider/workflows/CI/badge.svg)
-[<img src="https://img.shields.io/badge/docs--orange.svg?"/>](https://docs.lenses.io/connectors/secret-providers.html)
+[<img src="https://img.shields.io/badge/docs--orange.svg?"/>](https://docs.lenses.io/4.0/integrations/connectors/secret-providers/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 # Secret Provider
@@ -34,7 +34,7 @@ External secret providers allow for indirect references to be placed in an
 applications configuration, so for example, that secrets are not exposed in the
 Worker API endpoints of Kafka Connect.
 
-For [Documentation](https://docs.lenses.io).
+For [Documentation](https://docs.lenses.io/4.0/integrations/connectors/secret-providers/).
 
 
 ## Contributing
