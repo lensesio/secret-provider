@@ -27,10 +27,9 @@ allprojects {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
 
-
     ext {
-        scalaMajorVersion = "2.12"
-        scala = "2.12.10"
+        scalaMajorVersion = "2.13"
+        scala = "2.13.4"
         scalaCheck = "1.14.3"
         scalaLoggingVersion = "3.9.2"
         kafkaVersion = "2.5.0"

@@ -31,7 +31,7 @@ compile 'io.lenses:secret-provider:2.1.3'
 ## Description
 
 External secret providers allow for indirect references to be placed in an
-applications configuration, so for example, that secrets are not exposed in the
+applications' configuration, so for example, that secrets are not exposed in the
 Worker API endpoints of Kafka Connect.
 
 For [Documentation](https://docs.lenses.io/4.0/integrations/connectors/secret-providers/).

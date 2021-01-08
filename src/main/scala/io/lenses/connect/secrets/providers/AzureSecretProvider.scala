@@ -19,7 +19,7 @@ import io.lenses.connect.secrets.connect.getSecretsAndExpiry
 import org.apache.kafka.common.config.ConfigData
 import org.apache.kafka.common.config.provider.ConfigProvider
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.collection.mutable
 
 class AzureSecretProvider() extends ConfigProvider with AzureHelper {
@@ -69,13 +69,13 @@ class AzureSecretProvider() extends ConfigProvider with AzureHelper {
         // we have all the keys and are before the expiry
         val now = OffsetDateTime.now()
 
-        if (keys.asScala.subsetOf(data.data().asScala.keySet) && (expiresAt
+        if (keys.asScala.subsetOf(data.data().asScala.keySet) && expiresAt
               .getOrElse(now.plusSeconds(1))
-              .isAfter(now))) {
+              .isAfter(now) ) {
           logger.info("Fetching secrets from cache")
           (expiresAt,
            new ConfigData(
-             data.data().asScala.filterKeys(k => keys.contains(k)).asJava,
+             data.data().asScala.view.filterKeys(k => keys.contains(k)).toMap.asJava,
              data.ttl()))
         } else {
           // missing some or expired so reload

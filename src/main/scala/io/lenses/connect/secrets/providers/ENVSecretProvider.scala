@@ -15,7 +15,7 @@ import org.apache.kafka.common.config.ConfigData
 import org.apache.kafka.common.config.provider.ConfigProvider
 import org.apache.kafka.connect.errors.ConnectException
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class ENVSecretProvider extends ConfigProvider {
 
