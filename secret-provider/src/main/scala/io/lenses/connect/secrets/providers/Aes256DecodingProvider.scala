@@ -3,32 +3,30 @@ package io.lenses.connect.secrets.providers
 import io.lenses.connect.secrets.config.Aes256ProviderConfig
 import io.lenses.connect.secrets.connect.decodeKey
 import io.lenses.connect.secrets.io.FileWriter
-import io.lenses.connect.secrets.io.FileWriterOnce
 import io.lenses.connect.secrets.utils.EncodingAndId
-import org.apache.kafka.common.config.provider.ConfigProvider
 import org.apache.kafka.common.config.ConfigData
 import org.apache.kafka.common.config.ConfigException
+import org.apache.kafka.common.config.provider.ConfigProvider
 import org.apache.kafka.connect.errors.ConnectException
 
-import java.nio.file.Paths
 import java.util
 import scala.jdk.CollectionConverters._
 
 class Aes256DecodingProvider extends ConfigProvider {
 
-  var decoder: Option[Aes256DecodingHelper] = None
+  private var decoder: Option[Aes256DecodingHelper] = None
 
   private var fileWriter: FileWriter = _
 
   override def configure(configs: util.Map[String, _]): Unit = {
     val aes256Cfg = Aes256ProviderConfig(configs)
     val aes256Key = aes256Cfg.aes256Key
-    val writeDir  = aes256Cfg.writeDirectory
+    val writeDir  = aes256Cfg.fileWriterOptions
 
     decoder = Option(aes256Key)
       .map(Aes256DecodingHelper.init)
       .map(_.fold(e => throw new ConfigException(e), identity))
-    fileWriter = new FileWriterOnce(Paths.get(writeDir, "secrets"))
+    fileWriter = writeDir.createFileWriter()
   }
 
   override def get(path: String): ConfigData =

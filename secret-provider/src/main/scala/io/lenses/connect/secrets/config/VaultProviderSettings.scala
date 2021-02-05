@@ -11,12 +11,9 @@ import io.lenses.connect.secrets.config.AbstractConfigExtensions._
 import io.lenses.connect.secrets.config.VaultAuthMethod.VaultAuthMethod
 import io.lenses.connect.secrets.config.VaultProviderConfig.TOKEN_RENEWAL
 import io.lenses.connect.secrets.connect._
-import io.lenses.connect.secrets.io.FileWriterOnce
-import org.apache.kafka.common.config.AbstractConfig
 import org.apache.kafka.common.config.types.Password
 import org.apache.kafka.connect.errors.ConnectException
 
-import java.nio.file.Paths
 import java.time.Duration
 import java.time.temporal.ChronoUnit
 import scala.concurrent.duration.DurationInt
@@ -41,21 +38,6 @@ case class AppRole(role: String, secretId: Password)
 case class K8s(role: String, jwt: Password)
 case class Cert(mount: String)
 case class Github(token: Password, mount: String)
-
-object FileWriterOptions {
-  def apply(config: AbstractConfig): Option[FileWriterOptions] =
-    Option.when(config.getBoolean(WRITE_FILES)) {
-      FileWriterOptions(config.getString(FILE_DIR))
-    }
-}
-
-case class FileWriterOptions(
-  fileDir: String,
-) {
-  def createFileWriter(path: String): FileWriterOnce =
-    new FileWriterOnce(Paths.get(fileDir, path))
-
-}
 
 case class VaultSettings(
   addr:           String,

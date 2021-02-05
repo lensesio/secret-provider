@@ -30,6 +30,6 @@ object Aes256ProviderConfig {
 }
 
 case class Aes256ProviderConfig(props: util.Map[String, _]) extends AbstractConfig(Aes256ProviderConfig.config, props) {
-  def aes256Key:      String = getPassword(Aes256ProviderConfig.SECRET_KEY).value()
-  def writeDirectory: String = getString(FILE_DIR)
+  def aes256Key:         String            = getPassword(Aes256ProviderConfig.SECRET_KEY).value()
+  def fileWriterOptions: FileWriterOptions = FileWriterOptions(getString(FILE_DIR))
 }

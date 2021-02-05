@@ -363,7 +363,7 @@ class VaultSecretProviderTest extends AnyWordSpec with Matchers with BeforeAndAf
       .data()
       .get(secretKey)
 
-    outputFile shouldBe s"$tmp$separator$secretPath$separator$secretKey"
+    outputFile shouldBe s"$tmp${separator}secrets$separator$secretKey"
     Using(Source.fromFile(outputFile))(_.getLines().mkString) shouldBe Success(
       secretValue,
     )
@@ -394,7 +394,7 @@ class VaultSecretProviderTest extends AnyWordSpec with Matchers with BeforeAndAf
       .data()
       .get(secretKey)
 
-    outputFile shouldBe s"$tmp$separator$secretPath$separator$secretKey"
+    outputFile shouldBe s"$tmp${separator}secrets$separator$secretKey"
     Using(Source.fromFile(outputFile))(_.getLines().mkString) shouldBe Success(
       secretValue,
     )
