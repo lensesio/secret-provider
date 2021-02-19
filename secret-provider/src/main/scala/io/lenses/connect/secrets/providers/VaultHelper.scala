@@ -120,7 +120,7 @@ object VaultHelper extends StrictLogging {
           .map(ar =>
             vault
               .auth()
-              .loginByAppRole(ar.role, ar.secretId.value())
+              .loginByAppRole(ar.path, ar.role, ar.secretId.value())
               .getAuthClientToken,
           )
 

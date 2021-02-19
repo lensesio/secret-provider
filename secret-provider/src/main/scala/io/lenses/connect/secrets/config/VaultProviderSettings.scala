@@ -37,7 +37,7 @@ case class Gcp(role: String, jwt: Password)
 case class Jwt(role: String, provider: String, jwt: Password)
 case class UserPass(username: String, password: Password, mount: String)
 case class Ldap(username: String, password: Password, mount: String)
-case class AppRole(role: String, secretId: Password)
+case class AppRole(path: String, role: String, secretId: Password)
 case class K8s(role: String, jwt: Password)
 case class Cert(mount: String)
 case class Github(token: Password, mount: String)
@@ -186,10 +186,11 @@ object VaultSettings extends StrictLogging {
   }
 
   def getAppRole(config: VaultProviderConfig): AppRole = {
+    val path = config.getStringOrThrowOnNull(VaultProviderConfig.APP_ROLE_PATH)
     val role = config.getStringOrThrowOnNull(VaultProviderConfig.APP_ROLE)
     val secretId =
       config.getPasswordOrThrowOnNull(VaultProviderConfig.APP_ROLE_SECRET_ID)
-    AppRole(role = role, secretId = secretId)
+    AppRole(path = path, role = role, secretId = secretId)
   }
 
   def getK8s(config: VaultProviderConfig): K8s = {
