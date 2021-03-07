@@ -2,3 +2,4 @@ io.lenses.connect.secrets.providers.AzureSecretProvider
 io.lenses.connect.secrets.providers.VaultSecretProvider
 io.lenses.connect.secrets.providers.AWSSecretProvider
 io.lenses.connect.secrets.providers.Aes256DecodingProvider
+io.lenses.connect.secrets.providers.ENVSecretProvider
