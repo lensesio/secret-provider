@@ -53,7 +53,7 @@ trait VaultHelper extends StrictLogging {
             ar =>
               vault
                 .auth()
-                .loginByAppRole(ar.role, ar.secretId.value())
+                .loginByAppRole(ar.path, ar.role, ar.secretId.value())
                 .getAuthClientToken)
 
       case VaultAuthMethod.CERT =>
