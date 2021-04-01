@@ -121,7 +121,6 @@ class VaultSecretProvider() extends ConfigProvider with VaultHelper {
     val now = OffsetDateTime.now()
 
     logger.info(s"Looking up value at [$path]")
-    val fileWriter = new FileWriterOnce(Paths.get(settings.fileDir, path))
     Try(vaultClient.get.logical().read(path)) match {
       case Success(response) =>
         if (response.getRestResponse.getStatus != 200) {
@@ -144,6 +143,7 @@ class VaultSecretProvider() extends ConfigProvider with VaultHelper {
           )
         }
 
+        val fileWriter = new FileWriterOnce(Paths.get(settings.fileDir))
         response.getData.asScala.map {
           case (k, v) =>
             val encodingAndId = EncodingAndId.from(k)
