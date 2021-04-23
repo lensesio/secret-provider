@@ -96,6 +96,56 @@ class AWSSecretProviderTest
     provider.close()
   }
 
+  "should not throw exception with secret value in message" in {
+    val props = Map(
+      AWSProviderConfig.AUTH_METHOD -> AuthMode.CREDENTIALS.toString,
+      AWSProviderConfig.AWS_ACCESS_KEY -> "somekey",
+      AWSProviderConfig.AWS_SECRET_KEY -> "secretkey",
+      AWSProviderConfig.AWS_REGION -> "someregion"
+    ).asJava
+
+    val secretKey = "my-secret-key"
+    val secretName = "my-secret-name"
+    val secretValue = "secret-value"
+
+    val provider = new AWSSecretProvider()
+    provider.configure(props)
+
+    val mockClient = mock[AWSSecretsManager]
+    val secretValRequest =
+      new GetSecretValueRequest().withSecretId(secretName)
+    val secretValResponse = new GetSecretValueResult()
+    secretValResponse.setName(secretName)
+    // Not json, just the string
+    secretValResponse.setSecretString(secretValue)
+
+    val now = new Date()
+    val describeSecretResponse = new DescribeSecretResult()
+    describeSecretResponse.setLastRotatedDate(now)
+    describeSecretResponse.setRotationEnabled(true)
+    describeSecretResponse.setLastRotatedDate(now)
+
+    val rotationRulesType = new RotationRulesType()
+    rotationRulesType.setAutomaticallyAfterDays(1.toLong)
+    describeSecretResponse.setRotationRules(rotationRulesType)
+
+    when(mockClient.describeSecret(any[DescribeSecretRequest]))
+      .thenReturn(describeSecretResponse)
+    when(mockClient.getSecretValue(secretValRequest))
+      .thenReturn(secretValResponse)
+
+    provider.client = Some(mockClient)
+    try {
+      val data = provider.get(secretName, Set(secretKey).asJava)
+    } 
+    catch {
+      case e: Exception => {
+        e.getMessage() should not include "secret-value"
+      }
+    }
+    provider.close()
+  }
+
   "should authenticate with credentials and lookup a base64 secret" in {
     val props = Map(
       AWSProviderConfig.AUTH_METHOD -> AuthMode.CREDENTIALS.toString,
