@@ -98,8 +98,10 @@ trait AWSHelper extends StrictLogging {
       client.getSecretValue(new GetSecretValueRequest().withSecretId(secretId))
     ) match {
       case Success(secret) =>
-        val value =
-          new ObjectMapper()
+        if(key.trim().isEmpty()) {
+          (secret.getSecretString, getTTL(client, secretId))
+        }else {
+          val value = new ObjectMapper()
             .readValue(
               secret.getSecretString,
               classOf[java.util.HashMap[String, String]]
@@ -126,6 +128,7 @@ trait AWSHelper extends StrictLogging {
           ),
           getTTL(client, secretId)
         )
+      }
 
       case Failure(exception) =>
         throw new ConnectException(

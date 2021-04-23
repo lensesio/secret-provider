@@ -96,6 +96,48 @@ class AWSSecretProviderTest
     provider.close()
   }
 
+"should authenticate with credentials and lookup a secret without a key" in {
+    val props = Map(
+      AWSProviderConfig.AUTH_METHOD -> AuthMode.CREDENTIALS.toString,
+      AWSProviderConfig.AWS_ACCESS_KEY -> "somekey",
+      AWSProviderConfig.AWS_SECRET_KEY -> "secretkey",
+      AWSProviderConfig.AWS_REGION -> "someregion"
+    ).asJava
+
+    val secretName = "my-secret-name"
+    val secretValue = "secret-value"
+
+    val provider = new AWSSecretProvider()
+    provider.configure(props)
+
+    val mockClient = mock[AWSSecretsManager]
+    val secretValRequest =
+      new GetSecretValueRequest().withSecretId(secretName)
+    val secretValResponse = new GetSecretValueResult()
+    secretValResponse.setName(secretName)
+    secretValResponse.setSecretString(secretValue)
+
+    val now = new Date()
+    val describeSecretResponse = new DescribeSecretResult()
+    describeSecretResponse.setLastRotatedDate(now)
+    describeSecretResponse.setRotationEnabled(true)
+    describeSecretResponse.setLastRotatedDate(now)
+
+    val rotationRulesType = new RotationRulesType()
+    rotationRulesType.setAutomaticallyAfterDays(1.toLong)
+    describeSecretResponse.setRotationRules(rotationRulesType)
+
+    when(mockClient.describeSecret(any[DescribeSecretRequest]))
+      .thenReturn(describeSecretResponse)
+    when(mockClient.getSecretValue(secretValRequest))
+      .thenReturn(secretValResponse)
+
+    provider.client = Some(mockClient)
+    val data = provider.get(secretName, Set("").asJava)
+    data.data().get("") shouldBe secretValue
+    provider.close()
+  }  
+
   "should authenticate with credentials and lookup a base64 secret" in {
     val props = Map(
       AWSProviderConfig.AUTH_METHOD -> AuthMode.CREDENTIALS.toString,
@@ -141,7 +183,6 @@ class AWSSecretProviderTest
     val data = provider.get(secretName, Set(secretKey).asJava)
     data.data().get(secretKey) shouldBe secretValue
 
-    provider.get("").data().isEmpty shouldBe true
     provider.close()
   }
 
@@ -196,7 +237,6 @@ class AWSSecretProviderTest
     result.getLines().mkString shouldBe secretValue
     result.close()
 
-    provider.get("").data().isEmpty shouldBe true
     provider.close()
   }
 
@@ -252,7 +292,6 @@ class AWSSecretProviderTest
     result.getLines().mkString shouldBe secretValue
     result.close()
 
-    provider.get("").data().isEmpty shouldBe true
     provider.close()
   }
 
