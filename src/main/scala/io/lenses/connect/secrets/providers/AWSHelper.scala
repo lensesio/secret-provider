@@ -15,6 +15,7 @@ import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials, De
 import com.amazonaws.services.secretsmanager.model.{DescribeSecretRequest, GetSecretValueRequest}
 import com.amazonaws.services.secretsmanager.{AWSSecretsManager, AWSSecretsManagerClientBuilder}
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.core.JsonParseException
 import com.typesafe.scalalogging.StrictLogging
 import io.lenses.connect.secrets.config.AWSProviderSettings
 import io.lenses.connect.secrets.connect.{decodeKey, getFileName, AuthMode}
@@ -98,34 +99,45 @@ trait AWSHelper extends StrictLogging {
       client.getSecretValue(new GetSecretValueRequest().withSecretId(secretId))
     ) match {
       case Success(secret) =>
-        val value =
-          new ObjectMapper()
-            .readValue(
-              secret.getSecretString,
-              classOf[java.util.HashMap[String, String]]
-            )
-            .asScala
-            .getOrElse(
-              key,
-              throw new ConnectException(
-                s"Failed to look up key [$key] in secret [${secret.getName}]. key not found"
+        try {
+          val value =
+            new ObjectMapper()
+              .readValue(
+                secret.getSecretString,
+                classOf[java.util.HashMap[String, String]]
               )
-            )
+              .asScala
+              .getOrElse(
+                key,
+                throw new ConnectException(
+                  s"Failed to look up key [$key] in secret [${secret.getName}]. key not found"
+                )
+              )
 
-        val fileWriter:FileWriter = new FileWriterOnce(Paths.get(rootDir, secretId))
-        // decode the value
-        val encodingAndId = EncodingAndId.from(key)
-        (
-          decodeKey(
-            key = key,
-            value = value,
-            encoding = encodingAndId.encoding,
-            writeFileFn = content=>{
-              fileWriter.write(key.toLowerCase, content, key).toString
-            }
-          ),
-          getTTL(client, secretId)
-        )
+          val fileWriter:FileWriter = new FileWriterOnce(Paths.get(rootDir, secretId))
+          // decode the value
+          val encodingAndId = EncodingAndId.from(key)
+          (
+            decodeKey(
+              key = key,
+              value = value,
+              encoding = encodingAndId.encoding,
+              writeFileFn = content=>{
+                fileWriter.write(key.toLowerCase, content, key).toString
+              }
+            ),
+            getTTL(client, secretId)
+          )
+        }
+        catch {
+          // JsonParseException contains the secret text in the exception message which can easily
+          // end up in logs. Instead catch and throw a ConnectException with a generic message.
+          case jsonParseException: com.fasterxml.jackson.core.JsonParseException => {
+            throw new ConnectException(
+              s"Unable to parse JSON in secret [$secretId}]"
+            )
+          }
+        }
 
       case Failure(exception) =>
         throw new ConnectException(
