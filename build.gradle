@@ -35,9 +35,8 @@ allprojects {
         scalaLoggingVersion = "3.9.2"
         kafkaVersion = "2.5.0"
         vaultVersion = "5.1.0"
-        azureVersion = "1.22.0"
-        azureKeyVaultVersion = "4.1.1"
-        azureIdentityVersion = "1.0.5"
+        azureKeyVaultVersion = "4.3.0"
+        azureIdentityVersion = "1.3.1"
         awsSecretsVersion = "1.11.762"
 
         //test
