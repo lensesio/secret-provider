@@ -7,17 +7,16 @@
 package io.lenses.connect.secrets.config
 
 import com.typesafe.scalalogging.StrictLogging
+import io.lenses.connect.secrets.config.AbstractConfigExtensions._
 import io.lenses.connect.secrets.config.VaultAuthMethod.VaultAuthMethod
-import io.lenses.connect.secrets.connect._
-import AbstractConfigExtensions._
-import scala.concurrent.duration._
 import io.lenses.connect.secrets.config.VaultProviderConfig.TOKEN_RENEWAL
+import io.lenses.connect.secrets.connect._
 import org.apache.kafka.common.config.types.Password
 import org.apache.kafka.connect.errors.ConnectException
 
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration.{FiniteDuration, _}
 import scala.io.Source
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Success, Using}
 
 case class AwsIam(
     role: String,
@@ -168,17 +167,15 @@ object VaultSettings extends StrictLogging {
   def getK8s(config: VaultProviderConfig): K8s = {
     val role = config.getStringOrThrowOnNull(VaultProviderConfig.KUBERNETES_ROLE)
     val path = config.getStringOrThrowOnNull(VaultProviderConfig.KUBERNETES_TOKEN_PATH)
-    val file = Try(Source.fromFile(path)) match {
-      case Success(file) => file
+    Using(Source.fromFile(path))(_.getLines().mkString) match {
       case Failure(exception) =>
         throw new ConnectException(
           s"Failed to load kubernetes token file [$path]",
           exception
         )
+      case Success(fileContents) =>
+        K8s(role = role, jwt = new Password(fileContents))
     }
-    val jwt = new Password(file.getLines.mkString)
-    file.close()
-    K8s(role = role, jwt = jwt)
   }
 
   def getUserPass(config: VaultProviderConfig): UserPass = {

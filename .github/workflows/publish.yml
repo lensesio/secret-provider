@@ -11,32 +11,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up JDK 1.8
-        uses: actions/setup-java@v1
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Scala
+        uses: olafurpg/setup-scala@v11
         with:
-          java-version: 1.8
-      - shell: bash
-        env:
-          GRADLE_PROPERTIES: ${{ secrets.GRADLE_PROPERTIES }}
-          SIGNING_GPG_KEY: ${{ secrets.SIGNING_GPG_KEY }}
-        run: |
-          base64 -d <<< "$SIGNING_GPG_KEY" > /tmp/secring.gpg
-          echo "$GRADLE_PROPERTIES" > gradle.properties
+          java-version: openjdk@1.14
       - name: Get the tag
         id: get_tag
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
-      - name: Build shadowJar for Github
-        run: ./gradlew -Prelease -Pversion=${{ steps.get_tag.outputs.VERSION }} shadowJar
+      - name: Assembly
+        run: sbt +assembly
+        env:
+          LENSES_TAG_NAME: ${{ steps.get_tag.outputs.VERSION }}
       - name: Release to Github
         uses: softprops/action-gh-release@v1
         with:
-          files: build/libs/secret-provider-${{ steps.get_tag.outputs.VERSION }}-all.jar
+          files: |
+            target/scala-2.12/secret-provider_2.12-${{ steps.get_tag.outputs.VERSION }}-all.jar
+            target/scala-2.13/secret-provider_2.13-${{ steps.get_tag.outputs.VERSION }}-all.jar
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and upload jar to nexus
-        run: ./gradlew -Prelease -Pversion=${{ steps.get_tag.outputs.VERSION }} signArchives uploadArchives
-      - name: Wait for nexus to settle
-        run: sleep 30
-      - name: Release to nexus
-        run: ./gradlew -Prelease -Pversion=${{ steps.get_tag.outputs.VERSION }} closeAndReleaseRepository
+          LENSES_TAG_NAME: ${{ steps.get_tag.outputs.VERSION }}

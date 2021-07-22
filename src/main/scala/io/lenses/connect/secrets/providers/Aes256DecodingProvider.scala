@@ -1,20 +1,16 @@
 package io.lenses.connect.secrets.providers
 
-import java.nio.file.Paths
-import java.util
-
 import io.lenses.connect.secrets.config.Aes256ProviderConfig
 import io.lenses.connect.secrets.connect.decodeKey
-import io.lenses.connect.secrets.connect.Encoding
-import io.lenses.connect.secrets.io.FileWriter
-import io.lenses.connect.secrets.io.FileWriterOnce
+import io.lenses.connect.secrets.io.{FileWriter, FileWriterOnce}
 import io.lenses.connect.secrets.utils.EncodingAndId
-import org.apache.kafka.common.config.ConfigData
 import org.apache.kafka.common.config.provider.ConfigProvider
-import org.apache.kafka.common.config.ConfigException
+import org.apache.kafka.common.config.{ConfigData, ConfigException}
 import org.apache.kafka.connect.errors.ConnectException
 
-import scala.collection.JavaConverters._
+import java.nio.file.Paths
+import java.util
+import scala.jdk.CollectionConverters._
 
 class Aes256DecodingProvider extends ConfigProvider {
 

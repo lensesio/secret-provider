@@ -6,28 +6,24 @@
 
 package io.lenses.connect.secrets.providers
 
-import java.nio.file.FileSystems
-import java.nio.file.Paths
-import java.time.OffsetDateTime
-import java.util.Calendar
-
 import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials, DefaultAWSCredentialsProviderChain}
 import com.amazonaws.services.secretsmanager.model.{DescribeSecretRequest, GetSecretValueRequest}
 import com.amazonaws.services.secretsmanager.{AWSSecretsManager, AWSSecretsManagerClientBuilder}
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.typesafe.scalalogging.StrictLogging
 import io.lenses.connect.secrets.config.AWSProviderSettings
-import io.lenses.connect.secrets.connect.{decodeKey, getFileName, AuthMode}
-import io.lenses.connect.secrets.io.FileWriter
-import io.lenses.connect.secrets.io.FileWriterOnce
+import io.lenses.connect.secrets.connect.{AuthMode, decodeKey}
+import io.lenses.connect.secrets.io.{FileWriter, FileWriterOnce}
 import io.lenses.connect.secrets.utils.EncodingAndId
 import org.apache.kafka.connect.errors.ConnectException
 
-import scala.collection.JavaConverters._
+import java.nio.file.Paths
+import java.time.OffsetDateTime
+import java.util.Calendar
+import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
 
 trait AWSHelper extends StrictLogging {
-  private val separator: String = FileSystems.getDefault.getSeparator
 
   // initialize the AWS client based on the auth mode
   def createClient(settings: AWSProviderSettings): AWSSecretsManager = {
@@ -129,7 +125,7 @@ trait AWSHelper extends StrictLogging {
 
       case Failure(exception) =>
         throw new ConnectException(
-          s"Failed to look up key [$key] in secret [$secretId}]",
+          s"Failed to look up key [$key] in secret [$secretId] due to [${exception.getMessage}]",
           exception
         )
     }

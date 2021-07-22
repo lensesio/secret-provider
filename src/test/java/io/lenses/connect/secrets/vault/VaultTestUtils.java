@@ -78,9 +78,6 @@ public class VaultTestUtils {
     }
 
     public static Map<String, String> readRequestHeaders(HttpServletRequest request) {
-//       ArrayList<String> x = new ArrayList<>();
-//       x.add(request.getHeaderNames()).stream().collect(toMap(identity(), request::getHeader));
-//
         return Collections.list(request.getHeaderNames()).stream().collect(toMap(identity(), request::getHeader));
     }
 

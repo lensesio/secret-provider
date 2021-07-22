@@ -6,16 +6,15 @@
 
 package io.lenses.connect.secrets.providers
 
-import java.nio.file.FileSystems
-import java.util
-
 import io.lenses.connect.secrets.config.ENVProviderConfig
 import io.lenses.connect.secrets.connect.{FILE_DIR, decode, decodeToBytes, fileWriter}
 import org.apache.kafka.common.config.ConfigData
 import org.apache.kafka.common.config.provider.ConfigProvider
 import org.apache.kafka.connect.errors.ConnectException
 
-import scala.collection.JavaConverters._
+import java.nio.file.FileSystems
+import java.util
+import scala.jdk.CollectionConverters._
 
 class ENVSecretProvider extends ConfigProvider {
 
@@ -42,18 +41,18 @@ class ENVSecretProvider extends ConfigProvider {
             // match the value to see if its coming from contains
             // the value metadata pattern
             envVarVal match {
-              case BASE64_FILE(m, v) =>
+              case BASE64_FILE(_, v) =>
                 //decode and write to file
-                val fileName =  s"${fileDir}$separator${key.toLowerCase}"
+                val fileName =  s"$fileDir$separator${key.toLowerCase}"
                 fileWriter(fileName, decodeToBytes(key, v), key)
                 (key, fileName)
 
-              case UTF8_FILE(m, v) =>
-                val fileName =  s"${fileDir}$separator${key.toLowerCase}"
+              case UTF8_FILE(_, v) =>
+                val fileName =  s"$fileDir$separator${key.toLowerCase}"
                 fileWriter(fileName, v.getBytes(), key)
                 (key, fileName)
 
-              case BASE64(m, v) =>
+              case BASE64(_, v) =>
                 (key, decode(key, v))
 
               case _ =>

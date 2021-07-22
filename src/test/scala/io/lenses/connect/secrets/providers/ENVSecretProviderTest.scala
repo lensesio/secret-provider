@@ -6,16 +6,16 @@
 
 package io.lenses.connect.secrets.providers
 
-import java.nio.file.FileSystems
-import java.util.Base64
-
 import org.apache.kafka.common.config.ConfigTransformer
 import org.apache.kafka.common.config.provider.ConfigProvider
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
-import scala.collection.JavaConverters._
+import java.nio.file.FileSystems
+import java.util.Base64
 import scala.io.Source
+import scala.jdk.CollectionConverters._
+import scala.util.{Success, Using}
 
 class ENVSecretProviderTest extends AnyWordSpec with Matchers {
 
@@ -49,23 +49,17 @@ class ENVSecretProviderTest extends AnyWordSpec with Matchers {
     val outputFile = data4.data().get("BASE64_FILE")
     outputFile shouldBe s"$tmp${separator}base64_file"
 
-    val result = Source.fromFile(outputFile)
-    result.getLines().mkString shouldBe "my-base64-secret"
-    result.close()
+    Using(Source.fromFile(outputFile))(_.getLines().mkString) shouldBe Success("my-base64-secret")
 
     val data5 = provider.get("", Set("UTF8_FILE").asJava)
     val outputFile5 = data5.data().get("UTF8_FILE")
     outputFile5 shouldBe s"$tmp${separator}utf8_file"
 
-    val result2 = Source.fromFile(outputFile5)
-    result2.getLines().mkString shouldBe "my-secret"
-    result2.close()
+    Using(Source.fromFile(outputFile5))(_.getLines().mkString) shouldBe Success("my-secret")
 
   }
 
   "check transformer" in {
-
-    val props = Map.empty[String, String].asJava
 
     val provider = new ENVSecretProvider()
     provider.vars = Map("CONNECT_PASSWORD" -> "secret")

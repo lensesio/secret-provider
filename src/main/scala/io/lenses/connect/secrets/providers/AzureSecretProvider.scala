@@ -6,21 +6,17 @@
 
 package io.lenses.connect.secrets.providers
 
-import java.time.OffsetDateTime
-import java.util
-
 import com.azure.core.credential.TokenCredential
 import com.azure.security.keyvault.secrets.{SecretClient, SecretClientBuilder}
-import io.lenses.connect.secrets.config.{
-  AzureProviderConfig,
-  AzureProviderSettings
-}
+import io.lenses.connect.secrets.config.{AzureProviderConfig, AzureProviderSettings}
 import io.lenses.connect.secrets.connect.getSecretsAndExpiry
 import org.apache.kafka.common.config.ConfigData
 import org.apache.kafka.common.config.provider.ConfigProvider
 
-import scala.collection.JavaConverters._
+import java.time.OffsetDateTime
+import java.util
 import scala.collection.mutable
+import scala.jdk.CollectionConverters._
 
 class AzureSecretProvider() extends ConfigProvider with AzureHelper {
 
@@ -75,7 +71,9 @@ class AzureSecretProvider() extends ConfigProvider with AzureHelper {
           logger.info("Fetching secrets from cache")
           (expiresAt,
            new ConfigData(
-             data.data().asScala.filterKeys(k => keys.contains(k)).asJava,
+             data.data().asScala.view.filter{
+               case (k,_) => keys.contains(k)
+             }.toMap.asJava,
              data.ttl()))
         } else {
           // missing some or expired so reload

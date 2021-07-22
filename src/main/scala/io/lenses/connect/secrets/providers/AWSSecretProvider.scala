@@ -6,17 +6,16 @@
 
 package io.lenses.connect.secrets.providers
 
-import java.time.OffsetDateTime
-import java.util
-
+import com.amazonaws.services.secretsmanager.AWSSecretsManager
 import io.lenses.connect.secrets.config.{AWSProviderConfig, AWSProviderSettings}
 import io.lenses.connect.secrets.connect.getSecretsAndExpiry
-import com.amazonaws.services.secretsmanager.AWSSecretsManager
 import org.apache.kafka.common.config.ConfigData
 import org.apache.kafka.common.config.provider.ConfigProvider
 import org.apache.kafka.connect.errors.ConnectException
 
-import scala.collection.JavaConverters._
+import java.time.OffsetDateTime
+import java.util
+import scala.jdk.CollectionConverters._
 
 class AWSSecretProvider() extends ConfigProvider with AWSHelper {
 

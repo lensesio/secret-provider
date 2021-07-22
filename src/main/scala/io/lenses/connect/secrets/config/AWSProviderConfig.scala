@@ -6,11 +6,11 @@
 
 package io.lenses.connect.secrets.config
 
-import java.util
-
 import io.lenses.connect.secrets.connect.{AuthMode, _}
 import org.apache.kafka.common.config.ConfigDef.{Importance, Type}
 import org.apache.kafka.common.config.{AbstractConfig, ConfigDef}
+
+import java.util
 
 object AWSProviderConfig {
 

@@ -6,16 +6,16 @@
 
 package io.lenses.connect.secrets.providers
 
-import java.io.File
-import java.nio.file.FileSystems
-import java.time.OffsetDateTime
-import java.util.Base64
-
 import io.lenses.connect.secrets.connect
 import io.lenses.connect.secrets.connect.Encoding
 import org.apache.commons.io.FileUtils
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+
+import java.io.File
+import java.nio.file.FileSystems
+import java.time.OffsetDateTime
+import java.util.Base64
 
 class DecodeTest extends AnyWordSpec with Matchers {
 

@@ -1,8 +1,9 @@
 package io.lenses.connect.secrets.config
 
 import io.lenses.connect.secrets.connect.{FILE_DIR, FILE_DIR_DESC}
-import org.apache.kafka.common.config.{AbstractConfig, ConfigDef}
 import org.apache.kafka.common.config.ConfigDef.{Importance, Type}
+import org.apache.kafka.common.config.{AbstractConfig, ConfigDef}
+
 import java.util
 
 object Aes256ProviderConfig {

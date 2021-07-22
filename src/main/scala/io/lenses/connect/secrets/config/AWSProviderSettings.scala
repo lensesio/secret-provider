@@ -19,7 +19,7 @@ case class AWSProviderSettings(
     fileDir: String
 )
 
-import AbstractConfigExtensions._
+import io.lenses.connect.secrets.config.AbstractConfigExtensions._
 object AWSProviderSettings {
   def apply(configs: AWSProviderConfig): AWSProviderSettings = {
     val region = configs.getStringOrThrowOnNull(AWSProviderConfig.AWS_REGION)

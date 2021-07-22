@@ -6,24 +6,24 @@
 
 package io.lenses.connect.secrets.providers
 
-import java.nio.file.FileSystems
-import java.time.OffsetDateTime
-import java.util.Base64
-
 import com.azure.security.keyvault.secrets.SecretClient
 import com.azure.security.keyvault.secrets.models.{KeyVaultSecret, SecretProperties}
 import io.lenses.connect.secrets.config.{AzureProviderConfig, AzureProviderSettings}
 import io.lenses.connect.secrets.connect
 import io.lenses.connect.secrets.connect.AuthMode
-import org.apache.kafka.common.config.{ConfigData, ConfigDef, ConfigTransformer}
 import org.apache.kafka.common.config.provider.ConfigProvider
+import org.apache.kafka.common.config.{ConfigData, ConfigTransformer}
 import org.apache.kafka.connect.errors.ConnectException
 import org.mockito.MockitoSugar
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
-import scala.collection.JavaConverters._
+import java.nio.file.FileSystems
+import java.time.OffsetDateTime
+import java.util.Base64
 import scala.io.Source
+import scala.jdk.CollectionConverters._
+import scala.util.{Success, Using}
 
 class AzureSecretProviderTest
     extends AnyWordSpec
@@ -153,9 +153,7 @@ class AzureSecretProviderTest
 
     outputFile shouldBe s"$tmp$separator$secretPath$separator$secretKey"
 
-    val result = Source.fromFile(outputFile)
-    result.getLines().mkString shouldBe secretValue
-    result.close()
+    Using(Source.fromFile(outputFile))(_.getLines().mkString) shouldBe Success(secretValue)
 
     provider.get("").data().isEmpty shouldBe true
     provider.close()
@@ -199,9 +197,7 @@ class AzureSecretProviderTest
 
     outputFile shouldBe s"$tmp$separator$secretPath$separator$secretKey"
 
-    val result = Source.fromFile(outputFile)
-    result.getLines().mkString shouldBe secretValue
-    result.close()
+    Using(Source.fromFile(outputFile))(_.getLines().mkString) shouldBe Success(secretValue)
 
     provider.get("").data().isEmpty shouldBe true
     provider.close()
@@ -220,7 +216,6 @@ class AzureSecretProviderTest
     provider.configure(props)
 
     val secretKey = "utf8-key"
-    val secretValue = "utf8-secret-value"
     val secretPath = "my-path.vault.azure.net"
 
     val client = mock[SecretClient]

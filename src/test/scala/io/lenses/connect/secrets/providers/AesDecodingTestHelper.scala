@@ -1,11 +1,11 @@
 package io.lenses.connect.secrets.providers
 
-import javax.crypto.Cipher
-import javax.crypto.spec.IvParameterSpec
-import javax.crypto.spec.SecretKeySpec
+import io.lenses.connect.secrets.providers.Aes256DecodingHelper.INITIALISATION_VECTOR_SEPARATOR
+
 import java.util.Base64
+import javax.crypto.Cipher
+import javax.crypto.spec.{IvParameterSpec, SecretKeySpec}
 import scala.util.Try
-import Aes256DecodingHelper.INITIALISATION_VECTOR_SEPARATOR
 
 object AesDecodingTestHelper {
   private val AES = "AES"

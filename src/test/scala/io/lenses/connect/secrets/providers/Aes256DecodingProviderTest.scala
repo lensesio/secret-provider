@@ -1,32 +1,23 @@
 package io.lenses.connect.secrets.providers
 
+import io.lenses.connect.secrets.config.Aes256ProviderConfig
+import io.lenses.connect.secrets.connect.{Encoding, FILE_DIR}
+import io.lenses.connect.secrets.utils.EncodingAndId
 import org.apache.kafka.common.config.provider.ConfigProvider
+import org.apache.kafka.common.config.{ConfigException, ConfigTransformer}
+import org.apache.kafka.connect.errors.ConnectException
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.wordspec.AnyWordSpec
+
+import java.io.FileInputStream
+import java.nio.file.Files
+import java.util
 import java.util.Base64
 import java.util.UUID.randomUUID
-
-import io.lenses.connect.secrets.config.Aes256ProviderConfig
-
-import scala.collection.JavaConverters._
-import org.apache.kafka.connect.errors.ConnectException
-import org.apache.kafka.common.config.ConfigException
-import org.apache.kafka.common.config.ConfigTransformer
-import io.lenses.connect.secrets.connect.FILE_DIR
-import java.io.File
-import java.nio.file.Files
-
-import org.scalatest.compatible.Assertion
-
 import scala.io.Source
-import java.io.FileInputStream
-import java.util
-
-import io.lenses.connect.secrets.connect.Encoding
-import io.lenses.connect.secrets.utils.EncodingAndId
-
-import scala.util.Random
+import scala.jdk.CollectionConverters._
+import scala.util.{Random, Success, Using}
 
 class Aes256DecodingProviderTest
     extends AnyWordSpec
@@ -61,7 +52,7 @@ class Aes256DecodingProviderTest
 
       decryptedPath should startWith(s"$tmpDir/secrets/")
       decryptedPath.toLowerCase.contains(encrypted.toLowerCase) shouldBe false
-      Source.fromFile(decryptedPath).getLines.mkString shouldBe value
+      Using(Source.fromFile(decryptedPath))(_.getLines().mkString) shouldBe Success(value)
     }
 
     "decrypt aes 256 encoded value stored in file with base64 encoding" in new TestContext with ConfiguredProvider {

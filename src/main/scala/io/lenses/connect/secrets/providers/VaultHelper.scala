@@ -6,12 +6,12 @@
 
 package io.lenses.connect.secrets.providers
 
-import java.io.File
-
 import com.bettercloud.vault.{SslConfig, Vault, VaultConfig}
 import com.typesafe.scalalogging.StrictLogging
 import io.lenses.connect.secrets.config.{VaultAuthMethod, VaultSettings}
 import org.apache.kafka.connect.errors.ConnectException
+
+import java.io.File
 
 trait VaultHelper extends StrictLogging {
 

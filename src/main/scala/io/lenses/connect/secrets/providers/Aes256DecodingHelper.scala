@@ -2,13 +2,9 @@ package io.lenses.connect.secrets.providers
 
 import java.security.SecureRandom
 import java.util.Base64
-
 import javax.crypto.Cipher
-import javax.crypto.spec.IvParameterSpec
-import javax.crypto.spec.SecretKeySpec
-
-import scala.util.Failure
-import scala.util.Try
+import javax.crypto.spec.{IvParameterSpec, SecretKeySpec}
+import scala.util.{Failure, Try}
 
 private[providers] object Aes256DecodingHelper {
 

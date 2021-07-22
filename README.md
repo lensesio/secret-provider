@@ -6,32 +6,10 @@
 
 Secret provider for Kafka to provide indirect look up of configuration values.
 
-
-## Installing
-
-Maven
-```xml
-<dependency>
-	<groupId>io.lenses</groupId>
-	<artifactId>secret-provider</artifactId>
-	<version>2.1.3</version>
-</dependency>
-```
-
-SBT
-```bash
-libraryDependencies += "io.lenses" % "secret-provider" % "2.1.3"
-```
-
-Gradle
-```bash
-compile 'io.lenses:secret-provider:2.1.3'
-```
-
 ## Description
 
 External secret providers allow for indirect references to be placed in an
-applications configuration, so for example, that secrets are not exposed in the
+applications' configuration, so for example, that secrets are not exposed in the
 Worker API endpoints of Kafka Connect.
 
 For [Documentation](https://docs.lenses.io/4.0/integrations/connectors/secret-providers/).
@@ -46,28 +24,16 @@ and submit a pull request. Thanks!
 
 ### Building
 
-***Requires gradle 6.0 to build.***
+***Requires SBT to build.***
 
-To build
-
-```bash
-gradle compile
-```
-
-To test
+To build the (scala 2.12 and 2.13) assemblies for use with Kafka Connect (also runs tests):
 
 ```bash
-gradle test
+sbt +assembly
 ```
 
-To create a fat jar
+To run tests:
 
 ```bash
-gradle shadowJar
-```
-
-You can also use the gradle wrapper
-
-```
-./gradlew shadowJar
+sbt +test
 ```

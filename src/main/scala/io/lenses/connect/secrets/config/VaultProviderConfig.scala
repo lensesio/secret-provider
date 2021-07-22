@@ -6,11 +6,11 @@
 
 package io.lenses.connect.secrets.config
 
-import java.util
-
 import io.lenses.connect.secrets.connect.{FILE_DIR, FILE_DIR_DESC}
 import org.apache.kafka.common.config.ConfigDef.{Importance, Type}
 import org.apache.kafka.common.config.{AbstractConfig, ConfigDef, SslConfigs}
+
+import java.util
 
 object VaultAuthMethod extends Enumeration {
   type VaultAuthMethod = Value

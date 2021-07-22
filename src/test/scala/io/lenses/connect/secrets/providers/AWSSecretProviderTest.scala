@@ -6,18 +6,11 @@
 
 package io.lenses.connect.secrets.providers
 
-import java.nio.file.FileSystems
-import java.util.Base64
-import java.util.Date
-
 import com.amazonaws.services.secretsmanager.AWSSecretsManager
 import com.amazonaws.services.secretsmanager.model._
 import com.bettercloud.vault.json.JsonObject
-import io.lenses.connect.secrets.config.AWSProviderConfig
-import io.lenses.connect.secrets.config.AWSProviderSettings
-import io.lenses.connect.secrets.connect._
-import io.lenses.connect.secrets.connect.AuthMode
-import io.lenses.connect.secrets.connect.Encoding
+import io.lenses.connect.secrets.config.{AWSProviderConfig, AWSProviderSettings}
+import io.lenses.connect.secrets.connect.{AuthMode, Encoding, _}
 import io.lenses.connect.secrets.utils.EncodingAndId
 import org.apache.kafka.common.config.ConfigTransformer
 import org.apache.kafka.common.config.provider.ConfigProvider
@@ -27,8 +20,11 @@ import org.mockito.MockitoSugar
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
-import scala.collection.JavaConverters._
+import java.nio.file.FileSystems
+import java.util.{Base64, Date}
 import scala.io.Source
+import scala.jdk.CollectionConverters._
+import scala.util.{Success, Using}
 
 class AWSSecretProviderTest
     extends AnyWordSpec
@@ -192,9 +188,7 @@ class AWSSecretProviderTest
     val outputFile = data.data().get(secretKey)
     outputFile shouldBe s"$tmp$separator$secretName$separator${secretKey.toLowerCase}"
 
-    val result = Source.fromFile(outputFile)
-    result.getLines().mkString shouldBe secretValue
-    result.close()
+    Using(Source.fromFile(outputFile))(_.getLines().mkString) shouldBe Success(secretValue)
 
     provider.get("").data().isEmpty shouldBe true
     provider.close()
@@ -248,9 +242,7 @@ class AWSSecretProviderTest
     val outputFile = data.data().get(secretKey)
     outputFile shouldBe s"$tmp$separator$secretName$separator${secretKey.toLowerCase}"
 
-    val result = Source.fromFile(outputFile)
-    result.getLines().mkString shouldBe secretValue
-    result.close()
+    Using(Source.fromFile(outputFile))(_.getLines().mkString) shouldBe Success(secretValue)
 
     provider.get("").data().isEmpty shouldBe true
     provider.close()

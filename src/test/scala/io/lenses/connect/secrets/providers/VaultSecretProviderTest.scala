@@ -6,28 +6,23 @@
 
 package io.lenses.connect.secrets.providers
 
-import java.io.File
-import java.nio.file.FileSystems
-import java.util.Base64
-
-import com.bettercloud.vault.json.JsonArray
-import com.bettercloud.vault.json.JsonObject
-import io.lenses.connect.secrets.config.VaultAuthMethod
-import io.lenses.connect.secrets.config.VaultProviderConfig
-import io.lenses.connect.secrets.config.VaultSettings
+import com.bettercloud.vault.json.{JsonArray, JsonObject}
+import io.lenses.connect.secrets.config.{VaultAuthMethod, VaultProviderConfig, VaultSettings}
 import io.lenses.connect.secrets.connect
-import io.lenses.connect.secrets.vault.MockVault
-import io.lenses.connect.secrets.vault.VaultTestUtils
-import org.apache.kafka.common.config.ConfigData
-import org.apache.kafka.common.config.ConfigTransformer
+import io.lenses.connect.secrets.vault.{MockVault, VaultTestUtils}
 import org.apache.kafka.common.config.provider.ConfigProvider
+import org.apache.kafka.common.config.{ConfigData, ConfigTransformer}
 import org.eclipse.jetty.server.Server
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
-import scala.collection.JavaConverters._
+import java.io.File
+import java.nio.file.FileSystems
+import java.util.Base64
 import scala.io.Source
+import scala.jdk.CollectionConverters._
+import scala.util.{Success, Using}
 
 class VaultSecretProviderTest
   extends AnyWordSpec
@@ -333,9 +328,7 @@ class VaultSecretProviderTest
       .get(secretKey)
 
     outputFile shouldBe s"$tmp$separator$secretPath$separator$secretKey"
-    val result = Source.fromFile(outputFile)
-    result.getLines().mkString shouldBe secretValue
-    result.close()
+    Using(Source.fromFile(outputFile))(_.getLines().mkString) shouldBe Success(secretValue)
 
     provider.close()
   }
@@ -363,9 +356,7 @@ class VaultSecretProviderTest
       .get(secretKey)
 
     outputFile shouldBe s"$tmp$separator$secretPath$separator$secretKey"
-    val result = Source.fromFile(outputFile)
-    result.getLines().mkString shouldBe secretValue
-    result.close()
+    Using(Source.fromFile(outputFile))(_.getLines().mkString) shouldBe Success(secretValue)
 
     provider.close()
   }
