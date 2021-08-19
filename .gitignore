@@ -11,7 +11,5 @@
 /build/
 /.classpath
 /.project
-/target/
-/project/target/
+target/
 /.bsp/
-/project/project/target/
