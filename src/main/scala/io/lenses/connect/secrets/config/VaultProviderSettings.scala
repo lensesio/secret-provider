@@ -46,6 +46,7 @@ case class VaultSettings(
     pem: String,
     clientPem: String,
     engineVersion: Int = 2,
+    secretTtlDefault: Int = 0,
     appRole: Option[AppRole],
     awsIam: Option[AwsIam],
     gcp: Option[Gcp],
@@ -72,6 +73,7 @@ object VaultSettings extends StrictLogging {
     val pem = config.getString(VaultProviderConfig.VAULT_PEM)
     val clientPem = config.getString(VaultProviderConfig.VAULT_CLIENT_PEM)
     val engineVersion = config.getInt(VaultProviderConfig.VAULT_ENGINE_VERSION)
+    val secretTtlDefault = config.getInt(VaultProviderConfig.VAULT_SECRET_TTL_DEFAULT)
 
     val authMode = VaultAuthMethod.withNameOpt(
       config.getString(VaultProviderConfig.AUTH_METHOD).toUpperCase
@@ -121,6 +123,7 @@ object VaultSettings extends StrictLogging {
       pem = pem,
       clientPem = clientPem,
       engineVersion = engineVersion,
+      secretTtlDefault = secretTtlDefault,
       appRole = appRole,
       awsIam = awsIam,
       gcp = gcp,

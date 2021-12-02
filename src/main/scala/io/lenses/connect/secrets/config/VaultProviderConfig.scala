@@ -27,6 +27,7 @@ object VaultProviderConfig {
   val VAULT_CLIENT_PEM: String = "vault.client.pem"
   val VAULT_PEM: String = "vault.pem"
   val VAULT_ENGINE_VERSION = "vault.engine.version"
+  val VAULT_SECRET_TTL_DEFAULT: String = "vault.secret.ttl.default"
   val AUTH_METHOD: String = "vault.auth.method"
 
   val VAULT_TRUSTSTORE_LOC: String =
@@ -136,6 +137,13 @@ object VaultProviderConfig {
       2,
       Importance.HIGH,
       "KV Secrets Engine version of the Vault server instance. Defaults to 2"
+    )
+    .define(
+      VAULT_SECRET_TTL_DEFAULT,
+      Type.INT,
+      0,
+      Importance.MEDIUM,
+      "Default TTL for secrets returned from Vault. Defaults to 0 to not break existing configurations. Work around for the lack of `lease_duration` values returned from the Vault KV2 engine: https://github.com/hashicorp/vault/issues/6274"
     )
     // auth mode
     .define(
