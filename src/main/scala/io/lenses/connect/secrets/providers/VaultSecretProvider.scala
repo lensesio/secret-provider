@@ -132,7 +132,7 @@ class VaultSecretProvider() extends ConfigProvider with VaultHelper {
           )
         }
 
-        val ttl = Option(vaultClient.get.logical().read(path).getLeaseDuration) match {
+        val ttl = Option(response.getLeaseDuration) match {
           case Some(duration) => Some(now.plusSeconds(duration))
           case None => None
         }
