@@ -145,7 +145,7 @@ package object connect extends StrictLogging {
   //calculate the min expiry for secrets and return the configData and expiry
   def getSecretsAndExpiry(
       secrets: Map[String, (String, Option[OffsetDateTime])]
-  ): (Option[OffsetDateTime], ConfigData) = {
+  ): (Option[OffsetDateTime], Map[String, String]) = {
     var expiryList = mutable.ListBuffer.empty[OffsetDateTime]
 
     val data = secrets
@@ -154,15 +154,12 @@ package object connect extends StrictLogging {
           expiry.foreach(e => expiryList.append(e))
           (key, value)
       })
-      .asJava
 
     if (expiryList.isEmpty) {
-      (None, new ConfigData(data))
+      (None, data)
     } else {
       val minExpiry = expiryList.min
-      val ttl = minExpiry.toInstant.toEpochMilli - OffsetDateTime.now.toInstant
-        .toEpochMilli
-      (Some(minExpiry), new ConfigData(data, ttl))
+      (Some(minExpiry), data)
     }
   }
 

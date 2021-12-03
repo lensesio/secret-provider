@@ -6,7 +6,10 @@
 
 package io.lenses.connect.secrets.providers
 
-import java.time.OffsetDateTime
+import java.time.{
+  Duration,
+  OffsetDateTime
+}
 import java.util
 
 import io.lenses.connect.secrets.config.{AWSProviderConfig, AWSProviderSettings}
@@ -35,9 +38,13 @@ class AWSSecretProvider() extends ConfigProvider with AWSHelper {
         //aws client caches so we don't need to check here
         val (expiry, data) = getSecretsAndExpiry(
           getSecrets(awsClient, path, keys.asScala.toSet))
-        expiry.foreach(exp =>
-          logger.info(s"Min expiry for TTL set to [${exp.toString}]"))
-        data
+
+        var ttl = 0L
+        expiry.foreach(exp => {
+          ttl = Duration.between(OffsetDateTime.now(), exp).toMillis
+          logger.info(s"Min expiry for TTL set to [${exp.toString}]")
+        })
+        new ConfigData(data.asJava, ttl)
 
       case None => throw new ConnectException("AWS client is not set.")
     }

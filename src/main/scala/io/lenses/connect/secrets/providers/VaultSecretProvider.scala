@@ -8,7 +8,10 @@ package io.lenses.connect.secrets.providers
 
 import java.nio.file.FileSystems
 import java.nio.file.Paths
-import java.time.OffsetDateTime
+import java.time.{
+  Duration,
+  OffsetDateTime
+}
 import java.util
 
 import _root_.io.lenses.connect.secrets.config.VaultProviderConfig
@@ -34,7 +37,7 @@ class VaultSecretProvider() extends ConfigProvider with VaultHelper {
   private var settings: VaultSettings = _
   private var vaultClient: Option[Vault] = None
   private var tokenRenewal: Option[AsyncFunctionLoop] = None
-  private val cache = mutable.Map.empty[String, (Option[OffsetDateTime], ConfigData)]
+  private val cache = mutable.Map.empty[String, (Option[OffsetDateTime], Map[String, String])]
   def getClient: Option[Vault] = vaultClient
 
   // configure the vault client
@@ -57,10 +60,11 @@ class VaultSecretProvider() extends ConfigProvider with VaultHelper {
 
   // lookup secrets at a path
   override def get(path: String): ConfigData = {
+    val now = OffsetDateTime.now()
+
     val (expiry, data) = cache.get(path) match {
       case Some((expiresAt, data)) =>
         // we have all the keys and are before the expiry
-        val now = OffsetDateTime.now()
 
         if (expiresAt.getOrElse(now.plusSeconds(1)).isAfter(now)) {
           logger.info("Fetching secrets from cache")
@@ -74,28 +78,28 @@ class VaultSecretProvider() extends ConfigProvider with VaultHelper {
         getSecretsAndExpiry(getSecrets(path))
     }
 
-    expiry.foreach(exp =>
-      logger.info(s"Min expiry for TTL set to [${exp.toString}]"))
+    var ttl = 0L
+    expiry.foreach(exp => {
+      ttl = Duration.between(now, exp).toMillis
+      logger.info(s"Min expiry for TTL set to [${exp.toString}]")
+    })
     cache += (path -> (expiry, data))
-    data
+    new ConfigData(data.asJava, ttl)
   }
 
   // get secret keys at a path
   override def get(path: String, keys: util.Set[String]): ConfigData = {
+    val now = OffsetDateTime.now()
 
     val (expiry, data) = cache.get(path) match {
       case Some((expiresAt, data)) =>
         // we have all the keys and are before the expiry
-        val now = OffsetDateTime.now()
 
-        if (keys.asScala.subsetOf(data.data().asScala.keySet) && expiresAt
+        if (keys.asScala.subsetOf(data.keySet) && expiresAt
           .getOrElse(now.plusSeconds(1))
           .isAfter(now)) {
           logger.info("Fetching secrets from cache")
-          (expiresAt,
-            new ConfigData(
-              data.data().asScala.filterKeys(k => keys.contains(k)).asJava,
-              data.ttl()))
+          (expiresAt, data.filterKeys(k => keys.contains(k)))
         } else {
           // missing some or expired so reload
           getSecretsAndExpiry(
@@ -106,10 +110,13 @@ class VaultSecretProvider() extends ConfigProvider with VaultHelper {
         getSecretsAndExpiry(getSecrets(path).filterKeys(k => keys.contains(k)))
     }
 
-    expiry.foreach(exp =>
-      logger.info(s"Min expiry for TTL set to [${exp.toString}]"))
+    var ttl = 0L
+    expiry.foreach(exp => {
+      ttl = Duration.between(now, exp).toMillis
+      logger.info(s"Min expiry for TTL set to [${exp.toString}]")
+    })
     cache += (path -> (expiry, data))
-    data
+    new ConfigData(data.asJava, ttl)
   }
 
   override def close(): Unit = {
