@@ -15,7 +15,6 @@ import io.lenses.connect.secrets.config.AzureProviderSettings
 import io.lenses.connect.secrets.connect
 import io.lenses.connect.secrets.connect.AuthMode
 import org.apache.kafka.common.config.provider.ConfigProvider
-import org.apache.kafka.common.config.ConfigData
 import org.apache.kafka.common.config.ConfigTransformer
 import org.apache.kafka.connect.errors.ConnectException
 import org.mockito.Mockito.when
@@ -236,7 +235,7 @@ class AzureSecretProviderTest extends AnyWordSpec with Matchers with MockitoSuga
     // poke in the mocked client
     provider.clientMap += (s"https://$secretPath" -> client)
     val now        = OffsetDateTime.now().plusMinutes(10)
-    val cachedData = new ConfigData(Map(secretKey -> secretPath).asJava)
+    val cachedData = Map(secretKey -> secretPath)
     val cached     = (Some(now), cachedData)
 
     // add to cache
@@ -283,7 +282,7 @@ class AzureSecretProviderTest extends AnyWordSpec with Matchers with MockitoSuga
     provider.clientMap += (vaultUrl -> client)
     //put expiry of cache 1 second behind
     val now        = OffsetDateTime.now().minusSeconds(1)
-    val cachedData = new ConfigData(Map(secretKey -> secretPath).asJava)
+    val cachedData = Map(secretKey -> secretPath)
     val cached     = (Some(now), cachedData)
 
     // add to cache
@@ -332,7 +331,7 @@ class AzureSecretProviderTest extends AnyWordSpec with Matchers with MockitoSuga
     provider.clientMap += (vaultUrl -> client)
     //put expiry of cache 1 second behind
     val now        = OffsetDateTime.now()
-    val cachedData = new ConfigData(Map("old-key" -> secretPath).asJava)
+    val cachedData = Map("old-key" -> secretPath)
     val cached     = (Some(now), cachedData)
 
     // add to cache
