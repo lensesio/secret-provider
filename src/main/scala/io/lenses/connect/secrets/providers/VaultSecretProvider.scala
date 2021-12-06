@@ -6,7 +6,6 @@
 
 package io.lenses.connect.secrets.providers
 
-import java.nio.file.FileSystems
 import java.nio.file.Paths
 import java.time.OffsetDateTime
 import java.util
@@ -15,6 +14,7 @@ import _root_.io.lenses.connect.secrets.config.VaultProviderConfig
 import _root_.io.lenses.connect.secrets.config.VaultSettings
 import _root_.io.lenses.connect.secrets.connect._
 import com.bettercloud.vault.Vault
+import com.bettercloud.vault.response.LogicalResponse
 import io.lenses.connect.secrets.async.AsyncFunctionLoop
 import io.lenses.connect.secrets.io.FileWriterOnce
 import io.lenses.connect.secrets.utils.EncodingAndId
@@ -30,7 +30,6 @@ import scala.util.Try
 
 class VaultSecretProvider() extends ConfigProvider with VaultHelper {
 
-  private val separator: String = FileSystems.getDefault.getSeparator
   private var settings: VaultSettings = _
   private var vaultClient: Option[Vault] = None
   private var tokenRenewal: Option[AsyncFunctionLoop] = None
@@ -122,7 +121,7 @@ class VaultSecretProvider() extends ConfigProvider with VaultHelper {
 
     logger.info(s"Looking up value at [$path]")
     val fileWriter = new FileWriterOnce(Paths.get(settings.fileDir, path))
-    Try(vaultClient.get.logical().read(path)) match {
+    Try(readSecretFromVault(path)) match {
       case Success(response) =>
         if (response.getRestResponse.getStatus != 200) {
           throw new ConnectException(
@@ -165,6 +164,22 @@ class VaultSecretProvider() extends ConfigProvider with VaultHelper {
           s"Failed to fetch secrets from path [$path]",
           exception
         )
+    }
+  }
+
+  private def readSecretFromVault(path: String): LogicalResponse = {
+    // Check if the path looks like it's referencing the vault database engine. If so, use the `database()` api of the
+    // vault client to obtain this secret.  Otherwise, fall back to the default key-vaule engine.
+    if (path.startsWith("database/creds/")) {
+      val parts = path.split("/")
+
+      if (parts.length == 3) {
+        vaultClient.get.database().creds(parts(2))
+      } else {
+        throw new Exception("Database path is invalid. Path must be in the form 'database/creds/<role_name>'")
+      }
+    } else {
+      vaultClient.get.logical().read(path)
     }
   }
 }
