@@ -136,8 +136,10 @@ class VaultSecretProvider() extends ConfigProvider with VaultHelper {
           case Some(duration) =>
             if (duration != 0) {
               Some(now.plusSeconds(duration))
-            } else {
+            } else if (settings.secretTtlDefault > 0) {
               Some(now.plusSeconds(settings.secretTtlDefault))
+            } else {
+              None
             }
           case None => None
         }
