@@ -228,7 +228,7 @@ class AzureSecretProviderTest
     // poke in the mocked client
     provider.clientMap += (s"https://$secretPath" -> client)
     val now = OffsetDateTime.now().plusMinutes(10)
-    val cachedData = new ConfigData(Map(secretKey -> secretPath).asJava)
+    val cachedData = Map(secretKey -> secretPath)
     val cached = (Some(now), cachedData)
 
     // add to cache
@@ -273,7 +273,7 @@ class AzureSecretProviderTest
     provider.clientMap += (vaultUrl -> client)
     //put expiry of cache 1 second behind
     val now = OffsetDateTime.now().minusSeconds(1)
-    val cachedData = new ConfigData(Map(secretKey -> secretPath).asJava)
+    val cachedData = Map(secretKey -> secretPath)
     val cached = (Some(now), cachedData)
 
     // add to cache
@@ -320,7 +320,7 @@ class AzureSecretProviderTest
     provider.clientMap += (vaultUrl -> client)
     //put expiry of cache 1 second behind
     val now = OffsetDateTime.now()
-    val cachedData = new ConfigData(Map("old-key" -> secretPath).asJava)
+    val cachedData = Map("old-key" -> secretPath)
     val cached = (Some(now), cachedData)
 
     // add to cache
