@@ -1,9 +1,6 @@
-name: Publish
+name: Publish-manually
 
-on:
-  push:
-    tags:
-      - '*'
+on: [workflow_dispatch]
 
 jobs:
   build:
@@ -34,9 +31,10 @@ jobs:
           files: build/libs/secret-provider-${{ steps.get_tag.outputs.VERSION }}-all.jar
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and upload jar to nexus
+      - name: Upload archive
         run: ./gradlew -Prelease -Pversion=${{ steps.get_tag.outputs.VERSION }} signArchives uploadArchives
       - name: Wait for nexus to settle
         run: sleep 30
-      - name: Release to nexus
+      - name: Release archive
         run: ./gradlew -Prelease -Pversion=${{ steps.get_tag.outputs.VERSION }} closeAndReleaseRepository
+

@@ -18,8 +18,7 @@ trait VaultHelper extends StrictLogging {
 
   // initialize the vault client
   def createClient(settings: VaultSettings): Vault = {
-
-    var config =
+    val config =
       new VaultConfig().address(settings.addr)
 
     // set ssl if configured
@@ -32,6 +31,7 @@ trait VaultHelper extends StrictLogging {
 
     logger.info(s"Setting engine version to ${settings.engineVersion}")
     config.engineVersion(settings.engineVersion)
+
     val vault = new Vault(config.build())
 
     logger.info(
@@ -41,21 +41,21 @@ trait VaultHelper extends StrictLogging {
     val token = settings.authMode match {
       case VaultAuthMethod.USERPASS =>
         settings.userPass
-          .map(
-            up =>
-              vault
-                .auth()
-                .loginByUserPass(up.username, up.password.value(), up.mount)
-                .getAuthClientToken)
+          .map(up =>
+            vault
+              .auth()
+              .loginByUserPass(up.username, up.password.value(), up.mount)
+              .getAuthClientToken
+          )
 
       case VaultAuthMethod.APPROLE =>
         settings.appRole
-          .map(
-            ar =>
-              vault
-                .auth()
-                .loginByAppRole(ar.role, ar.secretId.value())
-                .getAuthClientToken)
+          .map(ar =>
+            vault
+              .auth()
+              .loginByAppRole(ar.role, ar.secretId.value())
+              .getAuthClientToken
+          )
 
       case VaultAuthMethod.CERT =>
         settings.cert
@@ -63,69 +63,70 @@ trait VaultHelper extends StrictLogging {
 
       case VaultAuthMethod.AWSIAM =>
         settings.awsIam
-          .map(
-            aws =>
-              vault
-                .auth()
-                .loginByAwsIam(
-                  aws.role,
-                  aws.url,
-                  aws.body.value(),
-                  aws.headers.value(),
-                  aws.mount
-                )
-                .getAuthClientToken)
+          .map(aws =>
+            vault
+              .auth()
+              .loginByAwsIam(
+                aws.role,
+                aws.url,
+                aws.body.value(),
+                aws.headers.value(),
+                aws.mount
+              )
+              .getAuthClientToken
+          )
 
       case VaultAuthMethod.KUBERNETES =>
         settings.k8s
-          .map(
-            k8s =>
-              vault
-                .auth()
-                .loginByKubernetes(k8s.role, k8s.jwt.value())
-                .getAuthClientToken)
+          .map(k8s =>
+            vault
+              .auth()
+              .loginByKubernetes(k8s.role, k8s.jwt.value())
+              .getAuthClientToken
+          )
       case VaultAuthMethod.GCP =>
         settings.gcp
-          .map(
-            gcp =>
-              vault
-                .auth()
-                .loginByGCP(gcp.role, gcp.jwt.value())
-                .getAuthClientToken)
+          .map(gcp =>
+            vault
+              .auth()
+              .loginByGCP(gcp.role, gcp.jwt.value())
+              .getAuthClientToken
+          )
 
       case VaultAuthMethod.LDAP =>
         settings.ldap
-          .map(
-            l =>
-              vault
-                .auth()
-                .loginByLDAP(l.username, l.password.value(), l.mount)
-                .getAuthClientToken)
+          .map(l =>
+            vault
+              .auth()
+              .loginByLDAP(l.username, l.password.value(), l.mount)
+              .getAuthClientToken
+          )
 
       case VaultAuthMethod.JWT =>
         settings.jwt
-          .map(
-            j =>
-              vault
-                .auth()
-                .loginByJwt(j.provider, j.role, j.jwt.value())
-                .getAuthClientToken)
+          .map(j =>
+            vault
+              .auth()
+              .loginByJwt(j.provider, j.role, j.jwt.value())
+              .getAuthClientToken
+          )
 
       case VaultAuthMethod.TOKEN =>
         Some(settings.token.value())
 
       case VaultAuthMethod.GITHUB =>
         settings.github
-          .map(
-            gh =>
-              vault
-                .auth()
-                .loginByGithub(gh.token.value(), gh.mount)
-                .getAuthClientToken)
+          .map(gh =>
+            vault
+              .auth()
+              .loginByGithub(gh.token.value(), gh.mount)
+              .getAuthClientToken
+          )
 
       case _ =>
         throw new ConnectException(
-          s"Unsupported auth method [${settings.authMode.toString}]")
+          s"Unsupported auth method [${settings.authMode.toString}]"
+        )
     }
 
     config.token(token.get)
@@ -148,9 +149,8 @@ trait VaultHelper extends StrictLogging {
     if (settings.truststoreLoc != "") {
       logger.info(s"Configuring truststore at [${settings.truststoreLoc}]")
       ssl.trustStore(
-        readTrustStore(
-          settings.truststoreLoc,
-        settings.keystorePass.value()))
+        readTrustStore(settings.truststoreLoc, settings.keystorePass.value())
+      )
     }
 
     if (settings.clientPem != "") {
@@ -166,12 +166,12 @@ trait VaultHelper extends StrictLogging {
     ssl.build()
   }
 
-  private def readTrustStore(file: String, password: String): KeyStore = cleanly(new FileInputStream(file))
-  { is =>
-    val keyStore = KeyStore.getInstance("JKS")
-    keyStore.load(is, if (password == null) null else password.toCharArray)
-    keyStore
-  }
+  private def readTrustStore(file: String, password: String): KeyStore =
+    cleanly(new FileInputStream(file)) { is =>
+      val keyStore = KeyStore.getInstance("JKS")
+      keyStore.load(is, if (password == null) null else password.toCharArray)
+      keyStore
+    }
 
   private def cleanly[A <: Closeable, B](resource: A)(bodyF: A => B): B =
     try {
