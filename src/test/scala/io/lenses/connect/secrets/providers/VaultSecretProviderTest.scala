@@ -7,7 +7,12 @@
 package io.lenses.connect.secrets.providers
 
 import com.bettercloud.vault.json.{JsonArray, JsonObject}
-import io.lenses.connect.secrets.config.{VaultAuthMethod, VaultProviderConfig, VaultSettings}
+import io.lenses.connect.secrets.TmpDirUtil.{getTempDir, separator}
+import io.lenses.connect.secrets.config.{
+  VaultAuthMethod,
+  VaultProviderConfig,
+  VaultSettings
+}
 import io.lenses.connect.secrets.connect
 import io.lenses.connect.secrets.vault.{MockVault, VaultTestUtils}
 import org.apache.kafka.common.config.provider.ConfigProvider
@@ -18,19 +23,17 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
 import java.io.File
-import java.nio.file.FileSystems
 import java.util.Base64
 import scala.io.Source
 import scala.jdk.CollectionConverters._
 import scala.util.{Success, Using}
 
 class VaultSecretProviderTest
-  extends AnyWordSpec
+    extends AnyWordSpec
     with Matchers
     with BeforeAndAfterAll {
-  val separator: String = FileSystems.getDefault.getSeparator
-  val tmp: String =
-    System.getProperty("java.io.tmpdir") + separator + "provider-tests-vault"
+
+  val tmp: String = s"$getTempDir${separator}provider-tests-vault"
 
   val data: JsonObject = new JsonObject().add(
     "data",
@@ -52,7 +55,9 @@ class VaultSecretProviderTest
     .add("lease_duration", 0)
     .add("policies", new JsonArray())
 
-  val root: JsonObject = new JsonObject().add("data", data).add("auth", auth)
+  val root: JsonObject = new JsonObject()
+    .add("data", data)
+    .add("auth", auth)
     .add("renewable", true)
   val mockVault = new MockVault(200, root.toString)
   val server: Server = VaultTestUtils.initHttpsMockVault(mockVault)
@@ -328,7 +333,9 @@ class VaultSecretProviderTest
       .get(secretKey)
 
     outputFile shouldBe s"$tmp$separator$secretPath$separator$secretKey"
-    Using(Source.fromFile(outputFile))(_.getLines().mkString) shouldBe Success(secretValue)
+    Using(Source.fromFile(outputFile))(_.getLines().mkString) shouldBe Success(
+      secretValue
+    )
 
     provider.close()
   }
@@ -356,7 +363,9 @@ class VaultSecretProviderTest
       .get(secretKey)
 
     outputFile shouldBe s"$tmp$separator$secretPath$separator$secretKey"
-    Using(Source.fromFile(outputFile))(_.getLines().mkString) shouldBe Success(secretValue)
+    Using(Source.fromFile(outputFile))(_.getLines().mkString) shouldBe Success(
+      secretValue
+    )
 
     provider.close()
   }

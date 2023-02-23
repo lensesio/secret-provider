@@ -24,11 +24,14 @@ class FileWriterOnce(rootPath: Path)
     with StrictLogging {
 
   private val folderPermissions = PosixFilePermissions.fromString("rwx------")
-  private val filePermissions   = PosixFilePermissions.fromString("rw-------")
-  private val folderAttributes  = PosixFilePermissions.asFileAttribute(folderPermissions)
-  private val fileAttributes    = PosixFilePermissions.asFileAttribute(filePermissions)
+  private val filePermissions = PosixFilePermissions.fromString("rw-------")
+  private val folderAttributes =
+    PosixFilePermissions.asFileAttribute(folderPermissions)
+  private val fileAttributes =
+    PosixFilePermissions.asFileAttribute(filePermissions)
 
-  if (!rootPath.toFile.exists) Files.createDirectories(rootPath, folderAttributes)
+  if (!rootPath.toFile.exists)
+    Files.createDirectories(rootPath, folderAttributes)
 
   def write(fileName: String, content: Array[Byte], key: String): Path = {
     val fullPath = Paths.get(rootPath.toString, fileName)

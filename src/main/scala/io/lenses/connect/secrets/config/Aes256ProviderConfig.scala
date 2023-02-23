@@ -8,7 +8,7 @@ import java.util
 
 object Aes256ProviderConfig {
   val SECRET_KEY = "aes256.key"
-  
+
   val config = new ConfigDef()
     .define(
       SECRET_KEY,
@@ -27,7 +27,7 @@ object Aes256ProviderConfig {
 }
 
 case class Aes256ProviderConfig(props: util.Map[String, _])
- extends AbstractConfig(Aes256ProviderConfig.config, props) {
-   def aes256Key: String = getString(Aes256ProviderConfig.SECRET_KEY)
-   def writeDirectory: String = getString(FILE_DIR)
- }
+    extends AbstractConfig(Aes256ProviderConfig.config, props) {
+  def aes256Key: String = getString(Aes256ProviderConfig.SECRET_KEY)
+  def writeDirectory: String = getString(FILE_DIR)
+}

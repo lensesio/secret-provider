@@ -15,9 +15,9 @@ import scala.jdk.CollectionConverters._
 class Aes256DecodingProvider extends ConfigProvider {
 
   var decoder: Option[Aes256DecodingHelper] = None
-  
+
   private var fileWriter: FileWriter = _
-  
+
   override def configure(configs: util.Map[String, _]): Unit = {
     val aes256Cfg = Aes256ProviderConfig(configs)
     val aes256Key = aes256Cfg.aes256Key
@@ -29,22 +29,33 @@ class Aes256DecodingProvider extends ConfigProvider {
     fileWriter = new FileWriterOnce(Paths.get(writeDir, "secrets"))
   }
 
-  override def get(path: String): ConfigData = new ConfigData(Map.empty[String, String].asJava)
+  override def get(path: String): ConfigData =
+    new ConfigData(Map.empty[String, String].asJava)
 
   override def get(path: String, keys: util.Set[String]): ConfigData = {
     val encodingAndId = EncodingAndId.from(path)
     decoder match {
       case Some(d) =>
         def decrypt(key: String): String = {
-          val decrypted = d.decrypt(key).fold(e => throw new ConnectException("Failed to decrypt the secret.", e), identity)
+          val decrypted = d
+            .decrypt(key)
+            .fold(
+              e =>
+                throw new ConnectException("Failed to decrypt the secret.", e),
+              identity
+            )
           decodeKey(
             key = key,
             value = decrypted,
             encoding = encodingAndId.encoding,
             writeFileFn = { content =>
               encodingAndId.id match {
-                case Some(value) => fileWriter.write(value, content, key).toString
-                case None => throw new ConnectException(s"Invalid argument received for key:$key. Expecting a file identifier.")
+                case Some(value) =>
+                  fileWriter.write(value, content, key).toString
+                case None =>
+                  throw new ConnectException(
+                    s"Invalid argument received for key:$key. Expecting a file identifier."
+                  )
               }
             }
           )

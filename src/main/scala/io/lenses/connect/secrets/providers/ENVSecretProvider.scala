@@ -7,7 +7,12 @@
 package io.lenses.connect.secrets.providers
 
 import io.lenses.connect.secrets.config.ENVProviderConfig
-import io.lenses.connect.secrets.connect.{FILE_DIR, decode, decodeToBytes, fileWriter}
+import io.lenses.connect.secrets.connect.{
+  FILE_DIR,
+  decode,
+  decodeToBytes,
+  fileWriter
+}
 import org.apache.kafka.common.config.ConfigData
 import org.apache.kafka.common.config.provider.ConfigProvider
 import org.apache.kafka.connect.errors.ConnectException
@@ -34,21 +39,24 @@ class ENVSecretProvider extends ConfigProvider {
         .map { key =>
           {
             val envVarVal =
-              vars.getOrElse(key,
-                             throw new ConnectException(
-                               s"Failed to lookup environment variable [$key]"))
+              vars.getOrElse(
+                key,
+                throw new ConnectException(
+                  s"Failed to lookup environment variable [$key]"
+                )
+              )
 
             // match the value to see if its coming from contains
             // the value metadata pattern
             envVarVal match {
               case BASE64_FILE(_, v) =>
                 //decode and write to file
-                val fileName =  s"$fileDir$separator${key.toLowerCase}"
+                val fileName = s"$fileDir$separator${key.toLowerCase}"
                 fileWriter(fileName, decodeToBytes(key, v), key)
                 (key, fileName)
 
               case UTF8_FILE(_, v) =>
-                val fileName =  s"$fileDir$separator${key.toLowerCase}"
+                val fileName = s"$fileDir$separator${key.toLowerCase}"
                 fileWriter(fileName, v.getBytes(), key)
                 (key, fileName)
 

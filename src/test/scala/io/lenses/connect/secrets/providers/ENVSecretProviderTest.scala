@@ -21,7 +21,9 @@ class ENVSecretProviderTest extends AnyWordSpec with Matchers {
 
   val separator: String = FileSystems.getDefault.getSeparator
   val tmp: String =
-    System.getProperty("java.io.tmpdir").stripSuffix(separator) + separator + "provider-tests-env"
+    System
+      .getProperty("java.io.tmpdir")
+      .stripSuffix(separator) + separator + "provider-tests-env"
 
   "should filter and match" in {
     val provider = new ENVSecretProvider()
@@ -38,7 +40,8 @@ class ENVSecretProviderTest extends AnyWordSpec with Matchers {
     data.data().get("CONNECT_CASSANDRA_PASSWORD") shouldBe "secret"
     data.data().containsKey("RANDOM") shouldBe false
 
-    val data2 = provider.get("", Set("CONNECT_CASSANDRA_PASSWORD", "RANDOM").asJava)
+    val data2 =
+      provider.get("", Set("CONNECT_CASSANDRA_PASSWORD", "RANDOM").asJava)
     data2.data().get("CONNECT_CASSANDRA_PASSWORD") shouldBe "secret"
     data2.data().containsKey("RANDOM") shouldBe true
 
@@ -49,13 +52,17 @@ class ENVSecretProviderTest extends AnyWordSpec with Matchers {
     val outputFile = data4.data().get("BASE64_FILE")
     outputFile shouldBe s"$tmp${separator}base64_file"
 
-    Using(Source.fromFile(outputFile))(_.getLines().mkString) shouldBe Success("my-base64-secret")
+    Using(Source.fromFile(outputFile))(_.getLines().mkString) shouldBe Success(
+      "my-base64-secret"
+    )
 
     val data5 = provider.get("", Set("UTF8_FILE").asJava)
     val outputFile5 = data5.data().get("UTF8_FILE")
     outputFile5 shouldBe s"$tmp${separator}utf8_file"
 
-    Using(Source.fromFile(outputFile5))(_.getLines().mkString) shouldBe Success("my-secret")
+    Using(Source.fromFile(outputFile5))(_.getLines().mkString) shouldBe Success(
+      "my-secret"
+    )
 
   }
 

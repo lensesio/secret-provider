@@ -9,6 +9,7 @@ package io.lenses.connect.secrets.providers
 import com.amazonaws.services.secretsmanager.AWSSecretsManager
 import com.amazonaws.services.secretsmanager.model._
 import com.bettercloud.vault.json.JsonObject
+import io.lenses.connect.secrets.TmpDirUtil.getTempDir
 import io.lenses.connect.secrets.config.{AWSProviderConfig, AWSProviderSettings}
 import io.lenses.connect.secrets.connect.{AuthMode, Encoding, _}
 import io.lenses.connect.secrets.utils.EncodingAndId
@@ -16,9 +17,10 @@ import org.apache.kafka.common.config.ConfigTransformer
 import org.apache.kafka.common.config.provider.ConfigProvider
 import org.apache.kafka.connect.errors.ConnectException
 import org.mockito.ArgumentMatchers.any
-import org.mockito.MockitoSugar
+import org.mockito.Mockito.when
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar
 
 import java.nio.file.FileSystems
 import java.util.{Base64, Date}
@@ -32,8 +34,7 @@ class AWSSecretProviderTest
     with MockitoSugar {
 
   val separator: String = FileSystems.getDefault.getSeparator
-  val tmp: String =
-    System.getProperty("java.io.tmpdir") + separator + "provider-tests-aws"
+  val tmp: String = s"$getTempDir${separator}provider-tests-aws"
 
   "should authenticate with credentials" in {
     val props = Map(
@@ -188,7 +189,9 @@ class AWSSecretProviderTest
     val outputFile = data.data().get(secretKey)
     outputFile shouldBe s"$tmp$separator$secretName$separator${secretKey.toLowerCase}"
 
-    Using(Source.fromFile(outputFile))(_.getLines().mkString) shouldBe Success(secretValue)
+    Using(Source.fromFile(outputFile))(_.getLines().mkString) shouldBe Success(
+      secretValue
+    )
 
     provider.get("").data().isEmpty shouldBe true
     provider.close()
@@ -242,7 +245,9 @@ class AWSSecretProviderTest
     val outputFile = data.data().get(secretKey)
     outputFile shouldBe s"$tmp$separator$secretName$separator${secretKey.toLowerCase}"
 
-    Using(Source.fromFile(outputFile))(_.getLines().mkString) shouldBe Success(secretValue)
+    Using(Source.fromFile(outputFile))(_.getLines().mkString) shouldBe Success(
+      secretValue
+    )
 
     provider.get("").data().isEmpty shouldBe true
     provider.close()

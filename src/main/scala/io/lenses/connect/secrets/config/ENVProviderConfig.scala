@@ -23,4 +23,4 @@ object ENVProviderConfig {
 }
 
 case class ENVProviderConfig(props: util.Map[String, _])
-  extends AbstractConfig(ENVProviderConfig.config, props)
+    extends AbstractConfig(ENVProviderConfig.config, props)

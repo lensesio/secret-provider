@@ -10,13 +10,14 @@ import sbtassembly.MergeStrategy
 object Settings extends Dependencies {
 
   val scala212 = "2.12.14"
-  val scala213 = "2.13.6"
+  val scala213 = "2.13.10"
+  val scala3 = "3.2.2"
 
   val nextVersion = "2.1.7"
   val artifactVersion = {
     sys.env.get("LENSES_TAG_NAME") match {
       case Some(tag) => tag
-      case _ => s"$nextVersion-SNAPSHOT"
+      case _         => s"$nextVersion-SNAPSHOT"
     }
   }
 
@@ -36,15 +37,15 @@ object Settings extends Dependencies {
       Resolver.mavenCentral
     ),
     libraryDependencies ++= secretProviderDeps,
-    crossScalaVersions := List(scala213, scala212),
+    crossScalaVersions := List( /*scala3, */ scala213 /*scala212*/ ),
     Compile / scalacOptions ++= Seq(
-      "-target:jvm-1.8",
+      "-release:11",
       "-encoding",
       "utf8",
       "-deprecation",
       "-unchecked",
       "-feature",
-      "8"
+      "11"
     ),
     Compile / scalacOptions ++= {
       CrossVersion.partialVersion(scalaVersion.value) match {

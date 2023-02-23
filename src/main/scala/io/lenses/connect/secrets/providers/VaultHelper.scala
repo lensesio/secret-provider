@@ -40,21 +40,21 @@ trait VaultHelper extends StrictLogging {
     val token = settings.authMode match {
       case VaultAuthMethod.USERPASS =>
         settings.userPass
-          .map(
-            up =>
-              vault
-                .auth()
-                .loginByUserPass(up.username, up.password.value(), up.mount)
-                .getAuthClientToken)
+          .map(up =>
+            vault
+              .auth()
+              .loginByUserPass(up.username, up.password.value(), up.mount)
+              .getAuthClientToken
+          )
 
       case VaultAuthMethod.APPROLE =>
         settings.appRole
-          .map(
-            ar =>
-              vault
-                .auth()
-                .loginByAppRole(ar.role, ar.secretId.value())
-                .getAuthClientToken)
+          .map(ar =>
+            vault
+              .auth()
+              .loginByAppRole(ar.role, ar.secretId.value())
+              .getAuthClientToken
+          )
 
       case VaultAuthMethod.CERT =>
         settings.cert
@@ -62,70 +62,70 @@ trait VaultHelper extends StrictLogging {
 
       case VaultAuthMethod.AWSIAM =>
         settings.awsIam
-          .map(
-            aws =>
-              vault
-                .auth()
-                .loginByAwsIam(
-                  aws.role,
-                  aws.url,
-                  aws.body.value(),
-                  aws.headers.value(),
-                  aws.mount
-                )
-                .getAuthClientToken)
+          .map(aws =>
+            vault
+              .auth()
+              .loginByAwsIam(
+                aws.role,
+                aws.url,
+                aws.body.value(),
+                aws.headers.value(),
+                aws.mount
+              )
+              .getAuthClientToken
+          )
 
       case VaultAuthMethod.KUBERNETES =>
         settings.k8s
-          .map(
-            k8s =>
-              vault
-                .auth()
-                .loginByKubernetes(k8s.role, k8s.jwt.value())
-                .getAuthClientToken)
+          .map(k8s =>
+            vault
+              .auth()
+              .loginByKubernetes(k8s.role, k8s.jwt.value())
+              .getAuthClientToken
+          )
       case VaultAuthMethod.GCP =>
         settings.gcp
-          .map(
-            gcp =>
-              vault
-                .auth()
-                .loginByGCP(gcp.role, gcp.jwt.value())
-                .getAuthClientToken)
+          .map(gcp =>
+            vault
+              .auth()
+              .loginByGCP(gcp.role, gcp.jwt.value())
+              .getAuthClientToken
+          )
 
       case VaultAuthMethod.LDAP =>
         settings.ldap
-          .map(
-            l =>
-              vault
-                .auth()
-                .loginByLDAP(l.username, l.password.value(), l.mount)
-                .getAuthClientToken)
+          .map(l =>
+            vault
+              .auth()
+              .loginByLDAP(l.username, l.password.value(), l.mount)
+              .getAuthClientToken
+          )
 
       case VaultAuthMethod.JWT =>
         settings.jwt
-          .map(
-            j =>
-              vault
-                .auth()
-                .loginByJwt(j.provider, j.role, j.jwt.value())
-                .getAuthClientToken)
+          .map(j =>
+            vault
+              .auth()
+              .loginByJwt(j.provider, j.role, j.jwt.value())
+              .getAuthClientToken
+          )
 
       case VaultAuthMethod.TOKEN =>
         Some(settings.token.value())
 
       case VaultAuthMethod.GITHUB =>
-
         settings.github
-          .map(
-            gh =>
-              vault
-                .auth()
-                .loginByGithub(gh.token.value(), gh.mount)
-                .getAuthClientToken)
+          .map(gh =>
+            vault
+              .auth()
+              .loginByGithub(gh.token.value(), gh.mount)
+              .getAuthClientToken
+          )
 
       case _ =>
         throw new ConnectException(
-          s"Unsupported auth method [${settings.authMode.toString}]")
+          s"Unsupported auth method [${settings.authMode.toString}]"
+        )
     }
 
     config.token(token.get)

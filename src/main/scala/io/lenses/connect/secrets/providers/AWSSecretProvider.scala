@@ -33,9 +33,11 @@ class AWSSecretProvider() extends ConfigProvider with AWSHelper {
       case Some(awsClient) =>
         //aws client caches so we don't need to check here
         val (expiry, data) = getSecretsAndExpiry(
-          getSecrets(awsClient, path, keys.asScala.toSet))
+          getSecrets(awsClient, path, keys.asScala.toSet)
+        )
         expiry.foreach(exp =>
-          logger.info(s"Min expiry for TTL set to [${exp.toString}]"))
+          logger.info(s"Min expiry for TTL set to [${exp.toString}]")
+        )
         data
 
       case None => throw new ConnectException("AWS client is not set.")
@@ -53,7 +55,8 @@ class AWSSecretProvider() extends ConfigProvider with AWSHelper {
   def getSecrets(
       awsClient: AWSSecretsManager,
       path: String,
-      keys: Set[String]): Map[String, (String, Option[OffsetDateTime])] = {
+      keys: Set[String]
+  ): Map[String, (String, Option[OffsetDateTime])] = {
     keys.map { key =>
       logger.info(s"Looking up value at [$path] for key [$key]")
       val (value, expiry) = getSecretValue(awsClient, rootDir, path, key)

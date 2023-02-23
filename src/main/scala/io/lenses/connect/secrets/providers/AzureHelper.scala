@@ -7,7 +7,10 @@
 package io.lenses.connect.secrets.providers
 
 import com.azure.core.credential.TokenCredential
-import com.azure.identity.{ClientSecretCredentialBuilder, DefaultAzureCredentialBuilder}
+import com.azure.identity.{
+  ClientSecretCredentialBuilder,
+  DefaultAzureCredentialBuilder
+}
 import com.azure.security.keyvault.secrets.SecretClient
 import com.typesafe.scalalogging.StrictLogging
 import io.lenses.connect.secrets.config.AzureProviderSettings
@@ -41,14 +44,16 @@ trait AzureHelper extends StrictLogging {
             Option(props.getTags)
               .map { _.getOrDefault(FILE_ENCODING, Encoding.UTF8.toString) }
               .getOrElse(Encoding.UTF8.toString)
-              .toUpperCase)
+              .toUpperCase
+          )
 
         val content = encoding match {
           case Encoding.UTF8 =>
             value
 
           case Encoding.UTF8_FILE =>
-            val fileName = getFileName(rootDir, path, key.toLowerCase, separator)
+            val fileName =
+              getFileName(rootDir, path, key.toLowerCase, separator)
             fileWriter(
               fileName,
               value.getBytes,
@@ -61,7 +66,8 @@ trait AzureHelper extends StrictLogging {
 
           // write to file and set the file name as the value
           case Encoding.BASE64_FILE | Encoding.UTF8_FILE =>
-            val fileName = getFileName(rootDir, path, key.toLowerCase, separator)
+            val fileName =
+              getFileName(rootDir, path, key.toLowerCase, separator)
             val decoded = decodeToBytes(key, value)
             fileWriter(
               fileName,

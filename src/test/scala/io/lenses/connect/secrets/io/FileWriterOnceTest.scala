@@ -45,7 +45,7 @@ class FileWriterOnceTest
 
     Using(Source.fromFile(file))(_.size) shouldBe Success(content1.length)
 
-    val content2 = Array(1, 2, 3,4,5,6,7,8).map(_.toByte)
+    val content2 = Array(1, 2, 3, 4, 5, 6, 7, 8).map(_.toByte)
     writer.write(fileName, content2, "key1")
     Using(Source.fromFile(file))(_.size) shouldBe Success(content1.length)
 

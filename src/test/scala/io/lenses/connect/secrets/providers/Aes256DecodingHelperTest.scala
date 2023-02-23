@@ -13,8 +13,8 @@ class Aes256DecodingHelperTest
     extends AnyWordSpec
     with Matchers
     with TableDrivenPropertyChecks {
-      
-  import AesDecodingTestHelper.encrypt    
+
+  import AesDecodingTestHelper.encrypt
 
   "AES-256 decorer" should {
     "not be created for invalid key length" in {
@@ -54,7 +54,7 @@ class Aes256DecodingHelperTest
   }
 
   trait TestContext {
-    val key = generateKey() 
+    val key = generateKey()
 
     def generateKey(): String = randomUUID.toString.take(32)
 

@@ -138,7 +138,8 @@ object VaultSettings extends StrictLogging {
     Cert(config.getString(VaultProviderConfig.CERT_MOUNT))
 
   def getGitHub(config: VaultProviderConfig): Github = {
-    val token = config.getPasswordOrThrowOnNull(VaultProviderConfig.GITHUB_TOKEN)
+    val token =
+      config.getPasswordOrThrowOnNull(VaultProviderConfig.GITHUB_TOKEN)
     val mount = config.getStringOrThrowOnNull(VaultProviderConfig.GITHUB_MOUNT)
     Github(token = token, mount = mount)
   }
@@ -146,8 +147,10 @@ object VaultSettings extends StrictLogging {
   def getAWS(config: VaultProviderConfig): AwsIam = {
     val role = config.getStringOrThrowOnNull(VaultProviderConfig.AWS_ROLE)
     val url = config.getStringOrThrowOnNull(VaultProviderConfig.AWS_REQUEST_URL)
-    val headers = config.getPasswordOrThrowOnNull(VaultProviderConfig.AWS_REQUEST_HEADERS)
-    val body = config.getPasswordOrThrowOnNull(VaultProviderConfig.AWS_REQUEST_BODY)
+    val headers =
+      config.getPasswordOrThrowOnNull(VaultProviderConfig.AWS_REQUEST_HEADERS)
+    val body =
+      config.getPasswordOrThrowOnNull(VaultProviderConfig.AWS_REQUEST_BODY)
     val mount = config.getStringOrThrowOnNull(VaultProviderConfig.AWS_MOUNT)
     AwsIam(
       role = role,
@@ -160,13 +163,16 @@ object VaultSettings extends StrictLogging {
 
   def getAppRole(config: VaultProviderConfig): AppRole = {
     val role = config.getStringOrThrowOnNull(VaultProviderConfig.APP_ROLE)
-    val secretId = config.getPasswordOrThrowOnNull(VaultProviderConfig.APP_ROLE_SECRET_ID)
+    val secretId =
+      config.getPasswordOrThrowOnNull(VaultProviderConfig.APP_ROLE_SECRET_ID)
     AppRole(role = role, secretId = secretId)
   }
 
   def getK8s(config: VaultProviderConfig): K8s = {
-    val role = config.getStringOrThrowOnNull(VaultProviderConfig.KUBERNETES_ROLE)
-    val path = config.getStringOrThrowOnNull(VaultProviderConfig.KUBERNETES_TOKEN_PATH)
+    val role =
+      config.getStringOrThrowOnNull(VaultProviderConfig.KUBERNETES_ROLE)
+    val path =
+      config.getStringOrThrowOnNull(VaultProviderConfig.KUBERNETES_TOKEN_PATH)
     Using(Source.fromFile(path))(_.getLines().mkString) match {
       case Failure(exception) =>
         throw new ConnectException(
@@ -187,7 +193,8 @@ object VaultSettings extends StrictLogging {
 
   def getLDAP(config: VaultProviderConfig): Ldap = {
     val user = config.getStringOrThrowOnNull(VaultProviderConfig.LDAP_USERNAME)
-    val pass = config.getPasswordOrThrowOnNull(VaultProviderConfig.LDAP_PASSWORD)
+    val pass =
+      config.getPasswordOrThrowOnNull(VaultProviderConfig.LDAP_PASSWORD)
     val mount = config.getStringOrThrowOnNull(VaultProviderConfig.LDAP_MOUNT)
     Ldap(username = user, password = pass, mount = mount)
   }
@@ -200,7 +207,8 @@ object VaultSettings extends StrictLogging {
 
   def getJWT(config: VaultProviderConfig): Jwt = {
     val role = config.getStringOrThrowOnNull(VaultProviderConfig.JWT_ROLE)
-    val provider = config.getStringOrThrowOnNull(VaultProviderConfig.JWT_PROVIDER)
+    val provider =
+      config.getStringOrThrowOnNull(VaultProviderConfig.JWT_PROVIDER)
     val jwt = config.getPasswordOrThrowOnNull(VaultProviderConfig.JWT)
     Jwt(role = role, provider = provider, jwt = jwt)
   }

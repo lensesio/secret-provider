@@ -350,13 +350,14 @@ object VaultProviderConfig {
       "",
       Importance.MEDIUM,
       FILE_DIR_DESC
-    ).define(
-    TOKEN_RENEWAL,
-    Type.INT,
-    TOKEN_RENEWAL_DEFAULT,
-    Importance.MEDIUM,
-    "The time in milliseconds to renew the Vault token"
-  )
+    )
+    .define(
+      TOKEN_RENEWAL,
+      Type.INT,
+      TOKEN_RENEWAL_DEFAULT,
+      Importance.MEDIUM,
+      "The time in milliseconds to renew the Vault token"
+    )
 }
 case class VaultProviderConfig(props: util.Map[String, _])
     extends AbstractConfig(VaultProviderConfig.config, props)

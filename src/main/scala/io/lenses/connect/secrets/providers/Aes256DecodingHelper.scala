@@ -29,10 +29,10 @@ private[providers] object Aes256DecodingHelper {
     }
 }
 
-private[providers] class Aes256DecodingHelper private(
-                                                       key: String,
-                                                       ivSeparator: String
-                                                     ) {
+private[providers] class Aes256DecodingHelper private (
+    key: String,
+    ivSeparator: String
+) {
 
   import Aes256DecodingHelper.CHARSET
   import B64._
@@ -41,15 +41,18 @@ private[providers] class Aes256DecodingHelper private(
 
   def decrypt(s: String): Try[String] =
     for {
-      (iv, encoded) <- InitializationVector.extractInitialisationVector(s, ivSeparator)
+      (iv, encoded) <- InitializationVector.extractInitialisationVector(
+        s,
+        ivSeparator
+      )
       decoded <- base64Decode(encoded)
       decrypted <- decryptBytes(iv, decoded)
     } yield new String(decrypted, CHARSET)
 
   private def decryptBytes(
-                            iv: InitializationVector,
-                            bytes: Array[Byte]
-                          ): Try[Array[Byte]] =
+      iv: InitializationVector,
+      bytes: Array[Byte]
+  ): Try[Array[Byte]] =
     for {
       cipher <- getCipher(Cipher.DECRYPT_MODE, iv)
       encrypted <- Try(cipher.doFinal(bytes))
@@ -64,7 +67,7 @@ private[providers] class Aes256DecodingHelper private(
     }
 }
 
-private case class InitializationVector private(bytes: Array[Byte])
+private case class InitializationVector private (bytes: Array[Byte])
 
 private object InitializationVector {
 
@@ -81,9 +84,9 @@ private object InitializationVector {
   }
 
   def extractInitialisationVector(
-                                   s: String,
-                                   ivSeparator: String
-                                 ): Try[(InitializationVector, String)] =
+      s: String,
+      ivSeparator: String
+  ): Try[(InitializationVector, String)] =
     s.indexOf(ivSeparator) match {
       case -1 =>
         Failure(

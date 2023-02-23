@@ -7,14 +7,22 @@
 package io.lenses.connect.secrets.providers
 
 import com.azure.security.keyvault.secrets.SecretClient
-import com.azure.security.keyvault.secrets.models.{KeyVaultSecret, SecretProperties}
-import io.lenses.connect.secrets.config.{AzureProviderConfig, AzureProviderSettings}
+import com.azure.security.keyvault.secrets.models.{
+  KeyVaultSecret,
+  SecretProperties
+}
+import io.lenses.connect.secrets.TmpDirUtil.getTempDir
+import io.lenses.connect.secrets.config.{
+  AzureProviderConfig,
+  AzureProviderSettings
+}
 import io.lenses.connect.secrets.connect
 import io.lenses.connect.secrets.connect.AuthMode
 import org.apache.kafka.common.config.provider.ConfigProvider
 import org.apache.kafka.common.config.{ConfigData, ConfigTransformer}
 import org.apache.kafka.connect.errors.ConnectException
-import org.mockito.MockitoSugar
+import org.mockito.Mockito.when
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
@@ -32,7 +40,7 @@ class AzureSecretProviderTest
 
   val separator: String = FileSystems.getDefault.getSeparator
   val tmp: String =
-    System.getProperty("java.io.tmpdir") + separator + "provider-tests-azure"
+    s"$getTempDir${separator}provider-tests-azure"
 
   "should get secrets at a path with service principal credentials" in {
     val props = Map(
@@ -50,6 +58,7 @@ class AzureSecretProviderTest
     val secretPath = "my-path.vault.azure.net"
 
     val client = mock[SecretClient]
+    when(client.getVaultUrl).thenReturn(s"https://$secretPath")
     val secret = mock[KeyVaultSecret]
     val secretProperties = mock[SecretProperties]
     val offset = OffsetDateTime.now()
@@ -86,6 +95,7 @@ class AzureSecretProviderTest
     val secretPath = "my-path.vault.azure.net"
 
     val client = mock[SecretClient]
+    when(client.getVaultUrl).thenReturn(s"https://$secretPath")
 
     //base64 secret
     val secretb64 = mock[KeyVaultSecret]
@@ -128,6 +138,7 @@ class AzureSecretProviderTest
     val secretPath = "my-path.vault.azure.net"
 
     val client = mock[SecretClient]
+    when(client.getVaultUrl).thenReturn(s"https://$secretPath")
 
     //base64 secret
     val secretb64 = mock[KeyVaultSecret]
@@ -153,7 +164,9 @@ class AzureSecretProviderTest
 
     outputFile shouldBe s"$tmp$separator$secretPath$separator$secretKey"
 
-    Using(Source.fromFile(outputFile))(_.getLines().mkString) shouldBe Success(secretValue)
+    Using(Source.fromFile(outputFile))(_.getLines().mkString) shouldBe Success(
+      secretValue
+    )
 
     provider.get("").data().isEmpty shouldBe true
     provider.close()
@@ -176,6 +189,8 @@ class AzureSecretProviderTest
     val secretPath = "my-path.vault.azure.net"
 
     val client = mock[SecretClient]
+    when(client.getVaultUrl).thenReturn(s"https://$secretPath")
+
     val secret = mock[KeyVaultSecret]
     val secretProperties = mock[SecretProperties]
     val ttl = OffsetDateTime.now()
@@ -197,7 +212,9 @@ class AzureSecretProviderTest
 
     outputFile shouldBe s"$tmp$separator$secretPath$separator$secretKey"
 
-    Using(Source.fromFile(outputFile))(_.getLines().mkString) shouldBe Success(secretValue)
+    Using(Source.fromFile(outputFile))(_.getLines().mkString) shouldBe Success(
+      secretValue
+    )
 
     provider.get("").data().isEmpty shouldBe true
     provider.close()
@@ -219,6 +236,7 @@ class AzureSecretProviderTest
     val secretPath = "my-path.vault.azure.net"
 
     val client = mock[SecretClient]
+    when(client.getVaultUrl).thenReturn(s"https://$secretPath")
 
     // poke in the mocked client
     provider.clientMap += (s"https://$secretPath" -> client)
@@ -250,6 +268,8 @@ class AzureSecretProviderTest
     val vaultUrl = s"https://$secretPath"
 
     val client = mock[SecretClient]
+    when(client.getVaultUrl).thenReturn(s"https://$secretPath")
+
     val secret = mock[KeyVaultSecret]
     val secretProperties = mock[SecretProperties]
     val ttl = OffsetDateTime.now().plusHours(1)
@@ -297,6 +317,8 @@ class AzureSecretProviderTest
     val vaultUrl = s"https://$secretPath"
 
     val client = mock[SecretClient]
+    when(client.getVaultUrl).thenReturn(s"https://$secretPath")
+
     val secret = mock[KeyVaultSecret]
     val secretProperties = mock[SecretProperties]
     val ttl = OffsetDateTime.now().plusHours(1)
@@ -387,6 +409,8 @@ class AzureSecretProviderTest
     val secretPath = "my-path.vault.azure.net"
 
     val client = mock[SecretClient]
+    when(client.getVaultUrl).thenReturn(s"https://$secretPath")
+
     val secret = mock[KeyVaultSecret]
     val secretProperties = mock[SecretProperties]
     val offset = OffsetDateTime.now()

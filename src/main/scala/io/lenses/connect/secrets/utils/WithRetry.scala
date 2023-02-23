@@ -12,11 +12,15 @@ import scala.util.{Failure, Success, Try}
 trait WithRetry {
 
   @tailrec
-  protected final def withRetry[T](retry: Int = 5, interval:Option[FiniteDuration])(thunk: => T): T =
+  protected final def withRetry[T](
+      retry: Int = 5,
+      interval: Option[FiniteDuration]
+  )(thunk: => T): T =
     Try {
       thunk
     } match {
-      case Failure(t) => if (retry == 0) throw t
+      case Failure(t) =>
+        if (retry == 0) throw t
         interval.foreach(sleepValue => Thread.sleep(sleepValue.toMillis))
         withRetry(retry - 1, interval)(thunk)
       case Success(value) => value
