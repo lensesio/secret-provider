@@ -6,20 +6,16 @@
 
 package io.lenses.connect.secrets
 
-import java.io.File
-import java.io.FileOutputStream
-import java.time.OffsetDateTime
-import java.util.Base64
-
 import com.typesafe.scalalogging.StrictLogging
 import org.apache.kafka.common.config.ConfigData
 import org.apache.kafka.connect.errors.ConnectException
 
-import scala.collection.JavaConverters._
+import java.io.{File, FileOutputStream}
+import java.time.OffsetDateTime
+import java.util.Base64
 import scala.collection.mutable
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
+import scala.jdk.CollectionConverters._
+import scala.util.{Failure, Success, Try}
 
 package object connect extends StrictLogging {
 
@@ -146,7 +142,7 @@ package object connect extends StrictLogging {
   def getSecretsAndExpiry(
       secrets: Map[String, (String, Option[OffsetDateTime])]
   ): (Option[OffsetDateTime], ConfigData) = {
-    var expiryList = mutable.ListBuffer.empty[OffsetDateTime]
+    val expiryList = mutable.ListBuffer.empty[OffsetDateTime]
 
     val data = secrets
       .map({

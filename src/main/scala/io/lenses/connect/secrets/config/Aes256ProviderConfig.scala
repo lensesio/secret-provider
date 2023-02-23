@@ -1,13 +1,14 @@
 package io.lenses.connect.secrets.config
 
 import io.lenses.connect.secrets.connect.{FILE_DIR, FILE_DIR_DESC}
-import org.apache.kafka.common.config.{AbstractConfig, ConfigDef}
 import org.apache.kafka.common.config.ConfigDef.{Importance, Type}
+import org.apache.kafka.common.config.{AbstractConfig, ConfigDef}
+
 import java.util
 
 object Aes256ProviderConfig {
   val SECRET_KEY = "aes256.key"
-  
+
   val config = new ConfigDef()
     .define(
       SECRET_KEY,
@@ -26,7 +27,7 @@ object Aes256ProviderConfig {
 }
 
 case class Aes256ProviderConfig(props: util.Map[String, _])
- extends AbstractConfig(Aes256ProviderConfig.config, props) {
-   def aes256Key: String = getString(Aes256ProviderConfig.SECRET_KEY)
-   def writeDirectory: String = getString(FILE_DIR)
- }
+    extends AbstractConfig(Aes256ProviderConfig.config, props) {
+  def aes256Key: String = getString(Aes256ProviderConfig.SECRET_KEY)
+  def writeDirectory: String = getString(FILE_DIR)
+}

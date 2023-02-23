@@ -6,9 +6,6 @@
 
 package io.lenses.connect.secrets.providers
 
-import java.nio.file.FileSystems
-import java.time.OffsetDateTime
-
 import com.azure.core.credential.TokenCredential
 import com.azure.identity.{
   ClientSecretCredentialBuilder,
@@ -17,17 +14,11 @@ import com.azure.identity.{
 import com.azure.security.keyvault.secrets.SecretClient
 import com.typesafe.scalalogging.StrictLogging
 import io.lenses.connect.secrets.config.AzureProviderSettings
-import io.lenses.connect.secrets.connect.{
-  AuthMode,
-  Encoding,
-  FILE_ENCODING,
-  decode,
-  decodeToBytes,
-  fileWriter,
-  getFileName
-}
+import io.lenses.connect.secrets.connect._
 import org.apache.kafka.connect.errors.ConnectException
 
+import java.nio.file.FileSystems
+import java.time.OffsetDateTime
 import scala.util.{Failure, Success, Try}
 
 trait AzureHelper extends StrictLogging {
@@ -53,14 +44,16 @@ trait AzureHelper extends StrictLogging {
             Option(props.getTags)
               .map { _.getOrDefault(FILE_ENCODING, Encoding.UTF8.toString) }
               .getOrElse(Encoding.UTF8.toString)
-              .toUpperCase)
+              .toUpperCase
+          )
 
         val content = encoding match {
           case Encoding.UTF8 =>
             value
 
           case Encoding.UTF8_FILE =>
-            val fileName = getFileName(rootDir, path, key.toLowerCase, separator)
+            val fileName =
+              getFileName(rootDir, path, key.toLowerCase, separator)
             fileWriter(
               fileName,
               value.getBytes,
@@ -73,7 +66,8 @@ trait AzureHelper extends StrictLogging {
 
           // write to file and set the file name as the value
           case Encoding.BASE64_FILE | Encoding.UTF8_FILE =>
-            val fileName = getFileName(rootDir, path, key.toLowerCase, separator)
+            val fileName =
+              getFileName(rootDir, path, key.toLowerCase, separator)
             val decoded = decodeToBytes(key, value)
             fileWriter(
               fileName,

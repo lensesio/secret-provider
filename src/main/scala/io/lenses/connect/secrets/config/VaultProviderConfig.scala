@@ -6,11 +6,11 @@
 
 package io.lenses.connect.secrets.config
 
-import java.util
-
 import io.lenses.connect.secrets.connect.{FILE_DIR, FILE_DIR_DESC}
 import org.apache.kafka.common.config.ConfigDef.{Importance, Type}
 import org.apache.kafka.common.config.{AbstractConfig, ConfigDef, SslConfigs}
+
+import java.util
 
 object VaultAuthMethod extends Enumeration {
   type VaultAuthMethod = Value
@@ -350,13 +350,14 @@ object VaultProviderConfig {
       "",
       Importance.MEDIUM,
       FILE_DIR_DESC
-    ).define(
-    TOKEN_RENEWAL,
-    Type.INT,
-    TOKEN_RENEWAL_DEFAULT,
-    Importance.MEDIUM,
-    "The time in milliseconds to renew the Vault token"
-  )
+    )
+    .define(
+      TOKEN_RENEWAL,
+      Type.INT,
+      TOKEN_RENEWAL_DEFAULT,
+      Importance.MEDIUM,
+      "The time in milliseconds to renew the Vault token"
+    )
 }
 case class VaultProviderConfig(props: util.Map[String, _])
     extends AbstractConfig(VaultProviderConfig.config, props)

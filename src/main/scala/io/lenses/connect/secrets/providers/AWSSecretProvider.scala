@@ -6,17 +6,16 @@
 
 package io.lenses.connect.secrets.providers
 
-import java.time.OffsetDateTime
-import java.util
-
+import com.amazonaws.services.secretsmanager.AWSSecretsManager
 import io.lenses.connect.secrets.config.{AWSProviderConfig, AWSProviderSettings}
 import io.lenses.connect.secrets.connect.getSecretsAndExpiry
-import com.amazonaws.services.secretsmanager.AWSSecretsManager
 import org.apache.kafka.common.config.ConfigData
 import org.apache.kafka.common.config.provider.ConfigProvider
 import org.apache.kafka.connect.errors.ConnectException
 
-import scala.collection.JavaConverters._
+import java.time.OffsetDateTime
+import java.util
+import scala.jdk.CollectionConverters._
 
 class AWSSecretProvider() extends ConfigProvider with AWSHelper {
 
@@ -34,9 +33,11 @@ class AWSSecretProvider() extends ConfigProvider with AWSHelper {
       case Some(awsClient) =>
         //aws client caches so we don't need to check here
         val (expiry, data) = getSecretsAndExpiry(
-          getSecrets(awsClient, path, keys.asScala.toSet))
+          getSecrets(awsClient, path, keys.asScala.toSet)
+        )
         expiry.foreach(exp =>
-          logger.info(s"Min expiry for TTL set to [${exp.toString}]"))
+          logger.info(s"Min expiry for TTL set to [${exp.toString}]")
+        )
         data
 
       case None => throw new ConnectException("AWS client is not set.")
@@ -54,7 +55,8 @@ class AWSSecretProvider() extends ConfigProvider with AWSHelper {
   def getSecrets(
       awsClient: AWSSecretsManager,
       path: String,
-      keys: Set[String]): Map[String, (String, Option[OffsetDateTime])] = {
+      keys: Set[String]
+  ): Map[String, (String, Option[OffsetDateTime])] = {
     keys.map { key =>
       logger.info(s"Looking up value at [$path] for key [$key]")
       val (value, expiry) = getSecretValue(awsClient, rootDir, path, key)

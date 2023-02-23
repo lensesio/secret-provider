@@ -1,25 +1,25 @@
 package io.lenses.connect.secrets.providers
 
+import io.lenses.connect.secrets.providers.Aes256DecodingHelper.INITIALISATION_VECTOR_SEPARATOR
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.prop.TableDrivenPropertyChecks
-import scala.util.Random.nextString
-import scala.util.Try
-import Aes256DecodingHelper.INITIALISATION_VECTOR_SEPARATOR
-import scala.util.Success
+import org.scalatest.wordspec.AnyWordSpec
+
 import java.util.UUID.randomUUID
+import scala.util.Random.nextString
+import scala.util.Success
 
 class Aes256DecodingHelperTest
     extends AnyWordSpec
     with Matchers
     with TableDrivenPropertyChecks {
-      
-  import AesDecodingTestHelper.encrypt    
+
+  import AesDecodingTestHelper.encrypt
 
   "AES-256 decorer" should {
     "not be created for invalid key length" in {
       val secretKey = randomUUID.toString.take(16)
-      Aes256DecodingHelper.init(secretKey) shouldBe 'left
+      Aes256DecodingHelper.init(secretKey) shouldBe Symbol("left")
     }
 
     "not be able to decrypt message for uncrecognized key" in new TestContext {
@@ -54,7 +54,7 @@ class Aes256DecodingHelperTest
   }
 
   trait TestContext {
-    val key = generateKey() 
+    val key = generateKey()
 
     def generateKey(): String = randomUUID.toString.take(32)
 

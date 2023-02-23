@@ -20,7 +20,7 @@ case class AzureProviderSettings(
     fileDir: String
 )
 
-import AbstractConfigExtensions._
+import io.lenses.connect.secrets.config.AbstractConfigExtensions._
 object AzureProviderSettings extends StrictLogging {
   def apply(config: AzureProviderConfig): AzureProviderSettings = {
 

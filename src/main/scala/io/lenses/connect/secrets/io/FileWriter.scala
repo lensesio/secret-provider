@@ -5,18 +5,14 @@
  */
 package io.lenses.connect.secrets.io
 
-import java.io.BufferedOutputStream
-import java.io.FileOutputStream
-import java.nio.file.Path
-import java.nio.file.Paths
-
 import com.typesafe.scalalogging.StrictLogging
 import io.lenses.connect.secrets.utils.WithRetry
 
+import java.io.{BufferedOutputStream, FileOutputStream}
+import java.nio.file.attribute.PosixFilePermissions
+import java.nio.file.{Files, Path, Paths}
 import scala.concurrent.duration._
 import scala.util.Try
-import java.nio.file.attribute.PosixFilePermissions
-import java.nio.file.Files
 
 trait FileWriter {
   def write(fileName: String, content: Array[Byte], key: String): Path
@@ -28,11 +24,14 @@ class FileWriterOnce(rootPath: Path)
     with StrictLogging {
 
   private val folderPermissions = PosixFilePermissions.fromString("rwx------")
-  private val filePermissions   = PosixFilePermissions.fromString("rw-------")
-  private val folderAttributes  = PosixFilePermissions.asFileAttribute(folderPermissions)
-  private val fileAttributes    = PosixFilePermissions.asFileAttribute(filePermissions)
+  private val filePermissions = PosixFilePermissions.fromString("rw-------")
+  private val folderAttributes =
+    PosixFilePermissions.asFileAttribute(folderPermissions)
+  private val fileAttributes =
+    PosixFilePermissions.asFileAttribute(filePermissions)
 
-  if (!rootPath.toFile.exists) Files.createDirectories(rootPath, folderAttributes)
+  if (!rootPath.toFile.exists)
+    Files.createDirectories(rootPath, folderAttributes)
 
   def write(fileName: String, content: Array[Byte], key: String): Path = {
     val fullPath = Paths.get(rootPath.toString, fileName)

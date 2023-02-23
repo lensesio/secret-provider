@@ -6,11 +6,11 @@
 
 package io.lenses.connect.secrets.config
 
-import java.util
-
 import io.lenses.connect.secrets.connect.{FILE_DIR, FILE_DIR_DESC}
-import org.apache.kafka.common.config.{AbstractConfig, ConfigDef}
 import org.apache.kafka.common.config.ConfigDef.{Importance, Type}
+import org.apache.kafka.common.config.{AbstractConfig, ConfigDef}
+
+import java.util
 
 object ENVProviderConfig {
   val config = new ConfigDef().define(
@@ -23,4 +23,4 @@ object ENVProviderConfig {
 }
 
 case class ENVProviderConfig(props: util.Map[String, _])
-  extends AbstractConfig(ENVProviderConfig.config, props)
+    extends AbstractConfig(ENVProviderConfig.config, props)

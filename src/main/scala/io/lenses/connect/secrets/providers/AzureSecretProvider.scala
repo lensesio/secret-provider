@@ -6,9 +6,6 @@
 
 package io.lenses.connect.secrets.providers
 
-import java.time.OffsetDateTime
-import java.util
-
 import com.azure.core.credential.TokenCredential
 import com.azure.security.keyvault.secrets.{SecretClient, SecretClientBuilder}
 import io.lenses.connect.secrets.config.{
@@ -19,8 +16,10 @@ import io.lenses.connect.secrets.connect.getSecretsAndExpiry
 import org.apache.kafka.common.config.ConfigData
 import org.apache.kafka.common.config.provider.ConfigProvider
 
-import scala.collection.JavaConverters._
+import java.time.OffsetDateTime
+import java.util
 import scala.collection.mutable
+import scala.jdk.CollectionConverters._
 
 class AzureSecretProvider() extends ConfigProvider with AzureHelper {
 
@@ -73,10 +72,21 @@ class AzureSecretProvider() extends ConfigProvider with AzureHelper {
               .getOrElse(now.plusSeconds(1))
               .isAfter(now))) {
           logger.info("Fetching secrets from cache")
-          (expiresAt,
-           new ConfigData(
-             data.data().asScala.filterKeys(k => keys.contains(k)).asJava,
-             data.ttl()))
+          (
+            expiresAt,
+            new ConfigData(
+              data
+                .data()
+                .asScala
+                .view
+                .filter {
+                  case (k, _) => keys.contains(k)
+                }
+                .toMap
+                .asJava,
+              data.ttl()
+            )
+          )
         } else {
           // missing some or expired so reload
           getSecretsAndExpiry(getSecrets(client, keys.asScala.toSet))
@@ -87,7 +97,8 @@ class AzureSecretProvider() extends ConfigProvider with AzureHelper {
     }
 
     expiry.foreach(exp =>
-      logger.info(s"Min expiry for TTL set to [${exp.toString}]"))
+      logger.info(s"Min expiry for TTL set to [${exp.toString}]")
+    )
     cache += (keyVaultUrl -> (expiry, data))
     data
   }
@@ -96,7 +107,8 @@ class AzureSecretProvider() extends ConfigProvider with AzureHelper {
 
   private def getSecrets(
       client: SecretClient,
-      keys: Set[String]): Map[String, (String, Option[OffsetDateTime])] = {
+      keys: Set[String]
+  ): Map[String, (String, Option[OffsetDateTime])] = {
     val path = client.getVaultUrl.stripPrefix("https://")
     keys.map { key =>
       logger.info(s"Looking up value at [$path] for key [$key]")

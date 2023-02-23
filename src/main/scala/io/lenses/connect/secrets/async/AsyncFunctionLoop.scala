@@ -6,17 +6,14 @@
 
 package io.lenses.connect.secrets.async
 
-import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicLong
-
 import com.typesafe.scalalogging.StrictLogging
 
+import java.util.concurrent.atomic.{AtomicBoolean, AtomicLong}
+import java.util.concurrent.{Executors, TimeUnit}
 import scala.concurrent.duration.Duration
 
 class AsyncFunctionLoop(interval: Duration, description: String)(thunk: => Unit)
-  extends AutoCloseable
+    extends AutoCloseable
     with StrictLogging {
 
   private val running = new AtomicBoolean(false)
@@ -28,7 +25,9 @@ class AsyncFunctionLoop(interval: Duration, description: String)(thunk: => Unit)
     if (!running.compareAndSet(false, true)) {
       throw new IllegalStateException(s"$description already running.")
     }
-    logger.info(s"Starting $description loop with an interval of ${interval.toMillis}ms.")
+    logger.info(
+      s"Starting $description loop with an interval of ${interval.toMillis}ms."
+    )
     executorService.submit(new Runnable {
       override def run(): Unit = {
         while (running.get()) {
@@ -36,8 +35,7 @@ class AsyncFunctionLoop(interval: Duration, description: String)(thunk: => Unit)
             Thread.sleep(interval.toMillis)
             thunk
             success.incrementAndGet()
-          }
-          catch {
+          } catch {
             case _: InterruptedException =>
             case t: Throwable =>
               logger.warn("Failed to renew the Kerberos ticket", t)

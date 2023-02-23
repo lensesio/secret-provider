@@ -7,17 +7,16 @@
 package io.lenses.connect.secrets.config
 
 import com.typesafe.scalalogging.StrictLogging
+import io.lenses.connect.secrets.config.AbstractConfigExtensions._
 import io.lenses.connect.secrets.config.VaultAuthMethod.VaultAuthMethod
-import io.lenses.connect.secrets.connect._
-import AbstractConfigExtensions._
-import scala.concurrent.duration._
 import io.lenses.connect.secrets.config.VaultProviderConfig.TOKEN_RENEWAL
+import io.lenses.connect.secrets.connect._
 import org.apache.kafka.common.config.types.Password
 import org.apache.kafka.connect.errors.ConnectException
 
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration.{FiniteDuration, _}
 import scala.io.Source
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Success, Using}
 
 case class AwsIam(
     role: String,
@@ -139,7 +138,8 @@ object VaultSettings extends StrictLogging {
     Cert(config.getString(VaultProviderConfig.CERT_MOUNT))
 
   def getGitHub(config: VaultProviderConfig): Github = {
-    val token = config.getPasswordOrThrowOnNull(VaultProviderConfig.GITHUB_TOKEN)
+    val token =
+      config.getPasswordOrThrowOnNull(VaultProviderConfig.GITHUB_TOKEN)
     val mount = config.getStringOrThrowOnNull(VaultProviderConfig.GITHUB_MOUNT)
     Github(token = token, mount = mount)
   }
@@ -147,8 +147,10 @@ object VaultSettings extends StrictLogging {
   def getAWS(config: VaultProviderConfig): AwsIam = {
     val role = config.getStringOrThrowOnNull(VaultProviderConfig.AWS_ROLE)
     val url = config.getStringOrThrowOnNull(VaultProviderConfig.AWS_REQUEST_URL)
-    val headers = config.getPasswordOrThrowOnNull(VaultProviderConfig.AWS_REQUEST_HEADERS)
-    val body = config.getPasswordOrThrowOnNull(VaultProviderConfig.AWS_REQUEST_BODY)
+    val headers =
+      config.getPasswordOrThrowOnNull(VaultProviderConfig.AWS_REQUEST_HEADERS)
+    val body =
+      config.getPasswordOrThrowOnNull(VaultProviderConfig.AWS_REQUEST_BODY)
     val mount = config.getStringOrThrowOnNull(VaultProviderConfig.AWS_MOUNT)
     AwsIam(
       role = role,
@@ -161,24 +163,25 @@ object VaultSettings extends StrictLogging {
 
   def getAppRole(config: VaultProviderConfig): AppRole = {
     val role = config.getStringOrThrowOnNull(VaultProviderConfig.APP_ROLE)
-    val secretId = config.getPasswordOrThrowOnNull(VaultProviderConfig.APP_ROLE_SECRET_ID)
+    val secretId =
+      config.getPasswordOrThrowOnNull(VaultProviderConfig.APP_ROLE_SECRET_ID)
     AppRole(role = role, secretId = secretId)
   }
 
   def getK8s(config: VaultProviderConfig): K8s = {
-    val role = config.getStringOrThrowOnNull(VaultProviderConfig.KUBERNETES_ROLE)
-    val path = config.getStringOrThrowOnNull(VaultProviderConfig.KUBERNETES_TOKEN_PATH)
-    val file = Try(Source.fromFile(path)) match {
-      case Success(file) => file
+    val role =
+      config.getStringOrThrowOnNull(VaultProviderConfig.KUBERNETES_ROLE)
+    val path =
+      config.getStringOrThrowOnNull(VaultProviderConfig.KUBERNETES_TOKEN_PATH)
+    Using(Source.fromFile(path))(_.getLines().mkString) match {
       case Failure(exception) =>
         throw new ConnectException(
           s"Failed to load kubernetes token file [$path]",
           exception
         )
+      case Success(fileContents) =>
+        K8s(role = role, jwt = new Password(fileContents))
     }
-    val jwt = new Password(file.getLines.mkString)
-    file.close()
-    K8s(role = role, jwt = jwt)
   }
 
   def getUserPass(config: VaultProviderConfig): UserPass = {
@@ -190,7 +193,8 @@ object VaultSettings extends StrictLogging {
 
   def getLDAP(config: VaultProviderConfig): Ldap = {
     val user = config.getStringOrThrowOnNull(VaultProviderConfig.LDAP_USERNAME)
-    val pass = config.getPasswordOrThrowOnNull(VaultProviderConfig.LDAP_PASSWORD)
+    val pass =
+      config.getPasswordOrThrowOnNull(VaultProviderConfig.LDAP_PASSWORD)
     val mount = config.getStringOrThrowOnNull(VaultProviderConfig.LDAP_MOUNT)
     Ldap(username = user, password = pass, mount = mount)
   }
@@ -203,7 +207,8 @@ object VaultSettings extends StrictLogging {
 
   def getJWT(config: VaultProviderConfig): Jwt = {
     val role = config.getStringOrThrowOnNull(VaultProviderConfig.JWT_ROLE)
-    val provider = config.getStringOrThrowOnNull(VaultProviderConfig.JWT_PROVIDER)
+    val provider =
+      config.getStringOrThrowOnNull(VaultProviderConfig.JWT_PROVIDER)
     val jwt = config.getPasswordOrThrowOnNull(VaultProviderConfig.JWT)
     Jwt(role = role, provider = provider, jwt = jwt)
   }

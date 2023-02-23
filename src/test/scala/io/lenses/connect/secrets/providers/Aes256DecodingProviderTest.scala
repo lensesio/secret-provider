@@ -1,32 +1,23 @@
 package io.lenses.connect.secrets.providers
 
+import io.lenses.connect.secrets.config.Aes256ProviderConfig
+import io.lenses.connect.secrets.connect.{Encoding, FILE_DIR}
+import io.lenses.connect.secrets.utils.EncodingAndId
 import org.apache.kafka.common.config.provider.ConfigProvider
+import org.apache.kafka.common.config.{ConfigException, ConfigTransformer}
+import org.apache.kafka.connect.errors.ConnectException
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.wordspec.AnyWordSpec
+
+import java.io.FileInputStream
+import java.nio.file.Files
+import java.util
 import java.util.Base64
 import java.util.UUID.randomUUID
-
-import io.lenses.connect.secrets.config.Aes256ProviderConfig
-
-import scala.collection.JavaConverters._
-import org.apache.kafka.connect.errors.ConnectException
-import org.apache.kafka.common.config.ConfigException
-import org.apache.kafka.common.config.ConfigTransformer
-import io.lenses.connect.secrets.connect.FILE_DIR
-import java.io.File
-import java.nio.file.Files
-
-import org.scalatest.compatible.Assertion
-
 import scala.io.Source
-import java.io.FileInputStream
-import java.util
-
-import io.lenses.connect.secrets.connect.Encoding
-import io.lenses.connect.secrets.utils.EncodingAndId
-
-import scala.util.Random
+import scala.jdk.CollectionConverters._
+import scala.util.{Random, Success, Using}
 
 class Aes256DecodingProviderTest
     extends AnyWordSpec
@@ -35,42 +26,60 @@ class Aes256DecodingProviderTest
   import AesDecodingTestHelper.encrypt
 
   "aes256 provider" should {
-    "decrypt aes 256 utf-8 encoded value" in new TestContext with ConfiguredProvider {
+    "decrypt aes 256 utf-8 encoded value" in new TestContext
+      with ConfiguredProvider {
       val encrypted = encrypt(value, key)
 
       forAll(Table("encoding", "", "utf-8")) { encoding =>
-        val decrypted = provider.get(encoding, Set(encrypted).asJava).data().asScala
+        val decrypted =
+          provider.get(encoding, Set(encrypted).asJava).data().asScala
 
         decrypted.get(encrypted) shouldBe Some(value)
       }
     }
 
-    "decrypt aes 256 base64 encoded value" in new TestContext with ConfiguredProvider {
-      val encrypted = encrypt(Base64.getEncoder.encodeToString(value.getBytes()), key)
+    "decrypt aes 256 base64 encoded value" in new TestContext
+      with ConfiguredProvider {
+      val encrypted =
+        encrypt(Base64.getEncoder.encodeToString(value.getBytes()), key)
 
-      val decrypted = provider.get("base64", Set(encrypted).asJava).data().asScala
+      val decrypted =
+        provider.get("base64", Set(encrypted).asJava).data().asScala
 
       decrypted.get(encrypted) shouldBe Some(value)
     }
 
-    "decrypt aes 256 encoded value stored in file with utf-8 encoding" in new TestContext with ConfiguredProvider {
+    "decrypt aes 256 encoded value stored in file with utf-8 encoding" in new TestContext
+      with ConfiguredProvider {
       val encrypted = encrypt(value, key)
 
-      val providerData = provider.get(s"utf8_file${EncodingAndId.Separator}id1", Set(encrypted).asJava).data().asScala
+      val providerData = provider
+        .get(s"utf8_file${EncodingAndId.Separator}id1", Set(encrypted).asJava)
+        .data()
+        .asScala
       val decryptedPath = providerData(encrypted)
 
       decryptedPath should startWith(s"$tmpDir/secrets/")
       decryptedPath.toLowerCase.contains(encrypted.toLowerCase) shouldBe false
-      Source.fromFile(decryptedPath).getLines.mkString shouldBe value
+      Using(Source.fromFile(decryptedPath))(_.getLines().mkString) shouldBe Success(
+        value
+      )
     }
 
-    "decrypt aes 256 encoded value stored in file with base64 encoding" in new TestContext with ConfiguredProvider {
+    "decrypt aes 256 encoded value stored in file with base64 encoding" in new TestContext
+      with ConfiguredProvider {
       val bytesAmount = 100
       val bytesInput = Array.fill[Byte](bytesAmount)(0)
       Random.nextBytes(bytesInput)
       val encrypted = encrypt(Base64.getEncoder.encodeToString(bytesInput), key)
 
-      val providerData = provider.get(s"${Encoding.BASE64_FILE}${EncodingAndId.Separator}fileId1", Set(encrypted).asJava).data().asScala
+      val providerData = provider
+        .get(
+          s"${Encoding.BASE64_FILE}${EncodingAndId.Separator}fileId1",
+          Set(encrypted).asJava
+        )
+        .data()
+        .asScala
       val decryptedPath = providerData(encrypted)
 
       decryptedPath should startWith(s"$tmpDir/secrets/")
@@ -80,7 +89,6 @@ class Aes256DecodingProviderTest
 
       bytesConsumed.toList shouldBe bytesInput.toList
     }
-
 
     "transform value referencing to the provider" in new TestContext {
       val value = "hi!"

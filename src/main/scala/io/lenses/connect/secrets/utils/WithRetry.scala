@@ -7,20 +7,22 @@ package io.lenses.connect.secrets.utils
 
 import scala.annotation.tailrec
 import scala.concurrent.duration.FiniteDuration
+import scala.util.{Failure, Success, Try}
 
 trait WithRetry {
-  protected final def withRetry[T](retry: Int = 5, interval:Option[FiniteDuration])(thunk: => T): T =
-    try {
+
+  @tailrec
+  protected final def withRetry[T](
+      retry: Int = 5,
+      interval: Option[FiniteDuration]
+  )(thunk: => T): T =
+    Try {
       thunk
-    } catch {
-      case t: Throwable =>
+    } match {
+      case Failure(t) =>
         if (retry == 0) throw t
-        interval match {
-          case Some(value) =>
-            Thread.sleep(value.toMillis)
-            withRetry(retry - 1, interval)(thunk)
-          case None =>
-            withRetry(retry-1,interval)(thunk)
-        }
+        interval.foreach(sleepValue => Thread.sleep(sleepValue.toMillis))
+        withRetry(retry - 1, interval)(thunk)
+      case Success(value) => value
     }
 }

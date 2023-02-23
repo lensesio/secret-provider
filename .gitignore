@@ -11,3 +11,6 @@
 /build/
 /.classpath
 /.project
+target/
+/.bsp/
+.DS_Store

@@ -6,28 +6,34 @@
 
 package io.lenses.connect.secrets.providers
 
-import java.nio.file.FileSystems
-import java.nio.file.Paths
-import java.time.OffsetDateTime
-import java.util.Calendar
-
-import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials, DefaultAWSCredentialsProviderChain}
-import com.amazonaws.services.secretsmanager.model.{DescribeSecretRequest, GetSecretValueRequest}
-import com.amazonaws.services.secretsmanager.{AWSSecretsManager, AWSSecretsManagerClientBuilder}
+import com.amazonaws.auth.{
+  AWSStaticCredentialsProvider,
+  BasicAWSCredentials,
+  DefaultAWSCredentialsProviderChain
+}
+import com.amazonaws.services.secretsmanager.model.{
+  DescribeSecretRequest,
+  GetSecretValueRequest
+}
+import com.amazonaws.services.secretsmanager.{
+  AWSSecretsManager,
+  AWSSecretsManagerClientBuilder
+}
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.typesafe.scalalogging.StrictLogging
 import io.lenses.connect.secrets.config.AWSProviderSettings
-import io.lenses.connect.secrets.connect.{decodeKey, getFileName, AuthMode}
-import io.lenses.connect.secrets.io.FileWriter
-import io.lenses.connect.secrets.io.FileWriterOnce
+import io.lenses.connect.secrets.connect.{AuthMode, decodeKey}
+import io.lenses.connect.secrets.io.{FileWriter, FileWriterOnce}
 import io.lenses.connect.secrets.utils.EncodingAndId
 import org.apache.kafka.connect.errors.ConnectException
 
-import scala.collection.JavaConverters._
+import java.nio.file.Paths
+import java.time.OffsetDateTime
+import java.util.Calendar
+import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
 
 trait AWSHelper extends StrictLogging {
-  private val separator: String = FileSystems.getDefault.getSeparator
 
   // initialize the AWS client based on the auth mode
   def createClient(settings: AWSProviderSettings): AWSSecretsManager = {
@@ -38,7 +44,12 @@ trait AWSHelper extends StrictLogging {
 
     val credentialProvider = settings.authMode match {
       case AuthMode.CREDENTIALS =>
-        new AWSStaticCredentialsProvider(new BasicAWSCredentials(settings.accessKey, settings.secretKey.value()))
+        new AWSStaticCredentialsProvider(
+          new BasicAWSCredentials(
+            settings.accessKey,
+            settings.secretKey.value()
+          )
+        )
       case _ =>
         new DefaultAWSCredentialsProviderChain()
     }
@@ -73,7 +84,8 @@ trait AWSHelper extends StrictLogging {
           //increment
           cal.add(Calendar.DAY_OF_MONTH, nextRotationInDays.toInt)
           Some(
-            OffsetDateTime.ofInstant(cal.toInstant, cal.getTimeZone.toZoneId))
+            OffsetDateTime.ofInstant(cal.toInstant, cal.getTimeZone.toZoneId)
+          )
 
         } else None
 
@@ -112,7 +124,9 @@ trait AWSHelper extends StrictLogging {
               )
             )
 
-        val fileWriter:FileWriter = new FileWriterOnce(Paths.get(rootDir, secretId))
+        val fileWriter: FileWriter = new FileWriterOnce(
+          Paths.get(rootDir, secretId)
+        )
         // decode the value
         val encodingAndId = EncodingAndId.from(key)
         (
@@ -120,7 +134,7 @@ trait AWSHelper extends StrictLogging {
             key = key,
             value = value,
             encoding = encodingAndId.encoding,
-            writeFileFn = content=>{
+            writeFileFn = content => {
               fileWriter.write(key.toLowerCase, content, key).toString
             }
           ),
@@ -129,7 +143,7 @@ trait AWSHelper extends StrictLogging {
 
       case Failure(exception) =>
         throw new ConnectException(
-          s"Failed to look up key [$key] in secret [$secretId}]",
+          s"Failed to look up key [$key] in secret [$secretId] due to [${exception.getMessage}]",
           exception
         )
     }
