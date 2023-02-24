@@ -2,15 +2,16 @@
  * Copyright (c) 2017-2020 Lenses.io Ltd
  */
 
+import com.eed3si9n.jarjarabrams.ShadeRule
 import sbt.Keys._
 import sbt.Def
 import sbt._
 import sbtassembly.AssemblyKeys._
 import sbtassembly.MergeStrategy
+import sbtassembly.PathList
 
 object Settings extends Dependencies {
 
-  val scala212 = "2.12.14"
   val scala213 = "2.13.10"
   val scala3   = "3.2.2"
 
@@ -37,7 +38,7 @@ object Settings extends Dependencies {
       Resolver.mavenLocal,
       Resolver.mavenCentral,
     ),
-    crossScalaVersions := List( /*scala3, */ scala213 /*scala212*/ ),
+    crossScalaVersions := List( /*scala3, */ scala213),
     Compile / scalacOptions ++= Seq(
       "-release:11",
       "-encoding",
@@ -58,33 +59,58 @@ object Settings extends Dependencies {
       ScalacFlags.WarnUnusedImports212,
       ScalacFlags.WarnUnusedImports213,
     ),
+    // TODO remove for cross build
+    scalaVersion := scala213,
     Test / fork := true,
   )
 
   implicit final class AssemblyConfigurator(project: Project) {
+
+    val excludeFilePatterns = Set(".MF", ".RSA", ".DSA", ".SF")
+
+    def excludeFileFilter(p: String): Boolean =
+      excludeFilePatterns.exists(p.endsWith)
+
+    val excludePatterns = Set(
+      "kafka-client",
+      "kafka-connect-json",
+      "hadoop-yarn",
+      "org.apache.kafka",
+      "zookeeper",
+      "log4j",
+      "junit",
+    )
+
     def configureAssembly(): Project =
       project.settings(
-        assembly / assemblyJarName := s"secret-provider_${SemanticVersioning(scalaVersion.value).majorMinor}-${artifactVersion}-all.jar",
-        assembly / assemblyExcludedJars := {
-          val cp = (assembly / fullClasspath).value
-          val excludes = Set(
-            "org.apache.avro",
-            "org.apache.kafka",
-            "io.confluent",
-            "org.apache.zookeeper",
-          )
-          cp filter { f => excludes.exists(f.data.getName.contains(_)) }
-        },
-        assembly / assemblyMergeStrategy := {
-          case "module-info.class" => MergeStrategy.discard
-          case x if x.contains("io.netty.versions.properties") =>
-            MergeStrategy.concat
-          case x =>
-            val oldStrategy = (assembly / assemblyMergeStrategy).value
-            oldStrategy(x)
-        },
+        Seq(
+          assembly / assemblyOutputPath := file(
+            target.value + "/libs/" + (assembly / assemblyJarName).value,
+          ),
+          assembly / assemblyExcludedJars := {
+            val cp: Classpath = (assembly / fullClasspath).value
+            cp filter { f =>
+              excludePatterns
+                .exists(f.data.getName.contains) && (!f.data.getName
+                .contains("slf4j"))
+            }
+          },
+          assembly / assemblyMergeStrategy := {
+            case PathList("META-INF", "MANIFEST.MF") => MergeStrategy.discard
+            case p if excludeFileFilter(p)           => MergeStrategy.discard
+            case PathList(ps @ _*) if ps.last == "module-info.class" =>
+              MergeStrategy.discard
+            case _ => MergeStrategy.first
+          },
+          assembly / assemblyShadeRules ++= Seq(
+            ShadeRule.rename("io.confluent.**" -> "lshaded.confluent.@1").inAll,
+            ShadeRule.rename("com.fasterxml.**" -> "lshaded.fasterxml.@1").inAll,
+          ),
+        ),
       )
 
   }
+
+  lazy val IntegrationTest = config("it") extend Test
 
 }

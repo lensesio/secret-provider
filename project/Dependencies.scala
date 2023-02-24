@@ -13,20 +13,22 @@ trait Dependencies {
     val vaultVersion         = "5.1.0"
     val azureKeyVaultVersion = "4.5.2"
     val azureIdentityVersion = "1.8.0"
-    val awsSecretsVersion    = "1.12.411"
+    val awsSecretsVersion    = "1.12.420"
 
     //test
-    val scalaTestVersion      = "3.2.15"
-    val mockitoVersion        = "3.2.15.0"
-    val byteBuddyVersion      = "1.14.0"
-    val slf4jVersion          = "2.0.5"
-    val commonsIOVersion      = "1.3.2"
-    val jettyVersion          = "11.0.13"
-    val testContainersVersion = "1.12.3"
-    val flexmarkVersion       = "0.64.0"
+    val scalaTestVersion = "3.2.15"
+    val mockitoVersion   = "3.2.15.0"
+    val byteBuddyVersion = "1.14.1"
+    val slf4jVersion     = "2.0.5"
+    val commonsIOVersion = "1.3.2"
+    val jettyVersion     = "11.0.13"
+    val flexmarkVersion  = "0.64.0"
 
     val scalaCollectionCompatVersion = "2.8.1"
     val jakartaServletVersion        = "6.0.0"
+    val testContainersVersion        = "1.17.6"
+    val json4sVersion                = "4.0.6"
+    val catsEffectVersion            = "3.4.8"
 
   }
 
@@ -59,6 +61,15 @@ trait Dependencies {
     val `jakartaServlet` =
       "jakarta.servlet" % "jakarta.servlet-api" % jakartaServletVersion
 
+    val `testContainersCore` =
+      "org.testcontainers" % "testcontainers" % testContainersVersion
+    val `testContainersKafka` =
+      "org.testcontainers" % "kafka" % testContainersVersion
+    val `testContainersVault` =
+      "org.testcontainers" % "vault" % testContainersVersion
+    val `json4sNative`  = "org.json4s"    %% "json4s-native"  % json4sVersion
+    val `json4sJackson` = "org.json4s"    %% "json4s-jackson" % json4sVersion
+    val `cats`          = "org.typelevel" %% "cats-effect"    % catsEffectVersion
   }
 
   import Dependencies._
@@ -69,16 +80,27 @@ trait Dependencies {
     `azure-key-vault`,
     `azure-identity` exclude ("javax.activation", "activation"),
     `aws-secrets-manager`,
-    `scalaCollectionCompat`,
-    `jakartaServlet` % Test,
-    `mockito`        % Test,
-    `byteBuddy`      % Test,
-    `scalatest`      % Test,
-    `jetty`          % Test,
-    `commons-io`     % Test,
-    `flexmark`       % Test,
-    `slf4j-api`      % Test,
-    `slf4j-simple`   % Test,
+    `jakartaServlet`      % Test,
+    `mockito`             % Test,
+    `byteBuddy`           % Test,
+    `scalatest`           % Test,
+    `jetty`               % Test,
+    `commons-io`          % Test,
+    `flexmark`            % Test,
+    `slf4j-api`           % Test,
+    `slf4j-simple`        % Test,
+    `cats`                % IntegrationTest,
+    `testContainersCore`  % IntegrationTest,
+    `testContainersKafka` % IntegrationTest,
+    `testContainersVault` % IntegrationTest,
+    `json4sNative`        % IntegrationTest,
+  )
+
+  val testSinkDeps = Seq(
+    `scala-logging`,
+    `kafka-connect-api` % Provided,
+    `vault-java-driver`,
+    `scalatest` % Test,
   )
 
 }

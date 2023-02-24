@@ -58,6 +58,8 @@ class VaultSecretProviderTest extends AnyWordSpec with Matchers with BeforeAndAf
   val root: JsonObject = new JsonObject()
     .add("data", data)
     .add("auth", auth)
+    .add("lease_id", "abcdefg")
+    .add("lease_duration", 10000L)
     .add("renewable", true)
   val mockVault = new MockVault(200, root.toString)
   val server: Server = VaultTestUtils.initHttpsMockVault(mockVault)
@@ -101,6 +103,35 @@ class VaultSecretProviderTest extends AnyWordSpec with Matchers with BeforeAndAf
     Thread.sleep(5000)
     provider.tokenRenewalFailure shouldBe 0
     provider.tokenRenewalSuccess >= 4 shouldBe true
+  }
+
+  "should recalculate secret ttl when cached" in {
+
+    // set up secret
+    val props = Map(
+      VaultProviderConfig.VAULT_ADDR       -> "https://127.0.0.1:9998",
+      VaultProviderConfig.VAULT_TOKEN      -> "mock_token",
+      VaultProviderConfig.VAULT_PEM        -> pemFile,
+      VaultProviderConfig.VAULT_CLIENT_PEM -> pemFile,
+      connect.FILE_DIR                     -> tmp,
+    ).asJava
+
+    val config   = VaultProviderConfig(props)
+    val settings = VaultSettings(config)
+
+    settings.pem shouldBe pemFile
+    val provider = new VaultSecretProvider()
+    provider.configure(props)
+
+    val data1 = provider.get("secret/hello")
+
+    Thread.sleep(5000)
+
+    val data2 = provider.get("secret/hello")
+
+    (data1.ttl > data2.ttl) shouldBe true
+    (data1.ttl() - data2.ttl()) should be > 5000L
+    data2.ttl().longValue() should be < 9995000L
   }
 
   "should be configured for username and password auth" in {
@@ -317,6 +348,7 @@ class VaultSecretProviderTest extends AnyWordSpec with Matchers with BeforeAndAf
       VaultProviderConfig.VAULT_PEM        -> pemFile,
       VaultProviderConfig.VAULT_CLIENT_PEM -> pemFile,
       connect.FILE_DIR                     -> tmp,
+      connect.WRITE_FILES                  -> true,
     ).asJava
 
     val provider = new VaultSecretProvider()
@@ -347,6 +379,7 @@ class VaultSecretProviderTest extends AnyWordSpec with Matchers with BeforeAndAf
       VaultProviderConfig.VAULT_PEM        -> pemFile,
       VaultProviderConfig.VAULT_CLIENT_PEM -> pemFile,
       connect.FILE_DIR                     -> tmp,
+      connect.WRITE_FILES                  -> true,
     ).asJava
 
     val provider = new VaultSecretProvider()
