@@ -41,7 +41,7 @@ class AsyncFunctionLoop(interval: Duration, description: String)(thunk: => Unit)
             } catch {
               case _: InterruptedException =>
               case t: Throwable =>
-                logger.warn("Failed to renew the Kerberos ticket", t)
+                logger.warn(s"Failed to run function $description", t)
                 failure.incrementAndGet()
             }
           }

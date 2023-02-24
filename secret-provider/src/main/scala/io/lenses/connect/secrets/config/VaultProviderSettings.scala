@@ -9,11 +9,14 @@ package io.lenses.connect.secrets.config
 import com.typesafe.scalalogging.StrictLogging
 import io.lenses.connect.secrets.config.AbstractConfigExtensions._
 import io.lenses.connect.secrets.config.VaultAuthMethod.VaultAuthMethod
+import io.lenses.connect.secrets.config.VaultProviderConfig.SECRET_DEFAULT_TTL
 import io.lenses.connect.secrets.config.VaultProviderConfig.TOKEN_RENEWAL
 import io.lenses.connect.secrets.connect._
+import io.lenses.connect.secrets.io.FileWriterOnce
 import org.apache.kafka.common.config.types.Password
 import org.apache.kafka.connect.errors.ConnectException
 
+import java.nio.file.Paths
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.duration._
 import scala.io.Source
@@ -37,28 +40,37 @@ case class K8s(role: String, jwt: Password)
 case class Cert(mount: String)
 case class Github(token: Password, mount: String)
 
+case class FileWriterOptions(
+  fileDir: String,
+) {
+  def createFileWriter(path: String): FileWriterOnce =
+    new FileWriterOnce(Paths.get(fileDir, path))
+
+}
+
 case class VaultSettings(
-  addr:          String,
-  namespace:     String,
-  token:         Password,
-  authMode:      VaultAuthMethod,
-  keystoreLoc:   String,
-  keystorePass:  Password,
-  truststoreLoc: String,
-  pem:           String,
-  clientPem:     String,
-  engineVersion: Int = 2,
-  appRole:       Option[AppRole],
-  awsIam:        Option[AwsIam],
-  gcp:           Option[Gcp],
-  jwt:           Option[Jwt],
-  userPass:      Option[UserPass],
-  ldap:          Option[Ldap],
-  k8s:           Option[K8s],
-  cert:          Option[Cert],
-  github:        Option[Github],
-  fileDir:       String,
-  tokenRenewal:  FiniteDuration,
+  addr:           String,
+  namespace:      String,
+  token:          Password,
+  authMode:       VaultAuthMethod,
+  keystoreLoc:    String,
+  keystorePass:   Password,
+  truststoreLoc:  String,
+  pem:            String,
+  clientPem:      String,
+  engineVersion:  Int = 2,
+  appRole:        Option[AppRole],
+  awsIam:         Option[AwsIam],
+  gcp:            Option[Gcp],
+  jwt:            Option[Jwt],
+  userPass:       Option[UserPass],
+  ldap:           Option[Ldap],
+  k8s:            Option[K8s],
+  cert:           Option[Cert],
+  github:         Option[Github],
+  tokenRenewal:   FiniteDuration,
+  fileWriterOpts: Option[FileWriterOptions],
+  defaultTtl:     Option[Duration],
 )
 
 object VaultSettings extends StrictLogging {
@@ -109,8 +121,6 @@ object VaultSettings extends StrictLogging {
       if (authMode.equals(VaultAuthMethod.GITHUB)) Some(getGitHub(config))
       else None
 
-    val fileDir = config.getString(FILE_DIR)
-
     val tokenRenewal = config.getInt(TOKEN_RENEWAL).toInt.milliseconds
     VaultSettings(
       addr          = addr,
@@ -132,8 +142,11 @@ object VaultSettings extends StrictLogging {
       k8s           = k8s,
       cert          = cert,
       github        = github,
-      fileDir       = fileDir,
       tokenRenewal  = tokenRenewal,
+      fileWriterOpts = Option.when(config.getBoolean(WRITE_FILES)) {
+        FileWriterOptions(config.getString(FILE_DIR))
+      },
+      defaultTtl = Option(config.getLong(SECRET_DEFAULT_TTL).toLong).filterNot(_ == 0L).map(Duration(_, MILLISECONDS)),
     )
   }
 
