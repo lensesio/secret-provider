@@ -3,7 +3,7 @@
  */
 
 import sbt.Keys._
-import sbt._
+import sbt.{Def, _}
 import sbtassembly.AssemblyKeys._
 import sbtassembly.MergeStrategy
 
@@ -17,7 +17,7 @@ object Settings extends Dependencies {
   val artifactVersion = {
     sys.env.get("LENSES_TAG_NAME") match {
       case Some(tag) => tag
-      case _         => s"$nextVersion-SNAPSHOT"
+      case _ => s"$nextVersion-SNAPSHOT"
     }
   }
 
@@ -36,8 +36,7 @@ object Settings extends Dependencies {
       Resolver.mavenLocal,
       Resolver.mavenCentral
     ),
-    libraryDependencies ++= secretProviderDeps,
-    crossScalaVersions := List( /*scala3, */ scala213 /*scala212*/ ),
+    crossScalaVersions := List(/*scala3, */ scala213 /*scala212*/),
     Compile / scalacOptions ++= Seq(
       "-release:11",
       "-encoding",
@@ -48,17 +47,9 @@ object Settings extends Dependencies {
       "11"
     ),
     Compile / scalacOptions ++= {
-      CrossVersion.partialVersion(scalaVersion.value) match {
-        case Some((2, n)) if n <= 12 =>
-          Seq(
-            "-Ypartial-unification",
-            ScalacFlags.WarnUnusedImports212
-          )
-        case _ =>
-          Seq(
-            ScalacFlags.WarnUnusedImports213
-          )
-      }
+      Seq(
+        ScalacFlags.WarnUnusedImports213
+      )
     },
     Compile / console / scalacOptions --= Seq(
       ScalacFlags.FatalWarnings212,
@@ -66,26 +57,34 @@ object Settings extends Dependencies {
       ScalacFlags.WarnUnusedImports212,
       ScalacFlags.WarnUnusedImports213
     ),
-    assembly / assemblyJarName := s"secret-provider_${SemanticVersioning(scalaVersion.value).majorMinor}-${artifactVersion}-all.jar",
-    assembly / assemblyExcludedJars := {
-      val cp = (assembly / fullClasspath).value
-      val excludes = Set(
-        "org.apache.avro",
-        "org.apache.kafka",
-        "io.confluent",
-        "org.apache.zookeeper"
-      )
-      cp filter { f => excludes.exists(f.data.getName.contains(_)) }
-    },
-    assembly / assemblyMergeStrategy := {
-      case "module-info.class" => MergeStrategy.discard
-      case x if x.contains("io.netty.versions.properties") =>
-        MergeStrategy.concat
-      case x =>
-        val oldStrategy = (assembly / assemblyMergeStrategy).value
-        oldStrategy(x)
-    },
+
     Test / fork := true
   )
+
+  implicit final class AssemblyConfigurator(project: Project) {
+    def configureAssembly(): Project =
+      project.settings(
+        assembly / assemblyJarName := s"secret-provider_${SemanticVersioning(scalaVersion.value).majorMinor}-${artifactVersion}-all.jar",
+        assembly / assemblyExcludedJars := {
+          val cp = (assembly / fullClasspath).value
+          val excludes = Set(
+            "org.apache.avro",
+            "org.apache.kafka",
+            "io.confluent",
+            "org.apache.zookeeper"
+          )
+          cp filter { f => excludes.exists(f.data.getName.contains(_)) }
+        },
+        assembly / assemblyMergeStrategy := {
+          case "module-info.class" => MergeStrategy.discard
+          case x if x.contains("io.netty.versions.properties") =>
+            MergeStrategy.concat
+          case x =>
+            val oldStrategy = (assembly / assemblyMergeStrategy).value
+            oldStrategy(x)
+        }
+      )
+
+    }
 
 }
