@@ -11,8 +11,7 @@ import org.apache.kafka.common.config.types.Password
 import org.apache.kafka.connect.errors.ConnectException
 
 object AbstractConfigExtensions {
-  implicit class AbstractConfigExtension(val config: AbstractConfig)
-      extends AnyVal {
+  implicit class AbstractConfigExtension(val config: AbstractConfig) extends AnyVal {
     def getStringOrThrowOnNull(field: String): String =
       Option(config.getString(field)).getOrElse(raiseException(field))
 
@@ -23,7 +22,7 @@ object AbstractConfigExtensions {
     }
 
     private def raiseException(fieldName: String) = throw new ConnectException(
-      s"$fieldName not set"
+      s"$fieldName not set",
     )
   }
 }

@@ -7,11 +7,10 @@
 package io.lenses.connect.secrets.providers
 
 import com.azure.core.credential.TokenCredential
-import com.azure.security.keyvault.secrets.{SecretClient, SecretClientBuilder}
-import io.lenses.connect.secrets.config.{
-  AzureProviderConfig,
-  AzureProviderSettings
-}
+import com.azure.security.keyvault.secrets.SecretClient
+import com.azure.security.keyvault.secrets.SecretClientBuilder
+import io.lenses.connect.secrets.config.AzureProviderConfig
+import io.lenses.connect.secrets.config.AzureProviderSettings
 import io.lenses.connect.secrets.connect.getSecretsAndExpiry
 import org.apache.kafka.common.config.ConfigData
 import org.apache.kafka.common.config.provider.ConfigProvider
@@ -23,15 +22,15 @@ import scala.jdk.CollectionConverters._
 
 class AzureSecretProvider() extends ConfigProvider with AzureHelper {
 
-  private var rootDir: String = _
-  private var credentials: Option[TokenCredential] = None
-  val clientMap: mutable.Map[String, SecretClient] = mutable.Map.empty
+  private var rootDir:     String                            = _
+  private var credentials: Option[TokenCredential]           = None
+  val clientMap:           mutable.Map[String, SecretClient] = mutable.Map.empty
   val cache = mutable.Map.empty[String, (Option[OffsetDateTime], ConfigData)]
 
   // configure the vault client
   override def configure(configs: util.Map[String, _]): Unit = {
     val settings = AzureProviderSettings(AzureProviderConfig(configs))
-    rootDir = settings.fileDir
+    rootDir     = settings.fileDir
     credentials = Some(createCredentials(settings))
   }
 
@@ -58,7 +57,7 @@ class AzureSecretProvider() extends ConfigProvider with AzureHelper {
       new SecretClientBuilder()
         .vaultUrl(keyVaultUrl)
         .credential(credentials.get)
-        .buildClient
+        .buildClient,
     )
 
     clientMap += (keyVaultUrl -> client)
@@ -68,9 +67,11 @@ class AzureSecretProvider() extends ConfigProvider with AzureHelper {
         // we have all the keys and are before the expiry
         val now = OffsetDateTime.now()
 
-        if (keys.asScala.subsetOf(data.data().asScala.keySet) && (expiresAt
-              .getOrElse(now.plusSeconds(1))
-              .isAfter(now))) {
+        if (
+          keys.asScala.subsetOf(data.data().asScala.keySet) && (expiresAt
+            .getOrElse(now.plusSeconds(1))
+            .isAfter(now))
+        ) {
           logger.info("Fetching secrets from cache")
           (
             expiresAt,
@@ -84,8 +85,8 @@ class AzureSecretProvider() extends ConfigProvider with AzureHelper {
                 }
                 .toMap
                 .asJava,
-              data.ttl()
-            )
+              data.ttl(),
+            ),
           )
         } else {
           // missing some or expired so reload
@@ -96,9 +97,7 @@ class AzureSecretProvider() extends ConfigProvider with AzureHelper {
         getSecretsAndExpiry(getSecrets(client, keys.asScala.toSet))
     }
 
-    expiry.foreach(exp =>
-      logger.info(s"Min expiry for TTL set to [${exp.toString}]")
-    )
+    expiry.foreach(exp => logger.info(s"Min expiry for TTL set to [${exp.toString}]"))
     cache += (keyVaultUrl -> (expiry, data))
     data
   }
@@ -106,8 +105,8 @@ class AzureSecretProvider() extends ConfigProvider with AzureHelper {
   override def close(): Unit = {}
 
   private def getSecrets(
-      client: SecretClient,
-      keys: Set[String]
+    client: SecretClient,
+    keys:   Set[String],
   ): Map[String, (String, Option[OffsetDateTime])] = {
     val path = client.getVaultUrl.stripPrefix("https://")
     keys.map { key =>

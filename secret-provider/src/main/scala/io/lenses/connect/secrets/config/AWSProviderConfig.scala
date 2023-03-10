@@ -6,39 +6,42 @@
 
 package io.lenses.connect.secrets.config
 
-import io.lenses.connect.secrets.connect.{AuthMode, _}
-import org.apache.kafka.common.config.ConfigDef.{Importance, Type}
-import org.apache.kafka.common.config.{AbstractConfig, ConfigDef}
+import io.lenses.connect.secrets.connect.AuthMode
+import io.lenses.connect.secrets.connect._
+import org.apache.kafka.common.config.ConfigDef.Importance
+import org.apache.kafka.common.config.ConfigDef.Type
+import org.apache.kafka.common.config.AbstractConfig
+import org.apache.kafka.common.config.ConfigDef
 
 import java.util
 
 object AWSProviderConfig {
 
-  val AWS_REGION: String = "aws.region"
+  val AWS_REGION:     String = "aws.region"
   val AWS_ACCESS_KEY: String = "aws.access.key"
   val AWS_SECRET_KEY: String = "aws.secret.key"
-  val AUTH_METHOD: String = "aws.auth.method"
+  val AUTH_METHOD:    String = "aws.auth.method"
 
   val config: ConfigDef = new ConfigDef()
     .define(
       AWS_REGION,
       Type.STRING,
       Importance.HIGH,
-      "AWS region the Secrets manager is in"
+      "AWS region the Secrets manager is in",
     )
     .define(
       AWS_ACCESS_KEY,
       Type.STRING,
       null,
       Importance.HIGH,
-      "AWS access key"
+      "AWS access key",
     )
     .define(
       AWS_SECRET_KEY,
       Type.PASSWORD,
       null,
       Importance.HIGH,
-      "AWS password key"
+      "AWS password key",
     )
     .define(
       AUTH_METHOD,
@@ -49,16 +52,15 @@ object AWSProviderConfig {
         | AWS authenticate method, 'credentials' to use the provided credentials 
         | or 'default' for the standard AWS provider chain.
         | Default is 'credentials'
-        |""".stripMargin
+        |""".stripMargin,
     )
     .define(
       FILE_DIR,
       Type.STRING,
       "",
       Importance.MEDIUM,
-      FILE_DIR_DESC
+      FILE_DIR_DESC,
     )
 }
 
-case class AWSProviderConfig(props: util.Map[String, _])
-    extends AbstractConfig(AWSProviderConfig.config, props)
+case class AWSProviderConfig(props: util.Map[String, _]) extends AbstractConfig(AWSProviderConfig.config, props)

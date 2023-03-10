@@ -29,33 +29,28 @@ class DecodeTest extends AnyWordSpec with Matchers {
   }
 
   "should decode UTF" in {
-    connect.decodeKey(None, "my-key", "secret", { _ =>
-      fail("No files here")
-    }) shouldBe "secret"
-    connect.decodeKey(Some(Encoding.UTF8), "my-key", "secret", { _ =>
-      fail("No files here")
-    }) shouldBe "secret"
+    connect.decodeKey(None, "my-key", "secret", _ => fail("No files here")) shouldBe "secret"
+    connect.decodeKey(Some(Encoding.UTF8), "my-key", "secret", _ => fail("No files here")) shouldBe "secret"
   }
 
   "should decode BASE64" in {
     val value = Base64.getEncoder.encodeToString("secret".getBytes)
-    connect.decodeKey(Some(Encoding.BASE64), s"my-key", value, { _ =>
-      fail("No files here")
-    }) shouldBe "secret"
+    connect.decodeKey(Some(Encoding.BASE64), s"my-key", value, _ => fail("No files here")) shouldBe "secret"
   }
 
   "should decode BASE64 and write to a file" in {
     val fileName = s"${tmp}my-file-base64"
 
-    val value = Base64.getEncoder.encodeToString("secret".getBytes)
+    val value   = Base64.getEncoder.encodeToString("secret".getBytes)
     var written = false
     connect.decodeKey(
       Some(Encoding.BASE64_FILE),
       s"my-key",
-      value, { _ =>
+      value,
+      { _ =>
         written = true
         fileName
-      }
+      },
     ) shouldBe fileName
     written shouldBe true
   }
@@ -65,16 +60,17 @@ class DecodeTest extends AnyWordSpec with Matchers {
     val jksFile: String =
       getClass.getClassLoader.getResource("keystore.jks").getPath
     val fileContent = FileUtils.readFileToByteArray(new File(jksFile))
-    val jksEncoded = Base64.getEncoder.encodeToString(fileContent)
+    val jksEncoded  = Base64.getEncoder.encodeToString(fileContent)
 
     var written = false
     connect.decodeKey(
       Some(Encoding.BASE64_FILE),
       s"keystore.jks",
-      jksEncoded, { _ =>
+      jksEncoded,
+      { _ =>
         written = true
         fileName
-      }
+      },
     ) shouldBe fileName
 
     written shouldBe true
@@ -82,15 +78,16 @@ class DecodeTest extends AnyWordSpec with Matchers {
 
   "should decode UTF8 and write to a file" in {
     val fileName = s"${tmp}my-file-utf8"
-    var written = false
+    var written  = false
 
     connect.decodeKey(
       Some(Encoding.UTF8_FILE),
       s"my-key",
-      "secret", { _ =>
+      "secret",
+      { _ =>
         written = true
         fileName
-      }
+      },
     ) shouldBe fileName
     written shouldBe true
   }
@@ -98,9 +95,9 @@ class DecodeTest extends AnyWordSpec with Matchers {
   "min list test" in {
     val now = OffsetDateTime.now()
     val secrets = Map(
-      "ke3" -> ("value", Some(OffsetDateTime.now().plusHours(3))),
+      "ke3"  -> ("value", Some(OffsetDateTime.now().plusHours(3))),
       "key1" -> ("value", Some(now)),
-      "key2" -> ("value", Some(OffsetDateTime.now().plusHours(1)))
+      "key2" -> ("value", Some(OffsetDateTime.now().plusHours(1))),
     )
 
     val (expiry, _) = connect.getSecretsAndExpiry(secrets)

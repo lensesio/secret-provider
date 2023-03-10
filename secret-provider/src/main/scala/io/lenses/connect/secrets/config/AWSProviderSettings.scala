@@ -12,11 +12,11 @@ import org.apache.kafka.common.config.types.Password
 import org.apache.kafka.connect.errors.ConnectException
 
 case class AWSProviderSettings(
-    region: String,
-    accessKey: String,
-    secretKey: Password,
-    authMode: AuthMode,
-    fileDir: String
+  region:    String,
+  accessKey: String,
+  secretKey: Password,
+  authMode:  AuthMode,
+  fileDir:   String,
 )
 
 import io.lenses.connect.secrets.config.AbstractConfigExtensions._
@@ -34,21 +34,21 @@ object AWSProviderSettings {
     if (authMode == AuthMode.CREDENTIALS) {
       if (accessKey.isEmpty)
         throw new ConnectException(
-          s"${AWSProviderConfig.AWS_ACCESS_KEY} not set"
+          s"${AWSProviderConfig.AWS_ACCESS_KEY} not set",
         )
       if (secretKey.value().isEmpty)
         throw new ConnectException(
-          s"${AWSProviderConfig.AWS_SECRET_KEY} not set"
+          s"${AWSProviderConfig.AWS_SECRET_KEY} not set",
         )
     }
     val fileDir = configs.getString(FILE_DIR)
 
     new AWSProviderSettings(
-      region = region,
+      region    = region,
       accessKey = accessKey,
       secretKey = secretKey,
-      authMode = authMode,
-      fileDir = fileDir
+      authMode  = authMode,
+      fileDir   = fileDir,
     )
   }
 }

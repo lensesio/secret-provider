@@ -6,7 +6,8 @@
 
 package io.lenses.connect.secrets.providers
 
-import io.lenses.connect.secrets.config.{VaultProviderConfig, VaultSettings}
+import io.lenses.connect.secrets.config.VaultProviderConfig
+import io.lenses.connect.secrets.config.VaultSettings
 import io.lenses.connect.secrets.connect._
 import com.bettercloud.vault.Vault
 import io.lenses.connect.secrets.async.AsyncFunctionLoop
@@ -21,12 +22,14 @@ import java.time.OffsetDateTime
 import java.util
 import scala.collection.mutable
 import scala.jdk.CollectionConverters._
-import scala.util.{Failure, Success, Try}
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 class VaultSecretProvider() extends ConfigProvider with VaultHelper {
 
-  private var settings: VaultSettings = _
-  private var vaultClient: Option[Vault] = None
+  private var settings:     VaultSettings             = _
+  private var vaultClient:  Option[Vault]             = None
   private var tokenRenewal: Option[AsyncFunctionLoop] = None
   private val cache =
     mutable.Map.empty[String, (Option[OffsetDateTime], ConfigData)]
@@ -34,11 +37,11 @@ class VaultSecretProvider() extends ConfigProvider with VaultHelper {
 
   // configure the vault client
   override def configure(configs: util.Map[String, _]): Unit = {
-    settings = VaultSettings(VaultProviderConfig(configs))
+    settings    = VaultSettings(VaultProviderConfig(configs))
     vaultClient = Some(createClient(settings))
     val renewalLoop =
       new AsyncFunctionLoop(settings.tokenRenewal, "Vault Token Renewal")(
-        renewToken()
+        renewToken(),
       )
     tokenRenewal = Some(renewalLoop)
     renewalLoop.start()
@@ -47,9 +50,8 @@ class VaultSecretProvider() extends ConfigProvider with VaultHelper {
   def tokenRenewalSuccess: Long = tokenRenewal.map(_.successRate).getOrElse(-1)
   def tokenRenewalFailure: Long = tokenRenewal.map(_.failureRate).getOrElse(-1)
 
-  private def renewToken(): Unit = {
-    vaultClient.foreach { client => client.auth().renewSelf() }
-  }
+  private def renewToken(): Unit =
+    vaultClient.foreach(client => client.auth().renewSelf())
 
   // lookup secrets at a path
   override def get(path: String): ConfigData = {
@@ -70,9 +72,7 @@ class VaultSecretProvider() extends ConfigProvider with VaultHelper {
         getSecretsAndExpiry(getSecrets(path))
     }
 
-    expiry.foreach(exp =>
-      logger.info(s"Min expiry for TTL set to [${exp.toString}]")
-    )
+    expiry.foreach(exp => logger.info(s"Min expiry for TTL set to [${exp.toString}]"))
     cache += (path -> (expiry, data))
     data
   }
@@ -85,9 +85,11 @@ class VaultSecretProvider() extends ConfigProvider with VaultHelper {
         // we have all the keys and are before the expiry
         val now = OffsetDateTime.now()
 
-        if (keys.asScala.subsetOf(data.data().asScala.keySet) && expiresAt
-              .getOrElse(now.plusSeconds(1))
-              .isAfter(now)) {
+        if (
+          keys.asScala.subsetOf(data.data().asScala.keySet) && expiresAt
+            .getOrElse(now.plusSeconds(1))
+            .isAfter(now)
+        ) {
           logger.info("Fetching secrets from cache")
           (
             expiresAt,
@@ -101,8 +103,8 @@ class VaultSecretProvider() extends ConfigProvider with VaultHelper {
                 }
                 .toMap
                 .asJava,
-              data.ttl()
-            )
+              data.ttl(),
+            ),
           )
         } else {
           // missing some or expired so reload
@@ -117,20 +119,17 @@ class VaultSecretProvider() extends ConfigProvider with VaultHelper {
         }.toMap)
     }
 
-    expiry.foreach(exp =>
-      logger.info(s"Min expiry for TTL set to [${exp.toString}]")
-    )
+    expiry.foreach(exp => logger.info(s"Min expiry for TTL set to [${exp.toString}]"))
     cache += (path -> (expiry, data))
     data
   }
 
-  override def close(): Unit = {
+  override def close(): Unit =
     tokenRenewal.foreach(_.close())
-  }
 
   // get the secrets and ttl under a path
   def getSecrets(
-      path: String
+    path: String,
   ): Map[String, (String, Option[OffsetDateTime])] = {
     val now = OffsetDateTime.now()
 
@@ -140,7 +139,7 @@ class VaultSecretProvider() extends ConfigProvider with VaultHelper {
       case Success(response) =>
         if (response.getRestResponse.getStatus != 200) {
           throw new ConnectException(
-            s"No secrets found at path [$path]. Vault response: ${new String(response.getRestResponse.getBody)}"
+            s"No secrets found at path [$path]. Vault response: ${new String(response.getRestResponse.getBody)}",
           )
         }
 
@@ -151,7 +150,7 @@ class VaultSecretProvider() extends ConfigProvider with VaultHelper {
 
         if (response.getData.isEmpty) {
           throw new ConnectException(
-            s"No secrets found at path [$path]"
+            s"No secrets found at path [$path]",
           )
         }
 
@@ -161,11 +160,11 @@ class VaultSecretProvider() extends ConfigProvider with VaultHelper {
             val decoded =
               decodeKey(
                 encoding = encodingAndId.encoding,
-                key = k,
-                value = v,
+                key      = k,
+                value    = v,
                 writeFileFn = { content =>
                   fileWriter.write(k.toLowerCase, content, k).toString
-                }
+                },
               )
 
             (k, (decoded, ttl))
@@ -174,7 +173,7 @@ class VaultSecretProvider() extends ConfigProvider with VaultHelper {
       case Failure(exception) =>
         throw new ConnectException(
           s"Failed to fetch secrets from path [$path]",
-          exception
+          exception,
         )
     }
   }

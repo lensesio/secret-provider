@@ -3,7 +3,8 @@
  */
 
 import sbt.Keys._
-import sbt.{Def, _}
+import sbt.Def
+import sbt._
 import sbtassembly.AssemblyKeys._
 import sbtassembly.MergeStrategy
 
@@ -11,19 +12,19 @@ object Settings extends Dependencies {
 
   val scala212 = "2.12.14"
   val scala213 = "2.13.10"
-  val scala3 = "3.2.2"
+  val scala3   = "3.2.2"
 
   val nextVersion = "2.1.7"
   val artifactVersion = {
     sys.env.get("LENSES_TAG_NAME") match {
       case Some(tag) => tag
-      case _ => s"$nextVersion-SNAPSHOT"
+      case _         => s"$nextVersion-SNAPSHOT"
     }
   }
 
   object ScalacFlags {
-    val FatalWarnings212 = "-Xfatal-warnings"
-    val FatalWarnings213 = "-Werror"
+    val FatalWarnings212     = "-Xfatal-warnings"
+    val FatalWarnings213     = "-Werror"
     val WarnUnusedImports212 = "-Ywarn-unused-import"
     val WarnUnusedImports213 = "-Ywarn-unused:imports"
   }
@@ -34,9 +35,9 @@ object Settings extends Dependencies {
     scalaOrganization := "org.scala-lang",
     resolvers ++= Seq(
       Resolver.mavenLocal,
-      Resolver.mavenCentral
+      Resolver.mavenCentral,
     ),
-    crossScalaVersions := List(/*scala3, */ scala213 /*scala212*/),
+    crossScalaVersions := List( /*scala3, */ scala213 /*scala212*/ ),
     Compile / scalacOptions ++= Seq(
       "-release:11",
       "-encoding",
@@ -44,21 +45,20 @@ object Settings extends Dependencies {
       "-deprecation",
       "-unchecked",
       "-feature",
-      "11"
+      "11",
     ),
     Compile / scalacOptions ++= {
       Seq(
-        ScalacFlags.WarnUnusedImports213
+        ScalacFlags.WarnUnusedImports213,
       )
     },
     Compile / console / scalacOptions --= Seq(
       ScalacFlags.FatalWarnings212,
       ScalacFlags.FatalWarnings213,
       ScalacFlags.WarnUnusedImports212,
-      ScalacFlags.WarnUnusedImports213
+      ScalacFlags.WarnUnusedImports213,
     ),
-
-    Test / fork := true
+    Test / fork := true,
   )
 
   implicit final class AssemblyConfigurator(project: Project) {
@@ -71,7 +71,7 @@ object Settings extends Dependencies {
             "org.apache.avro",
             "org.apache.kafka",
             "io.confluent",
-            "org.apache.zookeeper"
+            "org.apache.zookeeper",
           )
           cp filter { f => excludes.exists(f.data.getName.contains(_)) }
         },
@@ -82,9 +82,9 @@ object Settings extends Dependencies {
           case x =>
             val oldStrategy = (assembly / assemblyMergeStrategy).value
             oldStrategy(x)
-        }
+        },
       )
 
-    }
+  }
 
 }

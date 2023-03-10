@@ -7,9 +7,8 @@ name := "secret-provider"
 javacOptions ++= Seq("--release", "11")
 javaOptions ++= Seq("-Xms512M", "-Xmx2048M")
 
-
 lazy val subProjects: Seq[Project] = Seq(
-  `secret-provider`
+  `secret-provider`,
 )
 lazy val subProjectsRefs: Seq[ProjectReference] = subProjects.map(projectToLocalProject)
 
@@ -38,9 +37,9 @@ lazy val `secret-provider` = (project in file("secret-provider"))
 
 addCommandAlias(
   "validateAll",
-  ";scalafmtCheck;scalafmtSbtCheck;test:scalafmtCheck;"
+  ";scalafmtCheck;scalafmtSbtCheck;test:scalafmtCheck;",
 )
 addCommandAlias(
   "formatAll",
-  ";scalafmt;scalafmtSbt;test:scalafmt;"
+  ";scalafmt;scalafmtSbt;test:scalafmt;",
 )

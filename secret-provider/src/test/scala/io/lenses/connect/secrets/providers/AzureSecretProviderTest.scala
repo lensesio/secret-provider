@@ -7,19 +7,16 @@
 package io.lenses.connect.secrets.providers
 
 import com.azure.security.keyvault.secrets.SecretClient
-import com.azure.security.keyvault.secrets.models.{
-  KeyVaultSecret,
-  SecretProperties
-}
+import com.azure.security.keyvault.secrets.models.KeyVaultSecret
+import com.azure.security.keyvault.secrets.models.SecretProperties
 import io.lenses.connect.secrets.TmpDirUtil.getTempDir
-import io.lenses.connect.secrets.config.{
-  AzureProviderConfig,
-  AzureProviderSettings
-}
+import io.lenses.connect.secrets.config.AzureProviderConfig
+import io.lenses.connect.secrets.config.AzureProviderSettings
 import io.lenses.connect.secrets.connect
 import io.lenses.connect.secrets.connect.AuthMode
 import org.apache.kafka.common.config.provider.ConfigProvider
-import org.apache.kafka.common.config.{ConfigData, ConfigTransformer}
+import org.apache.kafka.common.config.ConfigData
+import org.apache.kafka.common.config.ConfigTransformer
 import org.apache.kafka.connect.errors.ConnectException
 import org.mockito.Mockito.when
 import org.scalatestplus.mockito.MockitoSugar
@@ -31,12 +28,10 @@ import java.time.OffsetDateTime
 import java.util.Base64
 import scala.io.Source
 import scala.jdk.CollectionConverters._
-import scala.util.{Success, Using}
+import scala.util.Success
+import scala.util.Using
 
-class AzureSecretProviderTest
-    extends AnyWordSpec
-    with Matchers
-    with MockitoSugar {
+class AzureSecretProviderTest extends AnyWordSpec with Matchers with MockitoSugar {
 
   val separator: String = FileSystems.getDefault.getSeparator
   val tmp: String =
@@ -44,24 +39,24 @@ class AzureSecretProviderTest
 
   "should get secrets at a path with service principal credentials" in {
     val props = Map(
-      AzureProviderConfig.AUTH_METHOD -> AuthMode.CREDENTIALS.toString,
+      AzureProviderConfig.AUTH_METHOD     -> AuthMode.CREDENTIALS.toString,
       AzureProviderConfig.AZURE_CLIENT_ID -> "someclientid",
       AzureProviderConfig.AZURE_TENANT_ID -> "sometenantid",
-      AzureProviderConfig.AZURE_SECRET_ID -> "somesecretid"
+      AzureProviderConfig.AZURE_SECRET_ID -> "somesecretid",
     ).asJava
 
     val provider = new AzureSecretProvider
     provider.configure(props)
 
-    val secretKey = "my-key"
+    val secretKey   = "my-key"
     val secretValue = "secret-value"
-    val secretPath = "my-path.vault.azure.net"
+    val secretPath  = "my-path.vault.azure.net"
 
     val client = mock[SecretClient]
     when(client.getVaultUrl).thenReturn(s"https://$secretPath")
-    val secret = mock[KeyVaultSecret]
+    val secret           = mock[KeyVaultSecret]
     val secretProperties = mock[SecretProperties]
-    val offset = OffsetDateTime.now()
+    val offset           = OffsetDateTime.now()
 
     // string secret
     when(secretProperties.getExpiresOn).thenReturn(offset)
@@ -81,34 +76,34 @@ class AzureSecretProviderTest
 
   "should get base64 secrets at a path with service principal credentials" in {
     val props = Map(
-      AzureProviderConfig.AUTH_METHOD -> AuthMode.CREDENTIALS.toString,
+      AzureProviderConfig.AUTH_METHOD     -> AuthMode.CREDENTIALS.toString,
       AzureProviderConfig.AZURE_CLIENT_ID -> "someclientid",
       AzureProviderConfig.AZURE_TENANT_ID -> "sometenantid",
-      AzureProviderConfig.AZURE_SECRET_ID -> "somesecretid"
+      AzureProviderConfig.AZURE_SECRET_ID -> "somesecretid",
     ).asJava
 
     val provider = new AzureSecretProvider
     provider.configure(props)
 
-    val secretKey = "base64-key"
+    val secretKey   = "base64-key"
     val secretValue = "base64-secret-value"
-    val secretPath = "my-path.vault.azure.net"
+    val secretPath  = "my-path.vault.azure.net"
 
     val client = mock[SecretClient]
     when(client.getVaultUrl).thenReturn(s"https://$secretPath")
 
     //base64 secret
-    val secretb64 = mock[KeyVaultSecret]
+    val secretb64           = mock[KeyVaultSecret]
     val secretPropertiesb64 = mock[SecretProperties]
-    val ttl = OffsetDateTime.now()
+    val ttl                 = OffsetDateTime.now()
 
     when(secretPropertiesb64.getExpiresOn).thenReturn(ttl)
     when(secretPropertiesb64.getTags)
       .thenReturn(
-        Map(connect.FILE_ENCODING -> connect.Encoding.BASE64.toString).asJava
+        Map(connect.FILE_ENCODING -> connect.Encoding.BASE64.toString).asJava,
       )
     when(secretb64.getValue).thenReturn(
-      Base64.getEncoder.encodeToString(secretValue.getBytes)
+      Base64.getEncoder.encodeToString(secretValue.getBytes),
     )
     when(secretb64.getProperties).thenReturn(secretPropertiesb64)
     when(client.getSecret(secretKey)).thenReturn(secretb64)
@@ -124,34 +119,34 @@ class AzureSecretProviderTest
 
   "should get base64 secrets and write to file" in {
     val props = Map(
-      AzureProviderConfig.AUTH_METHOD -> AuthMode.CREDENTIALS.toString,
+      AzureProviderConfig.AUTH_METHOD     -> AuthMode.CREDENTIALS.toString,
       AzureProviderConfig.AZURE_CLIENT_ID -> "someclientid",
       AzureProviderConfig.AZURE_TENANT_ID -> "sometenantid",
       AzureProviderConfig.AZURE_SECRET_ID -> "somesecretid",
-      connect.FILE_DIR -> tmp
+      connect.FILE_DIR                    -> tmp,
     ).asJava
 
     val provider = new AzureSecretProvider
     provider.configure(props)
-    val secretKey = "base64-key"
+    val secretKey   = "base64-key"
     val secretValue = "base64-secret-value"
-    val secretPath = "my-path.vault.azure.net"
+    val secretPath  = "my-path.vault.azure.net"
 
     val client = mock[SecretClient]
     when(client.getVaultUrl).thenReturn(s"https://$secretPath")
 
     //base64 secret
-    val secretb64 = mock[KeyVaultSecret]
+    val secretb64           = mock[KeyVaultSecret]
     val secretPropertiesb64 = mock[SecretProperties]
-    val ttl = OffsetDateTime.now()
+    val ttl                 = OffsetDateTime.now()
 
     when(secretPropertiesb64.getExpiresOn).thenReturn(ttl)
     when(secretPropertiesb64.getTags)
       .thenReturn(
-        Map(connect.FILE_ENCODING -> connect.Encoding.BASE64_FILE.toString).asJava
+        Map(connect.FILE_ENCODING -> connect.Encoding.BASE64_FILE.toString).asJava,
       )
     when(secretb64.getValue).thenReturn(
-      Base64.getEncoder.encodeToString(secretValue.getBytes)
+      Base64.getEncoder.encodeToString(secretValue.getBytes),
     )
     when(secretb64.getProperties).thenReturn(secretPropertiesb64)
     when(client.getSecret(secretKey)).thenReturn(secretb64)
@@ -159,13 +154,13 @@ class AzureSecretProviderTest
 
     // poke in the mocked client
     provider.clientMap += (s"https://$secretPath" -> client)
-    val data = provider.get(secretPath, Set(secretKey).asJava)
+    val data       = provider.get(secretPath, Set(secretKey).asJava)
     val outputFile = data.data().get(secretKey)
 
     outputFile shouldBe s"$tmp$separator$secretPath$separator$secretKey"
 
     Using(Source.fromFile(outputFile))(_.getLines().mkString) shouldBe Success(
-      secretValue
+      secretValue,
     )
 
     provider.get("").data().isEmpty shouldBe true
@@ -174,31 +169,31 @@ class AzureSecretProviderTest
 
   "should get utf secrets and write to file" in {
     val props = Map(
-      AzureProviderConfig.AUTH_METHOD -> AuthMode.CREDENTIALS.toString,
+      AzureProviderConfig.AUTH_METHOD     -> AuthMode.CREDENTIALS.toString,
       AzureProviderConfig.AZURE_CLIENT_ID -> "someclientid",
       AzureProviderConfig.AZURE_TENANT_ID -> "sometenantid",
       AzureProviderConfig.AZURE_SECRET_ID -> "somesecretid",
-      connect.FILE_DIR -> tmp
+      connect.FILE_DIR                    -> tmp,
     ).asJava
 
     val provider = new AzureSecretProvider
     provider.configure(props)
 
-    val secretKey = "utf8-key"
+    val secretKey   = "utf8-key"
     val secretValue = "utf8-secret-value"
-    val secretPath = "my-path.vault.azure.net"
+    val secretPath  = "my-path.vault.azure.net"
 
     val client = mock[SecretClient]
     when(client.getVaultUrl).thenReturn(s"https://$secretPath")
 
-    val secret = mock[KeyVaultSecret]
+    val secret           = mock[KeyVaultSecret]
     val secretProperties = mock[SecretProperties]
-    val ttl = OffsetDateTime.now()
+    val ttl              = OffsetDateTime.now()
 
     when(secretProperties.getExpiresOn).thenReturn(ttl)
     when(secretProperties.getTags)
       .thenReturn(
-        Map(connect.FILE_ENCODING -> connect.Encoding.UTF8_FILE.toString).asJava
+        Map(connect.FILE_ENCODING -> connect.Encoding.UTF8_FILE.toString).asJava,
       )
     when(secret.getValue).thenReturn(secretValue)
     when(secret.getProperties).thenReturn(secretProperties)
@@ -207,13 +202,13 @@ class AzureSecretProviderTest
 
     // poke in the mocked client
     provider.clientMap += (s"https://$secretPath" -> client)
-    val data = provider.get(secretPath, Set(secretKey).asJava)
+    val data       = provider.get(secretPath, Set(secretKey).asJava)
     val outputFile = data.data().get(secretKey)
 
     outputFile shouldBe s"$tmp$separator$secretPath$separator$secretKey"
 
     Using(Source.fromFile(outputFile))(_.getLines().mkString) shouldBe Success(
-      secretValue
+      secretValue,
     )
 
     provider.get("").data().isEmpty shouldBe true
@@ -222,17 +217,17 @@ class AzureSecretProviderTest
 
   "should use cache" in {
     val props = Map(
-      AzureProviderConfig.AUTH_METHOD -> AuthMode.CREDENTIALS.toString,
+      AzureProviderConfig.AUTH_METHOD     -> AuthMode.CREDENTIALS.toString,
       AzureProviderConfig.AZURE_CLIENT_ID -> "someclientid",
       AzureProviderConfig.AZURE_TENANT_ID -> "sometenantid",
       AzureProviderConfig.AZURE_SECRET_ID -> "somesecretid",
-      connect.FILE_DIR -> tmp
+      connect.FILE_DIR                    -> tmp,
     ).asJava
 
     val provider = new AzureSecretProvider
     provider.configure(props)
 
-    val secretKey = "utf8-key"
+    val secretKey  = "utf8-key"
     val secretPath = "my-path.vault.azure.net"
 
     val client = mock[SecretClient]
@@ -240,9 +235,9 @@ class AzureSecretProviderTest
 
     // poke in the mocked client
     provider.clientMap += (s"https://$secretPath" -> client)
-    val now = OffsetDateTime.now().plusMinutes(10)
+    val now        = OffsetDateTime.now().plusMinutes(10)
     val cachedData = new ConfigData(Map(secretKey -> secretPath).asJava)
-    val cached = (Some(now), cachedData)
+    val cached     = (Some(now), cachedData)
 
     // add to cache
     provider.cache += (s"https://$secretPath" -> cached)
@@ -252,32 +247,32 @@ class AzureSecretProviderTest
 
   "should use not cache because of expiry" in {
     val props = Map(
-      AzureProviderConfig.AUTH_METHOD -> AuthMode.CREDENTIALS.toString,
+      AzureProviderConfig.AUTH_METHOD     -> AuthMode.CREDENTIALS.toString,
       AzureProviderConfig.AZURE_CLIENT_ID -> "someclientid",
       AzureProviderConfig.AZURE_TENANT_ID -> "sometenantid",
       AzureProviderConfig.AZURE_SECRET_ID -> "somesecretid",
-      connect.FILE_DIR -> tmp
+      connect.FILE_DIR                    -> tmp,
     ).asJava
 
     val provider = new AzureSecretProvider
     provider.configure(props)
 
-    val secretKey = "utf8-key"
+    val secretKey   = "utf8-key"
     val secretValue = "utf8-secret-value"
-    val secretPath = "my-path.vault.azure.net"
-    val vaultUrl = s"https://$secretPath"
+    val secretPath  = "my-path.vault.azure.net"
+    val vaultUrl    = s"https://$secretPath"
 
     val client = mock[SecretClient]
     when(client.getVaultUrl).thenReturn(s"https://$secretPath")
 
-    val secret = mock[KeyVaultSecret]
+    val secret           = mock[KeyVaultSecret]
     val secretProperties = mock[SecretProperties]
-    val ttl = OffsetDateTime.now().plusHours(1)
+    val ttl              = OffsetDateTime.now().plusHours(1)
 
     when(secretProperties.getExpiresOn).thenReturn(ttl)
     when(secretProperties.getTags)
       .thenReturn(
-        Map(connect.FILE_ENCODING -> connect.Encoding.UTF8_FILE.toString).asJava
+        Map(connect.FILE_ENCODING -> connect.Encoding.UTF8_FILE.toString).asJava,
       )
     when(secret.getValue).thenReturn(secretValue)
     when(secret.getProperties).thenReturn(secretProperties)
@@ -287,9 +282,9 @@ class AzureSecretProviderTest
     // poke in the mocked client
     provider.clientMap += (vaultUrl -> client)
     //put expiry of cache 1 second behind
-    val now = OffsetDateTime.now().minusSeconds(1)
+    val now        = OffsetDateTime.now().minusSeconds(1)
     val cachedData = new ConfigData(Map(secretKey -> secretPath).asJava)
-    val cached = (Some(now), cachedData)
+    val cached     = (Some(now), cachedData)
 
     // add to cache
     provider.cache += (vaultUrl -> cached)
@@ -301,32 +296,32 @@ class AzureSecretProviderTest
 
   "should use not cache because of different keys" in {
     val props = Map(
-      AzureProviderConfig.AUTH_METHOD -> AuthMode.CREDENTIALS.toString,
+      AzureProviderConfig.AUTH_METHOD     -> AuthMode.CREDENTIALS.toString,
       AzureProviderConfig.AZURE_CLIENT_ID -> "someclientid",
       AzureProviderConfig.AZURE_TENANT_ID -> "sometenantid",
       AzureProviderConfig.AZURE_SECRET_ID -> "somesecretid",
-      connect.FILE_DIR -> tmp
+      connect.FILE_DIR                    -> tmp,
     ).asJava
 
     val provider = new AzureSecretProvider
     provider.configure(props)
 
-    val secretKey = "utf8-key"
+    val secretKey   = "utf8-key"
     val secretValue = "utf8-secret-value"
-    val secretPath = "my-path.vault.azure.net"
-    val vaultUrl = s"https://$secretPath"
+    val secretPath  = "my-path.vault.azure.net"
+    val vaultUrl    = s"https://$secretPath"
 
     val client = mock[SecretClient]
     when(client.getVaultUrl).thenReturn(s"https://$secretPath")
 
-    val secret = mock[KeyVaultSecret]
+    val secret           = mock[KeyVaultSecret]
     val secretProperties = mock[SecretProperties]
-    val ttl = OffsetDateTime.now().plusHours(1)
+    val ttl              = OffsetDateTime.now().plusHours(1)
 
     when(secretProperties.getExpiresOn).thenReturn(ttl)
     when(secretProperties.getTags)
       .thenReturn(
-        Map(connect.FILE_ENCODING -> connect.Encoding.UTF8_FILE.toString).asJava
+        Map(connect.FILE_ENCODING -> connect.Encoding.UTF8_FILE.toString).asJava,
       )
     when(secret.getValue).thenReturn(secretValue)
     when(secret.getProperties).thenReturn(secretProperties)
@@ -336,9 +331,9 @@ class AzureSecretProviderTest
     // poke in the mocked client
     provider.clientMap += (vaultUrl -> client)
     //put expiry of cache 1 second behind
-    val now = OffsetDateTime.now()
+    val now        = OffsetDateTime.now()
     val cachedData = new ConfigData(Map("old-key" -> secretPath).asJava)
-    val cached = (Some(now), cachedData)
+    val cached     = (Some(now), cachedData)
 
     // add to cache
     provider.cache += (vaultUrl -> cached)
@@ -351,8 +346,8 @@ class AzureSecretProviderTest
     intercept[ConnectException] {
       AzureProviderSettings(
         AzureProviderConfig(
-          Map(AzureProviderConfig.AUTH_METHOD -> AuthMode.CREDENTIALS.toString).asJava
-        )
+          Map(AzureProviderConfig.AUTH_METHOD -> AuthMode.CREDENTIALS.toString).asJava,
+        ),
       )
     }
   }
@@ -363,10 +358,10 @@ class AzureSecretProviderTest
       AzureProviderSettings(
         AzureProviderConfig(
           Map(
-            AzureProviderConfig.AUTH_METHOD -> AuthMode.CREDENTIALS.toString,
-            AzureProviderConfig.AZURE_CLIENT_ID -> "someclientid"
-          ).asJava
-        )
+            AzureProviderConfig.AUTH_METHOD     -> AuthMode.CREDENTIALS.toString,
+            AzureProviderConfig.AZURE_CLIENT_ID -> "someclientid",
+          ).asJava,
+        ),
       )
     }
   }
@@ -377,11 +372,11 @@ class AzureSecretProviderTest
       AzureProviderSettings(
         AzureProviderConfig(
           Map(
-            AzureProviderConfig.AUTH_METHOD -> AuthMode.CREDENTIALS.toString,
+            AzureProviderConfig.AUTH_METHOD     -> AuthMode.CREDENTIALS.toString,
             AzureProviderConfig.AZURE_CLIENT_ID -> "someclientid",
-            AzureProviderConfig.AZURE_TENANT_ID -> "sometenantid"
-          ).asJava
-        )
+            AzureProviderConfig.AZURE_TENANT_ID -> "sometenantid",
+          ).asJava,
+        ),
       )
     }
   }
@@ -390,8 +385,8 @@ class AzureSecretProviderTest
 
     val settings = AzureProviderSettings(
       AzureProviderConfig(
-        Map(AzureProviderConfig.AUTH_METHOD -> AuthMode.DEFAULT.toString).asJava
-      )
+        Map(AzureProviderConfig.AUTH_METHOD -> AuthMode.DEFAULT.toString).asJava,
+      ),
     )
 
     settings.authMode shouldBe AuthMode.DEFAULT
@@ -401,19 +396,19 @@ class AzureSecretProviderTest
     val props1 = Map(
       AzureProviderConfig.AZURE_CLIENT_ID -> "someclientid",
       AzureProviderConfig.AZURE_TENANT_ID -> "sometenantid",
-      AzureProviderConfig.AZURE_SECRET_ID -> "somesecretid"
+      AzureProviderConfig.AZURE_SECRET_ID -> "somesecretid",
     ).asJava
 
-    val secretKey = "key-1"
+    val secretKey   = "key-1"
     val secretValue = "utf8-secret-value"
-    val secretPath = "my-path.vault.azure.net"
+    val secretPath  = "my-path.vault.azure.net"
 
     val client = mock[SecretClient]
     when(client.getVaultUrl).thenReturn(s"https://$secretPath")
 
-    val secret = mock[KeyVaultSecret]
+    val secret           = mock[KeyVaultSecret]
     val secretProperties = mock[SecretProperties]
-    val offset = OffsetDateTime.now()
+    val offset           = OffsetDateTime.now()
 
     // string secret
     when(secretProperties.getExpiresOn).thenReturn(offset)

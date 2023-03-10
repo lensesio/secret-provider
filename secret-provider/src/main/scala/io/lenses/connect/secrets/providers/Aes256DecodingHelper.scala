@@ -3,8 +3,10 @@ package io.lenses.connect.secrets.providers
 import java.security.SecureRandom
 import java.util.Base64
 import javax.crypto.Cipher
-import javax.crypto.spec.{IvParameterSpec, SecretKeySpec}
-import scala.util.{Failure, Try}
+import javax.crypto.spec.IvParameterSpec
+import javax.crypto.spec.SecretKeySpec
+import scala.util.Failure
+import scala.util.Try
 
 private[providers] object Aes256DecodingHelper {
 
@@ -12,7 +14,7 @@ private[providers] object Aes256DecodingHelper {
   val INITIALISATION_VECTOR_SEPARATOR = " "
 
   private val BYTES_AMOUNT = 32
-  private val CHARSET = "UTF-8"
+  private val CHARSET      = "UTF-8"
 
   /**
     * Initializes AES256 decoder for valid key or fails for invalid key
@@ -30,8 +32,8 @@ private[providers] object Aes256DecodingHelper {
 }
 
 private[providers] class Aes256DecodingHelper private (
-    key: String,
-    ivSeparator: String
+  key:         String,
+  ivSeparator: String,
 ) {
 
   import Aes256DecodingHelper.CHARSET
@@ -43,18 +45,18 @@ private[providers] class Aes256DecodingHelper private (
     for {
       (iv, encoded) <- InitializationVector.extractInitialisationVector(
         s,
-        ivSeparator
+        ivSeparator,
       )
-      decoded <- base64Decode(encoded)
+      decoded   <- base64Decode(encoded)
       decrypted <- decryptBytes(iv, decoded)
     } yield new String(decrypted, CHARSET)
 
   private def decryptBytes(
-      iv: InitializationVector,
-      bytes: Array[Byte]
+    iv:    InitializationVector,
+    bytes: Array[Byte],
   ): Try[Array[Byte]] =
     for {
-      cipher <- getCipher(Cipher.DECRYPT_MODE, iv)
+      cipher    <- getCipher(Cipher.DECRYPT_MODE, iv)
       encrypted <- Try(cipher.doFinal(bytes))
     } yield encrypted
 
@@ -84,20 +86,18 @@ private object InitializationVector {
   }
 
   def extractInitialisationVector(
-      s: String,
-      ivSeparator: String
+    s:           String,
+    ivSeparator: String,
   ): Try[(InitializationVector, String)] =
     s.indexOf(ivSeparator) match {
       case -1 =>
         Failure(
           new IllegalStateException(
-            "Invalid format: missing initialization vector"
-          )
+            "Invalid format: missing initialization vector",
+          ),
         )
       case i =>
-        base64Decode(s.substring(0, i)).map(b =>
-          (new InitializationVector(b), s.substring(i + 1))
-        )
+        base64Decode(s.substring(0, i)).map(b => (new InitializationVector(b), s.substring(i + 1)))
     }
 }
 

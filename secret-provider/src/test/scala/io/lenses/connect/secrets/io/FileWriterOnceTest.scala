@@ -8,22 +8,20 @@ import java.io.File
 import java.nio.file.Paths
 import java.util.UUID
 import scala.io.Source
-import scala.util.{Success, Try, Using}
+import scala.util.Success
+import scala.util.Try
+import scala.util.Using
 
-class FileWriterOnceTest
-    extends AnyFunSuite
-    with Matchers
-    with BeforeAndAfterAll {
+class FileWriterOnceTest extends AnyFunSuite with Matchers with BeforeAndAfterAll {
   private val folder = new File(UUID.randomUUID().toString)
   folder.deleteOnExit()
   private val writer = new FileWriterOnce(folder.toPath)
 
-  override protected def beforeAll(): Unit = {
+  override protected def beforeAll(): Unit =
     folder.mkdir()
-  }
 
   override protected def afterAll(): Unit = {
-    folder.listFiles().foreach { f => Try(f.delete()) }
+    folder.listFiles().foreach(f => Try(f.delete()))
     folder.delete()
   }
 
