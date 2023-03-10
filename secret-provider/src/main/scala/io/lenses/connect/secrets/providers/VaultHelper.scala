@@ -6,9 +6,12 @@
 
 package io.lenses.connect.secrets.providers
 
-import com.bettercloud.vault.{SslConfig, Vault, VaultConfig}
+import com.bettercloud.vault.SslConfig
+import com.bettercloud.vault.Vault
+import com.bettercloud.vault.VaultConfig
 import com.typesafe.scalalogging.StrictLogging
-import io.lenses.connect.secrets.config.{VaultAuthMethod, VaultSettings}
+import io.lenses.connect.secrets.config.VaultAuthMethod
+import io.lenses.connect.secrets.config.VaultSettings
 import org.apache.kafka.connect.errors.ConnectException
 
 import java.io.File
@@ -34,7 +37,7 @@ trait VaultHelper extends StrictLogging {
     val vault = new Vault(config.build())
 
     logger.info(
-      s"Initializing client with mode [${settings.authMode.toString}]"
+      s"Initializing client with mode [${settings.authMode.toString}]",
     )
 
     val token = settings.authMode match {
@@ -44,7 +47,7 @@ trait VaultHelper extends StrictLogging {
             vault
               .auth()
               .loginByUserPass(up.username, up.password.value(), up.mount)
-              .getAuthClientToken
+              .getAuthClientToken,
           )
 
       case VaultAuthMethod.APPROLE =>
@@ -53,7 +56,7 @@ trait VaultHelper extends StrictLogging {
             vault
               .auth()
               .loginByAppRole(ar.role, ar.secretId.value())
-              .getAuthClientToken
+              .getAuthClientToken,
           )
 
       case VaultAuthMethod.CERT =>
@@ -70,9 +73,9 @@ trait VaultHelper extends StrictLogging {
                 aws.url,
                 aws.body.value(),
                 aws.headers.value(),
-                aws.mount
+                aws.mount,
               )
-              .getAuthClientToken
+              .getAuthClientToken,
           )
 
       case VaultAuthMethod.KUBERNETES =>
@@ -81,7 +84,7 @@ trait VaultHelper extends StrictLogging {
             vault
               .auth()
               .loginByKubernetes(k8s.role, k8s.jwt.value())
-              .getAuthClientToken
+              .getAuthClientToken,
           )
       case VaultAuthMethod.GCP =>
         settings.gcp
@@ -89,7 +92,7 @@ trait VaultHelper extends StrictLogging {
             vault
               .auth()
               .loginByGCP(gcp.role, gcp.jwt.value())
-              .getAuthClientToken
+              .getAuthClientToken,
           )
 
       case VaultAuthMethod.LDAP =>
@@ -98,7 +101,7 @@ trait VaultHelper extends StrictLogging {
             vault
               .auth()
               .loginByLDAP(l.username, l.password.value(), l.mount)
-              .getAuthClientToken
+              .getAuthClientToken,
           )
 
       case VaultAuthMethod.JWT =>
@@ -107,7 +110,7 @@ trait VaultHelper extends StrictLogging {
             vault
               .auth()
               .loginByJwt(j.provider, j.role, j.jwt.value())
-              .getAuthClientToken
+              .getAuthClientToken,
           )
 
       case VaultAuthMethod.TOKEN =>
@@ -119,12 +122,12 @@ trait VaultHelper extends StrictLogging {
             vault
               .auth()
               .loginByGithub(gh.token.value(), gh.mount)
-              .getAuthClientToken
+              .getAuthClientToken,
           )
 
       case _ =>
         throw new ConnectException(
-          s"Unsupported auth method [${settings.authMode.toString}]"
+          s"Unsupported auth method [${settings.authMode.toString}]",
         )
     }
 
@@ -141,7 +144,7 @@ trait VaultHelper extends StrictLogging {
       logger.info(s"Configuring keystore at [${settings.keystoreLoc}]")
       ssl.keyStoreFile(
         new File(settings.keystoreLoc),
-        settings.keystorePass.value()
+        settings.keystorePass.value(),
       )
     }
 

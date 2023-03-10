@@ -14,16 +14,19 @@ import io.lenses.connect.secrets.connect._
 import org.apache.kafka.common.config.types.Password
 import org.apache.kafka.connect.errors.ConnectException
 
-import scala.concurrent.duration.{FiniteDuration, _}
+import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration._
 import scala.io.Source
-import scala.util.{Failure, Success, Using}
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Using
 
 case class AwsIam(
-    role: String,
-    url: String,
-    headers: Password,
-    body: Password,
-    mount: String
+  role:    String,
+  url:     String,
+  headers: Password,
+  body:    Password,
+  mount:   String,
 )
 case class Gcp(role: String, jwt: Password)
 case class Jwt(role: String, provider: String, jwt: Password)
@@ -35,50 +38,50 @@ case class Cert(mount: String)
 case class Github(token: Password, mount: String)
 
 case class VaultSettings(
-    addr: String,
-    namespace: String,
-    token: Password,
-    authMode: VaultAuthMethod,
-    keystoreLoc: String,
-    keystorePass: Password,
-    truststoreLoc: String,
-    pem: String,
-    clientPem: String,
-    engineVersion: Int = 2,
-    appRole: Option[AppRole],
-    awsIam: Option[AwsIam],
-    gcp: Option[Gcp],
-    jwt: Option[Jwt],
-    userPass: Option[UserPass],
-    ldap: Option[Ldap],
-    k8s: Option[K8s],
-    cert: Option[Cert],
-    github: Option[Github],
-    fileDir: String,
-    tokenRenewal: FiniteDuration
+  addr:          String,
+  namespace:     String,
+  token:         Password,
+  authMode:      VaultAuthMethod,
+  keystoreLoc:   String,
+  keystorePass:  Password,
+  truststoreLoc: String,
+  pem:           String,
+  clientPem:     String,
+  engineVersion: Int = 2,
+  appRole:       Option[AppRole],
+  awsIam:        Option[AwsIam],
+  gcp:           Option[Gcp],
+  jwt:           Option[Jwt],
+  userPass:      Option[UserPass],
+  ldap:          Option[Ldap],
+  k8s:           Option[K8s],
+  cert:          Option[Cert],
+  github:        Option[Github],
+  fileDir:       String,
+  tokenRenewal:  FiniteDuration,
 )
 
 object VaultSettings extends StrictLogging {
   def apply(config: VaultProviderConfig): VaultSettings = {
-    val addr = config.getString(VaultProviderConfig.VAULT_ADDR)
-    val token = config.getPassword(VaultProviderConfig.VAULT_TOKEN)
-    val namespace = config.getString(VaultProviderConfig.VAULT_NAMESPACE)
+    val addr        = config.getString(VaultProviderConfig.VAULT_ADDR)
+    val token       = config.getPassword(VaultProviderConfig.VAULT_TOKEN)
+    val namespace   = config.getString(VaultProviderConfig.VAULT_NAMESPACE)
     val keystoreLoc = config.getString(VaultProviderConfig.VAULT_KEYSTORE_LOC)
     val keystorePass =
       config.getPassword(VaultProviderConfig.VAULT_KEYSTORE_PASS)
     val truststoreLoc =
       config.getString(VaultProviderConfig.VAULT_TRUSTSTORE_LOC)
-    val pem = config.getString(VaultProviderConfig.VAULT_PEM)
-    val clientPem = config.getString(VaultProviderConfig.VAULT_CLIENT_PEM)
+    val pem           = config.getString(VaultProviderConfig.VAULT_PEM)
+    val clientPem     = config.getString(VaultProviderConfig.VAULT_CLIENT_PEM)
     val engineVersion = config.getInt(VaultProviderConfig.VAULT_ENGINE_VERSION)
 
     val authMode = VaultAuthMethod.withNameOpt(
-      config.getString(VaultProviderConfig.AUTH_METHOD).toUpperCase
+      config.getString(VaultProviderConfig.AUTH_METHOD).toUpperCase,
     ) match {
       case Some(auth) => auth
       case None =>
         throw new ConnectException(
-          s"Unsupported ${VaultProviderConfig.AUTH_METHOD}"
+          s"Unsupported ${VaultProviderConfig.AUTH_METHOD}",
         )
     }
 
@@ -110,27 +113,27 @@ object VaultSettings extends StrictLogging {
 
     val tokenRenewal = config.getInt(TOKEN_RENEWAL).toInt.milliseconds
     VaultSettings(
-      addr = addr,
-      namespace = namespace,
-      token = token,
-      authMode = authMode,
-      keystoreLoc = keystoreLoc,
-      keystorePass = keystorePass,
+      addr          = addr,
+      namespace     = namespace,
+      token         = token,
+      authMode      = authMode,
+      keystoreLoc   = keystoreLoc,
+      keystorePass  = keystorePass,
       truststoreLoc = truststoreLoc,
-      pem = pem,
-      clientPem = clientPem,
+      pem           = pem,
+      clientPem     = clientPem,
       engineVersion = engineVersion,
-      appRole = appRole,
-      awsIam = awsIam,
-      gcp = gcp,
-      jwt = jwt,
-      userPass = userpass,
-      ldap = ldap,
-      k8s = k8s,
-      cert = cert,
-      github = github,
-      fileDir = fileDir,
-      tokenRenewal = tokenRenewal
+      appRole       = appRole,
+      awsIam        = awsIam,
+      gcp           = gcp,
+      jwt           = jwt,
+      userPass      = userpass,
+      ldap          = ldap,
+      k8s           = k8s,
+      cert          = cert,
+      github        = github,
+      fileDir       = fileDir,
+      tokenRenewal  = tokenRenewal,
     )
   }
 
@@ -146,18 +149,18 @@ object VaultSettings extends StrictLogging {
 
   def getAWS(config: VaultProviderConfig): AwsIam = {
     val role = config.getStringOrThrowOnNull(VaultProviderConfig.AWS_ROLE)
-    val url = config.getStringOrThrowOnNull(VaultProviderConfig.AWS_REQUEST_URL)
+    val url  = config.getStringOrThrowOnNull(VaultProviderConfig.AWS_REQUEST_URL)
     val headers =
       config.getPasswordOrThrowOnNull(VaultProviderConfig.AWS_REQUEST_HEADERS)
     val body =
       config.getPasswordOrThrowOnNull(VaultProviderConfig.AWS_REQUEST_BODY)
     val mount = config.getStringOrThrowOnNull(VaultProviderConfig.AWS_MOUNT)
     AwsIam(
-      role = role,
-      url = url,
+      role    = role,
+      url     = url,
       headers = headers,
-      body = body,
-      mount = mount
+      body    = body,
+      mount   = mount,
     )
   }
 
@@ -177,7 +180,7 @@ object VaultSettings extends StrictLogging {
       case Failure(exception) =>
         throw new ConnectException(
           s"Failed to load kubernetes token file [$path]",
-          exception
+          exception,
         )
       case Success(fileContents) =>
         K8s(role = role, jwt = new Password(fileContents))
@@ -185,8 +188,8 @@ object VaultSettings extends StrictLogging {
   }
 
   def getUserPass(config: VaultProviderConfig): UserPass = {
-    val user = config.getStringOrThrowOnNull(VaultProviderConfig.USERNAME)
-    val pass = config.getPasswordOrThrowOnNull(VaultProviderConfig.PASSWORD)
+    val user  = config.getStringOrThrowOnNull(VaultProviderConfig.USERNAME)
+    val pass  = config.getPasswordOrThrowOnNull(VaultProviderConfig.PASSWORD)
     val mount = config.getStringOrThrowOnNull(VaultProviderConfig.UP_MOUNT)
     UserPass(username = user, password = pass, mount = mount)
   }
@@ -201,7 +204,7 @@ object VaultSettings extends StrictLogging {
 
   def getGCP(config: VaultProviderConfig): Gcp = {
     val role = config.getStringOrThrowOnNull(VaultProviderConfig.GCP_ROLE)
-    val jwt = config.getPasswordOrThrowOnNull(VaultProviderConfig.GCP_JWT)
+    val jwt  = config.getPasswordOrThrowOnNull(VaultProviderConfig.GCP_JWT)
     Gcp(role = role, jwt = jwt)
   }
 

@@ -7,10 +7,8 @@
 package io.lenses.connect.secrets.providers
 
 import com.azure.core.credential.TokenCredential
-import com.azure.identity.{
-  ClientSecretCredentialBuilder,
-  DefaultAzureCredentialBuilder
-}
+import com.azure.identity.ClientSecretCredentialBuilder
+import com.azure.identity.DefaultAzureCredentialBuilder
 import com.azure.security.keyvault.secrets.SecretClient
 import com.typesafe.scalalogging.StrictLogging
 import io.lenses.connect.secrets.config.AzureProviderSettings
@@ -19,7 +17,9 @@ import org.apache.kafka.connect.errors.ConnectException
 
 import java.nio.file.FileSystems
 import java.time.OffsetDateTime
-import scala.util.{Failure, Success, Try}
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 trait AzureHelper extends StrictLogging {
 
@@ -27,12 +27,11 @@ trait AzureHelper extends StrictLogging {
 
   // look up secret in Azure
   def getSecretValue(
-      rootDir: String,
-      path: String,
-      client: SecretClient,
-      key: String
-  ): (String, Option[OffsetDateTime]) = {
-
+    rootDir: String,
+    path:    String,
+    client:  SecretClient,
+    key:     String,
+  ): (String, Option[OffsetDateTime]) =
     Try(client.getSecret(key)) match {
       case Success(secret) =>
         val value = secret.getValue
@@ -42,9 +41,9 @@ trait AzureHelper extends StrictLogging {
         val encoding =
           Encoding.withName(
             Option(props.getTags)
-              .map { _.getOrDefault(FILE_ENCODING, Encoding.UTF8.toString) }
+              .map(_.getOrDefault(FILE_ENCODING, Encoding.UTF8.toString))
               .getOrElse(Encoding.UTF8.toString)
-              .toUpperCase
+              .toUpperCase,
           )
 
         val content = encoding match {
@@ -57,7 +56,7 @@ trait AzureHelper extends StrictLogging {
             fileWriter(
               fileName,
               value.getBytes,
-              key.toLowerCase
+              key.toLowerCase,
             )
             fileName
 
@@ -72,7 +71,7 @@ trait AzureHelper extends StrictLogging {
             fileWriter(
               fileName,
               decoded,
-              key.toLowerCase
+              key.toLowerCase,
             )
             fileName
         }
@@ -83,16 +82,15 @@ trait AzureHelper extends StrictLogging {
       case Failure(e) =>
         throw new ConnectException(
           s"Failed to look up secret [$key] at [${client.getVaultUrl}]",
-          e
+          e,
         )
     }
-  }
 
   // setup azure credentials
   def createCredentials(settings: AzureProviderSettings): TokenCredential = {
 
     logger.info(
-      s"Initializing client with mode [${settings.authMode.toString}]"
+      s"Initializing client with mode [${settings.authMode.toString}]",
     )
 
     settings.authMode match {

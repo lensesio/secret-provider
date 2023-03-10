@@ -15,7 +15,8 @@ import java.nio.file.FileSystems
 import java.util.Base64
 import scala.io.Source
 import scala.jdk.CollectionConverters._
-import scala.util.{Success, Using}
+import scala.util.Success
+import scala.util.Using
 
 class ENVSecretProviderTest extends AnyWordSpec with Matchers {
 
@@ -28,11 +29,11 @@ class ENVSecretProviderTest extends AnyWordSpec with Matchers {
   "should filter and match" in {
     val provider = new ENVSecretProvider()
     provider.vars = Map(
-      "RANDOM" -> "somevalue",
+      "RANDOM"                     -> "somevalue",
       "CONNECT_CASSANDRA_PASSWORD" -> "secret",
-      "BASE64" -> s"ENV-base64:${Base64.getEncoder.encodeToString("my-base64-secret".getBytes)}",
-      "BASE64_FILE" -> s"ENV-mounted-base64:${Base64.getEncoder.encodeToString("my-base64-secret".getBytes)}",
-      "UTF8_FILE" -> s"ENV-mounted:my-secret"
+      "BASE64"                     -> s"ENV-base64:${Base64.getEncoder.encodeToString("my-base64-secret".getBytes)}",
+      "BASE64_FILE"                -> s"ENV-mounted-base64:${Base64.getEncoder.encodeToString("my-base64-secret".getBytes)}",
+      "UTF8_FILE"                  -> s"ENV-mounted:my-secret",
     )
     provider.fileDir = tmp
 
@@ -48,20 +49,20 @@ class ENVSecretProviderTest extends AnyWordSpec with Matchers {
     val data3 = provider.get("", Set("BASE64").asJava)
     data3.data().get("BASE64") shouldBe "my-base64-secret"
 
-    val data4 = provider.get("", Set("BASE64_FILE").asJava)
+    val data4      = provider.get("", Set("BASE64_FILE").asJava)
     val outputFile = data4.data().get("BASE64_FILE")
     outputFile shouldBe s"$tmp${separator}base64_file"
 
     Using(Source.fromFile(outputFile))(_.getLines().mkString) shouldBe Success(
-      "my-base64-secret"
+      "my-base64-secret",
     )
 
-    val data5 = provider.get("", Set("UTF8_FILE").asJava)
+    val data5       = provider.get("", Set("UTF8_FILE").asJava)
     val outputFile5 = data5.data().get("UTF8_FILE")
     outputFile5 shouldBe s"$tmp${separator}utf8_file"
 
     Using(Source.fromFile(outputFile5))(_.getLines().mkString) shouldBe Success(
-      "my-secret"
+      "my-secret",
     )
 
   }

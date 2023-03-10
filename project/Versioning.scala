@@ -1,4 +1,5 @@
-import java.util.regex.{Matcher, Pattern}
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 
 case class SemanticVersioning(version: String) {
 

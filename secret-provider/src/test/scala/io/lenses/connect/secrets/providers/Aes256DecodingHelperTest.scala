@@ -9,10 +9,7 @@ import java.util.UUID.randomUUID
 import scala.util.Random.nextString
 import scala.util.Success
 
-class Aes256DecodingHelperTest
-    extends AnyWordSpec
-    with Matchers
-    with TableDrivenPropertyChecks {
+class Aes256DecodingHelperTest extends AnyWordSpec with Matchers with TableDrivenPropertyChecks {
 
   import AesDecodingTestHelper.encrypt
 
@@ -34,7 +31,7 @@ class Aes256DecodingHelperTest
 
     "decrypt encrypted text" in new TestContext {
       forAll(inputs) { text: String =>
-        val aes256 = newEncryption(key)
+        val aes256    = newEncryption(key)
         val encrypted = encrypt(text, key)
 
         aes256.decrypt(encrypted) shouldBe Success(text)
@@ -43,7 +40,7 @@ class Aes256DecodingHelperTest
 
     "decrypt same text prefixed with different initialization vector" in new TestContext {
       forAll(inputs) { text: String =>
-        val aes256 = newEncryption(key)
+        val aes256     = newEncryption(key)
         val encrypted1 = encrypt(text, key)
         val encrypted2 = encrypt(text, key)
         removePrefix(encrypted1) should not be removePrefix(encrypted2)
@@ -65,7 +62,7 @@ class Aes256DecodingHelperTest
       nextString(length = 10),
       nextString(length = 100),
       nextString(length = 1000),
-      nextString(length = 10000)
+      nextString(length = 10000),
     )
 
     def removePrefix(s: String) =

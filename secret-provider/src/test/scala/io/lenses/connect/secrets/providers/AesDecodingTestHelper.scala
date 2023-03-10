@@ -4,7 +4,8 @@ import io.lenses.connect.secrets.providers.Aes256DecodingHelper.INITIALISATION_V
 
 import java.util.Base64
 import javax.crypto.Cipher
-import javax.crypto.spec.{IvParameterSpec, SecretKeySpec}
+import javax.crypto.spec.IvParameterSpec
+import javax.crypto.spec.SecretKeySpec
 import scala.util.Try
 
 object AesDecodingTestHelper {
@@ -15,26 +16,26 @@ object AesDecodingTestHelper {
     encryptBytes(s.getBytes("UTF-8"), iv, key)
       .map(encrypted =>
         base64Encode(iv.bytes) + INITIALISATION_VECTOR_SEPARATOR + base64Encode(
-          encrypted
-        )
+          encrypted,
+        ),
       )
       .get
   }
 
   private def encryptBytes(
-      bytes: Array[Byte],
-      iv: InitializationVector,
-      key: String
+    bytes: Array[Byte],
+    iv:    InitializationVector,
+    key:   String,
   ): Try[Array[Byte]] =
     for {
-      cipher <- getCipher(Cipher.ENCRYPT_MODE, iv, key)
+      cipher    <- getCipher(Cipher.ENCRYPT_MODE, iv, key)
       encrypted <- Try(cipher.doFinal(bytes))
     } yield encrypted
 
   private def getCipher(
-      mode: Int,
-      iv: InitializationVector,
-      key: String
+    mode: Int,
+    iv:   InitializationVector,
+    key:  String,
   ): Try[Cipher] =
     Try {
       val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")

@@ -10,8 +10,11 @@ import com.amazonaws.services.secretsmanager.AWSSecretsManager
 import com.amazonaws.services.secretsmanager.model._
 import com.bettercloud.vault.json.JsonObject
 import io.lenses.connect.secrets.TmpDirUtil.getTempDir
-import io.lenses.connect.secrets.config.{AWSProviderConfig, AWSProviderSettings}
-import io.lenses.connect.secrets.connect.{AuthMode, Encoding, _}
+import io.lenses.connect.secrets.config.AWSProviderConfig
+import io.lenses.connect.secrets.config.AWSProviderSettings
+import io.lenses.connect.secrets.connect.AuthMode
+import io.lenses.connect.secrets.connect.Encoding
+import io.lenses.connect.secrets.connect._
 import io.lenses.connect.secrets.utils.EncodingAndId
 import org.apache.kafka.common.config.ConfigTransformer
 import org.apache.kafka.common.config.provider.ConfigProvider
@@ -23,25 +26,24 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
 
 import java.nio.file.FileSystems
-import java.util.{Base64, Date}
+import java.util.Base64
+import java.util.Date
 import scala.io.Source
 import scala.jdk.CollectionConverters._
-import scala.util.{Success, Using}
+import scala.util.Success
+import scala.util.Using
 
-class AWSSecretProviderTest
-    extends AnyWordSpec
-    with Matchers
-    with MockitoSugar {
+class AWSSecretProviderTest extends AnyWordSpec with Matchers with MockitoSugar {
 
   val separator: String = FileSystems.getDefault.getSeparator
-  val tmp: String = s"$getTempDir${separator}provider-tests-aws"
+  val tmp:       String = s"$getTempDir${separator}provider-tests-aws"
 
   "should authenticate with credentials" in {
     val props = Map(
-      AWSProviderConfig.AUTH_METHOD -> AuthMode.CREDENTIALS.toString,
+      AWSProviderConfig.AUTH_METHOD    -> AuthMode.CREDENTIALS.toString,
       AWSProviderConfig.AWS_ACCESS_KEY -> "somekey",
       AWSProviderConfig.AWS_SECRET_KEY -> "secretkey",
-      AWSProviderConfig.AWS_REGION -> "someregion"
+      AWSProviderConfig.AWS_REGION     -> "someregion",
     ).asJava
 
     val provider = new AWSSecretProvider()
@@ -51,14 +53,14 @@ class AWSSecretProviderTest
 
   "should authenticate with credentials and lookup a secret" in {
     val props = Map(
-      AWSProviderConfig.AUTH_METHOD -> AuthMode.CREDENTIALS.toString,
+      AWSProviderConfig.AUTH_METHOD    -> AuthMode.CREDENTIALS.toString,
       AWSProviderConfig.AWS_ACCESS_KEY -> "somekey",
       AWSProviderConfig.AWS_SECRET_KEY -> "secretkey",
-      AWSProviderConfig.AWS_REGION -> "someregion"
+      AWSProviderConfig.AWS_REGION     -> "someregion",
     ).asJava
 
-    val secretKey = "my-secret-key"
-    val secretName = "my-secret-name"
+    val secretKey   = "my-secret-key"
+    val secretName  = "my-secret-name"
     val secretValue = "secret-value"
 
     val provider = new AWSSecretProvider()
@@ -68,11 +70,11 @@ class AWSSecretProviderTest
     val secretValRequest =
       new GetSecretValueRequest().withSecretId(secretName)
     val secretValResponse = new GetSecretValueResult()
-    val secretJson = new JsonObject().add(secretKey, secretValue)
+    val secretJson        = new JsonObject().add(secretKey, secretValue)
     secretValResponse.setName(secretName)
     secretValResponse.setSecretString(secretJson.toString())
 
-    val now = new Date()
+    val now                    = new Date()
     val describeSecretResponse = new DescribeSecretResult()
     describeSecretResponse.setLastRotatedDate(now)
     describeSecretResponse.setRotationEnabled(true)
@@ -95,14 +97,14 @@ class AWSSecretProviderTest
 
   "should authenticate with credentials and lookup a base64 secret" in {
     val props = Map(
-      AWSProviderConfig.AUTH_METHOD -> AuthMode.CREDENTIALS.toString,
+      AWSProviderConfig.AUTH_METHOD    -> AuthMode.CREDENTIALS.toString,
       AWSProviderConfig.AWS_ACCESS_KEY -> "somekey",
       AWSProviderConfig.AWS_SECRET_KEY -> "secretkey",
-      AWSProviderConfig.AWS_REGION -> "someregion"
+      AWSProviderConfig.AWS_REGION     -> "someregion",
     ).asJava
 
-    val secretKey = Encoding.BASE64.toString
-    val secretName = "my-secret-name"
+    val secretKey   = Encoding.BASE64.toString
+    val secretName  = "my-secret-name"
     val secretValue = "base64-secret-value"
 
     val provider = new AWSSecretProvider()
@@ -115,11 +117,11 @@ class AWSSecretProviderTest
     secretValResponse.setName(secretName)
     val secretJson = new JsonObject().add(
       secretKey,
-      Base64.getEncoder.encodeToString(secretValue.getBytes)
+      Base64.getEncoder.encodeToString(secretValue.getBytes),
     )
     secretValResponse.setSecretString(secretJson.toString)
 
-    val now = new Date()
+    val now                    = new Date()
     val describeSecretResponse = new DescribeSecretResult()
     describeSecretResponse.setLastRotatedDate(now)
     describeSecretResponse.setRotationEnabled(true)
@@ -144,15 +146,15 @@ class AWSSecretProviderTest
 
   "should authenticate with credentials and lookup a base64 secret and write to file" in {
     val props = Map(
-      AWSProviderConfig.AUTH_METHOD -> AuthMode.CREDENTIALS.toString,
+      AWSProviderConfig.AUTH_METHOD    -> AuthMode.CREDENTIALS.toString,
       AWSProviderConfig.AWS_ACCESS_KEY -> "somekey",
       AWSProviderConfig.AWS_SECRET_KEY -> "secretkey",
-      AWSProviderConfig.AWS_REGION -> "someregion",
-      FILE_DIR -> tmp
+      AWSProviderConfig.AWS_REGION     -> "someregion",
+      FILE_DIR                         -> tmp,
     ).asJava
 
-    val secretKey = Encoding.BASE64_FILE.toString
-    val secretName = "my-secret-name"
+    val secretKey   = Encoding.BASE64_FILE.toString
+    val secretName  = "my-secret-name"
     val secretValue = "base64-secret-value"
 
     val provider = new AWSSecretProvider()
@@ -165,11 +167,11 @@ class AWSSecretProviderTest
     secretValResponse.setName(secretName)
     val secretJson = new JsonObject().add(
       secretKey,
-      Base64.getEncoder.encodeToString("base64-secret-value".getBytes)
+      Base64.getEncoder.encodeToString("base64-secret-value".getBytes),
     )
     secretValResponse.setSecretString(secretJson.toString)
 
-    val now = new Date()
+    val now                    = new Date()
     val describeSecretResponse = new DescribeSecretResult()
     describeSecretResponse.setLastRotatedDate(now)
     describeSecretResponse.setRotationEnabled(true)
@@ -185,12 +187,12 @@ class AWSSecretProviderTest
       .thenReturn(secretValResponse)
 
     provider.client = Some(mockClient)
-    val data = provider.get(secretName, Set(secretKey).asJava)
+    val data       = provider.get(secretName, Set(secretKey).asJava)
     val outputFile = data.data().get(secretKey)
     outputFile shouldBe s"$tmp$separator$secretName$separator${secretKey.toLowerCase}"
 
     Using(Source.fromFile(outputFile))(_.getLines().mkString) shouldBe Success(
-      secretValue
+      secretValue,
     )
 
     provider.get("").data().isEmpty shouldBe true
@@ -199,16 +201,16 @@ class AWSSecretProviderTest
 
   "should authenticate with credentials and lookup a utf8 secret and write to file" in {
     val props = Map(
-      AWSProviderConfig.AUTH_METHOD -> AuthMode.CREDENTIALS.toString,
+      AWSProviderConfig.AUTH_METHOD    -> AuthMode.CREDENTIALS.toString,
       AWSProviderConfig.AWS_ACCESS_KEY -> "somekey",
       AWSProviderConfig.AWS_SECRET_KEY -> "secretkey",
-      AWSProviderConfig.AWS_REGION -> "someregion",
-      FILE_DIR -> tmp
+      AWSProviderConfig.AWS_REGION     -> "someregion",
+      FILE_DIR                         -> tmp,
     ).asJava
 
     val secretKey =
       s"${Encoding.UTF8_FILE}${EncodingAndId.Separator}my-secret-key"
-    val secretName = "my-secret-name"
+    val secretName  = "my-secret-name"
     val secretValue = "utf8-secret-value"
 
     val provider = new AWSSecretProvider()
@@ -221,11 +223,11 @@ class AWSSecretProviderTest
     secretValResponse.setName(secretName)
     val secretJson = new JsonObject().add(
       secretKey,
-      secretValue
+      secretValue,
     )
     secretValResponse.setSecretString(secretJson.toString)
 
-    val now = new Date()
+    val now                    = new Date()
     val describeSecretResponse = new DescribeSecretResult()
     describeSecretResponse.setLastRotatedDate(now)
     describeSecretResponse.setRotationEnabled(true)
@@ -241,12 +243,12 @@ class AWSSecretProviderTest
       .thenReturn(secretValResponse)
 
     provider.client = Some(mockClient)
-    val data = provider.get(secretName, Set(secretKey).asJava)
+    val data       = provider.get(secretName, Set(secretKey).asJava)
     val outputFile = data.data().get(secretKey)
     outputFile shouldBe s"$tmp$separator$secretName$separator${secretKey.toLowerCase}"
 
     Using(Source.fromFile(outputFile))(_.getLines().mkString) shouldBe Success(
-      secretValue
+      secretValue,
     )
 
     provider.get("").data().isEmpty shouldBe true
@@ -259,11 +261,11 @@ class AWSSecretProviderTest
       AWSProviderSettings(
         AWSProviderConfig(
           Map(
-            AWSProviderConfig.AWS_REGION -> "someregion",
-            AWSProviderConfig.AUTH_METHOD -> AuthMode.CREDENTIALS.toString,
-            AWSProviderConfig.AWS_SECRET_KEY -> "secretId"
-          ).asJava
-        )
+            AWSProviderConfig.AWS_REGION     -> "someregion",
+            AWSProviderConfig.AUTH_METHOD    -> AuthMode.CREDENTIALS.toString,
+            AWSProviderConfig.AWS_SECRET_KEY -> "secretId",
+          ).asJava,
+        ),
       )
     }
   }
@@ -274,30 +276,30 @@ class AWSSecretProviderTest
       AWSProviderSettings(
         AWSProviderConfig(
           Map(
-            AWSProviderConfig.AWS_REGION -> "someregion",
-            AWSProviderConfig.AUTH_METHOD -> AuthMode.CREDENTIALS.toString,
-            AWSProviderConfig.AWS_ACCESS_KEY -> "someclientid"
-          ).asJava
-        )
+            AWSProviderConfig.AWS_REGION     -> "someregion",
+            AWSProviderConfig.AUTH_METHOD    -> AuthMode.CREDENTIALS.toString,
+            AWSProviderConfig.AWS_ACCESS_KEY -> "someclientid",
+          ).asJava,
+        ),
       )
     }
   }
 
   "should check transformer" in {
 
-    val secretKey = s"my-secret-key"
-    val secretName = "my-secret-name"
+    val secretKey   = s"my-secret-key"
+    val secretName  = "my-secret-name"
     val secretValue = "utf8-secret-value"
 
     val mockClient = mock[AWSSecretsManager]
     val secretValRequest =
       new GetSecretValueRequest().withSecretId(secretName)
     val secretValResponse = new GetSecretValueResult()
-    val secretJson = new JsonObject().add(secretKey, secretValue)
+    val secretJson        = new JsonObject().add(secretKey, secretValue)
     secretValResponse.setName(secretName)
     secretValResponse.setSecretString(secretJson.toString())
 
-    val now = new Date()
+    val now                    = new Date()
     val describeSecretResponse = new DescribeSecretResult()
     describeSecretResponse.setLastRotatedDate(now)
     describeSecretResponse.setRotationEnabled(true)
@@ -313,10 +315,10 @@ class AWSSecretProviderTest
       .thenReturn(secretValResponse)
 
     val props = Map(
-      AWSProviderConfig.AUTH_METHOD -> AuthMode.CREDENTIALS.toString,
+      AWSProviderConfig.AUTH_METHOD    -> AuthMode.CREDENTIALS.toString,
       AWSProviderConfig.AWS_ACCESS_KEY -> "somekey",
       AWSProviderConfig.AWS_SECRET_KEY -> "secretkey",
-      AWSProviderConfig.AWS_REGION -> "someregion"
+      AWSProviderConfig.AWS_REGION     -> "someregion",
     ).asJava
 
     val provider = new AWSSecretProvider()

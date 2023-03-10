@@ -15,13 +15,13 @@ object EncodingAndId {
     Encoding.UTF8_FILE,
     Encoding.BASE64_FILE,
     Encoding.BASE64,
-    Encoding.UTF8
+    Encoding.UTF8,
   )
-  def from(key: String): EncodingAndId = {
+  def from(key: String): EncodingAndId =
     Option(key).map(_.trim).filter(_.nonEmpty).fold(EncodingAndId(None, None)) {
       value =>
         val encoding = encodingPrioritised
-          .map { v => v.toString.toLowerCase() -> v }
+          .map(v => v.toString.toLowerCase() -> v)
           .collectFirst { case (v, e) if value.toLowerCase.startsWith(v) => e }
           .map(identity)
 
@@ -32,5 +32,4 @@ object EncodingAndId {
         }
         EncodingAndId(encoding, id)
     }
-  }
 }

@@ -10,17 +10,20 @@ import com.typesafe.scalalogging.StrictLogging
 import org.apache.kafka.common.config.ConfigData
 import org.apache.kafka.connect.errors.ConnectException
 
-import java.io.{File, FileOutputStream}
+import java.io.File
+import java.io.FileOutputStream
 import java.time.OffsetDateTime
 import java.util.Base64
 import scala.collection.mutable
 import scala.jdk.CollectionConverters._
-import scala.util.{Failure, Success, Try}
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 package object connect extends StrictLogging {
 
   val FILE_ENCODING: String = "file-encoding"
-  val FILE_DIR: String = "file.dir"
+  val FILE_DIR:      String = "file.dir"
   val FILE_DIR_DESC: String =
     """
       | Location to write any files for any secrets that need to
@@ -42,46 +45,43 @@ package object connect extends StrictLogging {
   }
 
   // get the authmethod
-  def getAuthenticationMethod(method: String): AuthMode.Value = {
+  def getAuthenticationMethod(method: String): AuthMode.Value =
     AuthMode.withNameOpt(method.toUpperCase) match {
       case Some(auth) => auth
       case None =>
         throw new ConnectException(
-          s"Unsupported authentication method"
+          s"Unsupported authentication method",
         )
     }
-  }
 
   // base64 decode secret
-  def decode(key: String, value: String): String = {
+  def decode(key: String, value: String): String =
     Try(Base64.getDecoder.decode(value)) match {
       case Success(decoded) => decoded.map(_.toChar).mkString
       case Failure(exception) =>
         throw new ConnectException(
           s"Failed to decode value for key [$key]",
-          exception
+          exception,
         )
     }
-  }
 
-  def decodeToBytes(key: String, value: String): Array[Byte] = {
+  def decodeToBytes(key: String, value: String): Array[Byte] =
     Try(Base64.getDecoder.decode(value)) match {
       case Success(decoded) => decoded
       case Failure(exception) =>
         throw new ConnectException(
           s"Failed to decode value for key [$key]",
-          exception
+          exception,
         )
     }
-  }
 
   // decode a key bases on the prefix encoding
   def decodeKey(
-      encoding: Option[Encoding.Value],
-      key: String,
-      value: String,
-      writeFileFn: Array[Byte] => String
-  ): String = {
+    encoding:    Option[Encoding.Value],
+    key:         String,
+    value:       String,
+    writeFileFn: Array[Byte] => String,
+  ): String =
     encoding.fold(value) {
       case Encoding.BASE64 => decode(key, value)
       case Encoding.BASE64_FILE =>
@@ -90,40 +90,38 @@ package object connect extends StrictLogging {
       case Encoding.UTF8      => value
       case Encoding.UTF8_FILE => writeFileFn(value.getBytes())
     }
-  }
 
   // write secrets to file
-  private def writer(file: File, payload: Array[Byte], key: String): Unit = {
+  private def writer(file: File, payload: Array[Byte], key: String): Unit =
     Try(file.createNewFile()) match {
       case Success(_) =>
         Try(new FileOutputStream(file)) match {
           case Success(fos) =>
             fos.write(payload)
             logger.info(
-              s"Payload written to [${file.getAbsolutePath}] for key [$key]"
+              s"Payload written to [${file.getAbsolutePath}] for key [$key]",
             )
 
           case Failure(exception) =>
             throw new ConnectException(
               s"Failed to write payload to file [${file.getAbsolutePath}] for key [$key]",
-              exception
+              exception,
             )
         }
 
       case Failure(exception) =>
         throw new ConnectException(
           s"Failed to create file [${file.getAbsolutePath}]  for key [$key]",
-          exception
+          exception,
         )
     }
-  }
 
   // write secrets to a file
   def fileWriter(
-      fileName: String,
-      payload: Array[Byte],
-      key: String,
-      overwrite: Boolean = false
+    fileName:  String,
+    payload:   Array[Byte],
+    key:       String,
+    overwrite: Boolean = false,
   ): Unit = {
     val file = new File(fileName)
     file.getParentFile.mkdirs()
@@ -140,7 +138,7 @@ package object connect extends StrictLogging {
 
   //calculate the min expiry for secrets and return the configData and expiry
   def getSecretsAndExpiry(
-      secrets: Map[String, (String, Option[OffsetDateTime])]
+    secrets: Map[String, (String, Option[OffsetDateTime])],
   ): (Option[OffsetDateTime], ConfigData) = {
     val expiryList = mutable.ListBuffer.empty[OffsetDateTime]
 
@@ -163,10 +161,10 @@ package object connect extends StrictLogging {
   }
 
   def getFileName(
-      rootDir: String,
-      path: String,
-      key: String,
-      separator: String
+    rootDir:   String,
+    path:      String,
+    key:       String,
+    separator: String,
   ): String =
     s"${rootDir.stripSuffix(separator)}$separator$path$separator${key.toLowerCase}"
 }
