@@ -15,9 +15,9 @@ case class SecretProviderRestResponse(
   renewable:     Boolean,
   leaseDuration: BigInt,
   data:          DataResponse,
-  wrapInfo:      Object, // todo what is this?
-  warnings:      Object, // todo
-  auth:          Object, // todo
+  wrapInfo:      Any, // todo what is this?
+  warnings:      Any, // todo
+  auth:          Any, // todo
 )
 
 case object SecretProviderRestResponse {

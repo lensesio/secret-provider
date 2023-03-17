@@ -39,13 +39,4 @@ class TtlTest extends AnyFunSuite with Matchers with OptionValues {
     ttl.value.expiry should be(Instant.EPOCH.plus(10, ChronoUnit.MINUTES).atOffset(toOffset))
   }
 
-  test("zero ttl should be ignored") {
-    val ttl = Ttl(Some(Duration(0, MINUTES)), Some(Duration(5, MINUTES)))
-    ttl.value.originalTtl should be(Duration(5, MINUTES))
-    ttl.value.expiry should be(Instant.EPOCH.plus(5, ChronoUnit.MINUTES).atOffset(toOffset))
-  }
-
-  test("zero ttls should be ignored") {
-    Ttl(Some(Duration(0, MINUTES)), Some(Duration(0, MINUTES))) should be(Option.empty)
-  }
 }

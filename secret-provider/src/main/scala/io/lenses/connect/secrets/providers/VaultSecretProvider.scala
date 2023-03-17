@@ -37,7 +37,7 @@ class VaultSecretProvider() extends ConfigProvider with VaultHelper {
   private var tokenRenewal: Option[AsyncFunctionLoop] = None
 
   private implicit val clock: Clock = Clock.systemDefaultZone()
-  private val cache = new TtlCache[Map[String, String]]()
+  private val cache = new TtlCache[Map[String, String]](k => getSecretValue(k))
 
   def getClient: Option[Vault] = vaultClient
 
@@ -62,33 +62,31 @@ class VaultSecretProvider() extends ConfigProvider with VaultHelper {
 
   // lookup secrets at a path
   override def get(path: String): ConfigData = {
-    logger.info(" -> VaultSecretProvider.get(path: {})", path)
+    logger.debug(" -> VaultSecretProvider.get(path: {})", path)
     val sec = cache
       .cachingWithTtl(
         path,
-        fnGetMissingValue = getSecretValue(path),
       )
       .fold(
         ex => throw ex,
         ConfigDataBuilder(_),
       )
-    logger.info(" <- VaultSecretProvider.get(path: {}, ttl: {})", path, sec.ttl())
+    logger.debug(" <- VaultSecretProvider.get(path: {}, ttl: {})", path, sec.ttl())
     sec
   }
 
   // get secret keys at a path
   override def get(path: String, keys: util.Set[String]): ConfigData = {
-    logger.info(" -> VaultSecretProvider.get(path: {}, keys: {})", path, keys.asScala)
+    logger.debug(" -> VaultSecretProvider.get(path: {}, keys: {})", path, keys.asScala)
     val sec = cache.cachingWithTtl(
       path,
       fnCondition        = s => keys.asScala.subsetOf(s.keySet),
-      fnGetMissingValue  = getSecretValue(path),
       fnFilterReturnKeys = filter(_, keys.asScala.toSet),
     ).fold(
       ex => throw ex,
       ConfigDataBuilder(_),
     )
-    logger.info(" <- VaultSecretProvider.get(path: {}, keys: {}, ttl: {})", path, keys.asScala, sec.ttl())
+    logger.debug(" <- VaultSecretProvider.get(path: {}, keys: {}, ttl: {})", path, keys.asScala, sec.ttl())
     sec
   }
 
@@ -102,8 +100,8 @@ class VaultSecretProvider() extends ConfigProvider with VaultHelper {
     tokenRenewal.foreach(_.close())
 
   // get the secrets and ttl under a path
-  private def getSecretValue(path: String): () => Either[Throwable, ValueWithTtl[Map[String, String]]] = () => {
-    logger.info(s"Looking up value from Vault at [$path]")
+  val getSecretValue: String => Either[Throwable, ValueWithTtl[Map[String, String]]] = path => {
+    logger.debug(s"Looking up value from Vault at [$path]")
     Try(vaultClient.get.logical().read(path)) match {
       case Failure(ex) =>
         failWithEx(s"Failed to fetch secrets from path [$path]", ex)
@@ -115,7 +113,7 @@ class VaultSecretProvider() extends ConfigProvider with VaultHelper {
         failWithEx(s"No secrets found at path [$path]")
       case Success(response) =>
         val ttl =
-          Option(response.getLeaseDuration).map(Duration(_, TimeUnit.SECONDS))
+          Option(response.getLeaseDuration).filterNot(_ == 0L).map(Duration(_, TimeUnit.SECONDS))
         Right(
           ValueWithTtl(ttl, settings.defaultTtl, parseSuccessfulResponse(path, response)),
         )

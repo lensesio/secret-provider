@@ -66,6 +66,11 @@ object Settings extends Dependencies {
 
   implicit final class AssemblyConfigurator(project: Project) {
 
+    /*
+    Exclude the jar signing files from dependencies.  They come from other jars,
+    and including these would break assembly (due to duplicates) or classloading
+    (due to mismatching jar checksum/signature).
+     */
     val excludeFilePatterns = Set(".MF", ".RSA", ".DSA", ".SF")
 
     def excludeFileFilter(p: String): Boolean =

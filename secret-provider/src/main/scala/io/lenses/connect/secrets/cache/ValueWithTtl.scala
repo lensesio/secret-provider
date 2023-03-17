@@ -16,10 +16,8 @@ case class Ttl(originalTtl: Duration, expiry: OffsetDateTime) {
 }
 
 object Ttl {
-  def apply(ttl: Option[Duration], defaultTtl: Option[Duration])(implicit clock: Clock): Option[Ttl] = {
-    val applicableTtl = Seq(ttl, defaultTtl).flatten.filterNot(_.toMillis == 0).headOption
-    applicableTtl.map(finalTtl => Ttl(finalTtl, ttlToExpiry(finalTtl)))
-  }
+  def apply(ttl: Option[Duration], defaultTtl: Option[Duration])(implicit clock: Clock): Option[Ttl] =
+    ttl.orElse(defaultTtl).map(finalTtl => Ttl(finalTtl, ttlToExpiry(finalTtl)))
 
   def ttlToExpiry(ttl: Duration)(implicit clock: Clock): OffsetDateTime = {
     val offset         = clock.getZone.getRules.getOffset(clock.instant())

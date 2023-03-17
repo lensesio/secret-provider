@@ -1,6 +1,5 @@
 package io.lenses.connect.secrets.integration
 
-import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 
