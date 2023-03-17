@@ -32,6 +32,14 @@ package object connect extends StrictLogging {
       | pattern /file.dir/[path|keyvault]/key
       |""".stripMargin
 
+  val WRITE_FILES: String = "file.write"
+  val WRITE_FILES_DESC: String =
+    """
+      | Boolean flag whether to write secrets to disk.  Defaults
+      | to false.  Should be set to true when writing Java
+      | keystores etc.
+      |""".stripMargin
+
   object AuthMode extends Enumeration {
     type AuthMode = Value
     val DEFAULT, CREDENTIALS = Value

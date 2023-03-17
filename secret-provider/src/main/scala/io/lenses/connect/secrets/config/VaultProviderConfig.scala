@@ -8,6 +8,8 @@ package io.lenses.connect.secrets.config
 
 import io.lenses.connect.secrets.connect.FILE_DIR
 import io.lenses.connect.secrets.connect.FILE_DIR_DESC
+import io.lenses.connect.secrets.connect.WRITE_FILES
+import io.lenses.connect.secrets.connect.WRITE_FILES_DESC
 import org.apache.kafka.common.config.ConfigDef.Importance
 import org.apache.kafka.common.config.ConfigDef.Type
 import org.apache.kafka.common.config.AbstractConfig
@@ -75,6 +77,9 @@ object VaultProviderConfig {
 
   val TOKEN_RENEWAL:         String = "token.renewal.ms"
   val TOKEN_RENEWAL_DEFAULT: Int    = 600000
+
+  val SECRET_DEFAULT_TTL         = "secret.default.ttl"
+  val SECRET_DEFAULT_TTL_DEFAULT = 0L
 
   val config: ConfigDef = new ConfigDef()
     .define(
@@ -355,11 +360,26 @@ object VaultProviderConfig {
       FILE_DIR_DESC,
     )
     .define(
+      WRITE_FILES,
+      Type.BOOLEAN,
+      false,
+      Importance.MEDIUM,
+      WRITE_FILES_DESC,
+    )
+    .define(
       TOKEN_RENEWAL,
       Type.INT,
       TOKEN_RENEWAL_DEFAULT,
       Importance.MEDIUM,
       "The time in milliseconds to renew the Vault token",
     )
+    .define(
+      SECRET_DEFAULT_TTL,
+      Type.LONG,
+      SECRET_DEFAULT_TTL_DEFAULT,
+      Importance.MEDIUM,
+      "Default TTL to apply in case a secret has no TTL",
+    )
+
 }
 case class VaultProviderConfig(props: util.Map[String, _]) extends AbstractConfig(VaultProviderConfig.config, props)
