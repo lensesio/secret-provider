@@ -124,7 +124,7 @@ class VaultSecretProviderIT
       Map(
         "name" -> StringCnfVal(connectorName),
         "connector.class" -> StringCnfVal(
-          "io.lenses.connect.secrets.test.TestSinkConnector",
+          "io.lenses.connect.secrets.test.vault.TestSinkConnector",
         ),
         "topics" -> StringCnfVal(topicName),
         "key.converter" -> StringCnfVal(

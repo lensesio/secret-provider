@@ -33,13 +33,16 @@ class VaultContainer(maybeLeaseInfo: Option[LeaseInfo] = Option.empty)
   override val container: JavaVaultContainer[_] = new JavaVaultContainer(
     VaultDockerImageName,
   )
-  container.withNetworkAliases(defaultNetworkAlias)
-  container.withVaultToken(token)
+    .withNetworkAliases(defaultNetworkAlias)
+
   container.withEnv(
     "VAULT_LOCAL_CONFIG", //"listener": [{"tcp": { "address": "0.0.0.0:8200", "tls_disable": true}}],
     s"""
        |{${maybeLeaseInfo.fold("")(_.toDurString())} "ui": true}""".stripMargin,
   )
+
+  container.withVaultToken(token)
+
   def vaultClientResource: Resource[IO, Vault] =
     Resource.make(
       IO(
@@ -98,10 +101,10 @@ class VaultContainer(maybeLeaseInfo: Option[LeaseInfo] = Option.empty)
 object VaultContainer {
   val VaultDockerImageName: DockerImageName =
     DockerImageName.parse("vault").withTag("1.12.3")
-  def vaultRootPath     = "rotate-test" // was: secret/
-  def vaultSecretPath   = s"$vaultRootPath/myVaultSecretPath"
-  def vaultSecretKey    = "myVaultSecretKey"
-  def vaultSecretPrefix = "myVaultSecretValue"
+  val vaultRootPath     = "rotate-test" // was: secret/
+  val vaultSecretPath   = s"$vaultRootPath/myVaultSecretPath"
+  val vaultSecretKey    = "myVaultSecretKey"
+  val vaultSecretPrefix = "myVaultSecretValue"
 
   private val defaultNetworkAlias = "vault"
   private val vaultPort: Int = 8200

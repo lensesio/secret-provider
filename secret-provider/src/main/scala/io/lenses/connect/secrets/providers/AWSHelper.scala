@@ -5,36 +5,135 @@
  */
 
 package io.lenses.connect.secrets.providers
-
-import com.amazonaws.auth.AWSStaticCredentialsProvider
-import com.amazonaws.auth.BasicAWSCredentials
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
-import com.amazonaws.services.secretsmanager.model.DescribeSecretRequest
-import com.amazonaws.services.secretsmanager.model.GetSecretValueRequest
-import com.amazonaws.services.secretsmanager.AWSSecretsManager
-import com.amazonaws.services.secretsmanager.AWSSecretsManagerClientBuilder
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.typesafe.scalalogging.LazyLogging
 import com.typesafe.scalalogging.StrictLogging
+import io.lenses.connect.secrets.cache.Ttl
+import io.lenses.connect.secrets.cache.ValueWithTtl
 import io.lenses.connect.secrets.config.AWSProviderSettings
 import io.lenses.connect.secrets.connect.AuthMode
 import io.lenses.connect.secrets.connect.decodeKey
-import io.lenses.connect.secrets.io.FileWriter
 import io.lenses.connect.secrets.io.FileWriterOnce
 import io.lenses.connect.secrets.utils.EncodingAndId
-import org.apache.kafka.connect.errors.ConnectException
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
+import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient
+import software.amazon.awssdk.services.secretsmanager.model.DescribeSecretRequest
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest
 
-import java.nio.file.Paths
+import java.net.URI
+import java.time.temporal.ChronoUnit
+import java.time.Clock
+import java.time.Duration
 import java.time.OffsetDateTime
-import java.util.Calendar
-import scala.jdk.CollectionConverters._
+import java.time.ZoneId
+import java.util
+import scala.jdk.CollectionConverters.MapHasAsScala
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 
-trait AWSHelper extends StrictLogging {
+class AWSHelper(
+  client:             SecretsManagerClient,
+  defaultTtl:         Option[Duration],
+  fileWriterCreateFn: String => Option[FileWriterOnce],
+)(
+  implicit
+  clock: Clock,
+) extends SecretHelper
+    with LazyLogging {
+
+  private val objectMapper = new ObjectMapper()
+
+  // get the key value and ttl in the specified secret
+  override def lookup(secretId: String): Either[Throwable, ValueWithTtl[Map[String, String]]] =
+    for {
+      secretTtl         <- getTTL(secretId)
+      secretValue       <- getSecretValue(secretId)
+      parsedSecretValue <- parseSecretValue(secretId, secretValue)
+    } yield ValueWithTtl(secretTtl, parsedSecretValue)
+
+  // determine the ttl for the secret
+  def getTTL(
+    secretId: String,
+  )(
+    implicit
+    clock: Clock,
+  ): Either[Throwable, Option[Ttl]] = {
+
+    // describe to get the ttl
+    val descRequest: DescribeSecretRequest =
+      DescribeSecretRequest.builder().secretId(secretId).build()
+
+    for {
+      secretResponse <- Try(client.describeSecret(descRequest)).toEither
+    } yield {
+      if (secretResponse.rotationEnabled()) {
+        //val lastRotation = secretResponse.lastRotatedDate()
+        val ttlExpires       = secretResponse.nextRotationDate()
+        val rotationDuration = Duration.of(secretResponse.rotationRules().automaticallyAfterDays(), ChronoUnit.DAYS)
+        Some(Ttl(
+          rotationDuration,
+          OffsetDateTime.ofInstant(ttlExpires, ZoneId.systemDefault()),
+        ))
+      } else {
+        Ttl(Option.empty, defaultTtl)
+      }
+    }
+
+  }
+
+  private def parseSecretValue(
+    secretId:     String,
+    secretValues: Map[String, String],
+  ): Either[Throwable, Map[String, String]] = {
+    val fileWriterMaybe = fileWriterCreateFn(secretId)
+    Try(
+      secretValues.map {
+        case (k, v) =>
+          (k,
+           decodeKey(
+             key      = k,
+             value    = v,
+             encoding = EncodingAndId.from(k).encoding,
+             writeFileFn = content => {
+               fileWriterMaybe.fold("nofile")(_.write(k.toLowerCase, content, k).toString)
+             },
+           ),
+          )
+      },
+    ).toEither
+  }
+
+  private def getSecretValue(secretId: String): Either[Throwable, Map[String, String]] = {
+    val a = for {
+      secretValueResult <- Try(
+        client.getSecretValue(GetSecretValueRequest.builder().secretId(secretId).build()),
+      )
+      secretString <- Try(secretValueResult.secretString())
+      mapFromResponse <- Try(
+        objectMapper
+          .readValue(
+            secretString,
+            classOf[util.HashMap[String, String]],
+          )
+          .asScala.toMap,
+      )
+    } yield mapFromResponse
+    a match {
+      case Failure(exception) => Left(exception)
+      case Success(value)     => Right(value)
+    }
+
+  }
+}
+
+object AWSHelper extends StrictLogging {
 
   // initialize the AWS client based on the auth mode
-  def createClient(settings: AWSProviderSettings): AWSSecretsManager = {
+  def createClient(settings: AWSProviderSettings): SecretsManagerClient = {
 
     logger.info(
       s"Initializing client with mode [${settings.authMode}]",
@@ -42,106 +141,22 @@ trait AWSHelper extends StrictLogging {
 
     val credentialProvider = settings.authMode match {
       case AuthMode.CREDENTIALS =>
-        new AWSStaticCredentialsProvider(
-          new BasicAWSCredentials(
+        StaticCredentialsProvider.create(
+          AwsBasicCredentials.create(
             settings.accessKey,
             settings.secretKey.value(),
           ),
         )
       case _ =>
-        new DefaultAWSCredentialsProviderChain()
+        DefaultCredentialsProvider.create()
     }
 
-    AWSSecretsManagerClientBuilder
-      .standard()
-      .withCredentials(credentialProvider)
-      .withRegion(settings.region)
-      .build()
+    val builder = SecretsManagerClient.builder()
+      .credentialsProvider(credentialProvider)
+      .region(Region.of(settings.region))
 
+    settings.endpointOverride.foreach(eo => builder.endpointOverride(URI.create(eo)))
+
+    builder.build()
   }
-
-  // determine the ttl for the secret
-  private def getTTL(
-    client:   AWSSecretsManager,
-    secretId: String,
-  ): Option[OffsetDateTime] = {
-
-    // describe to get the ttl
-    val descRequest: DescribeSecretRequest =
-      new DescribeSecretRequest().withSecretId(secretId)
-
-    Try(client.describeSecret(descRequest)) match {
-      case Success(d) =>
-        if (d.getRotationEnabled) {
-          val lastRotation = d.getLastRotatedDate
-          val nextRotationInDays =
-            d.getRotationRules.getAutomaticallyAfterDays
-          val cal = Calendar.getInstance()
-          //set to last rotation date
-          cal.setTime(lastRotation)
-          //increment
-          cal.add(Calendar.DAY_OF_MONTH, nextRotationInDays.toInt)
-          Some(
-            OffsetDateTime.ofInstant(cal.toInstant, cal.getTimeZone.toZoneId),
-          )
-
-        } else None
-
-      case Failure(exception) =>
-        throw new ConnectException(
-          s"Failed to describe secret [$secretId]",
-          exception,
-        )
-    }
-  }
-
-  // get the key value and ttl in the specified secret
-  def getSecretValue(
-    client:   AWSSecretsManager,
-    rootDir:  String,
-    secretId: String,
-    key:      String,
-  ): (String, Option[OffsetDateTime]) =
-    // get the secret
-    Try(
-      client.getSecretValue(new GetSecretValueRequest().withSecretId(secretId)),
-    ) match {
-      case Success(secret) =>
-        val value =
-          new ObjectMapper()
-            .readValue(
-              secret.getSecretString,
-              classOf[java.util.HashMap[String, String]],
-            )
-            .asScala
-            .getOrElse(
-              key,
-              throw new ConnectException(
-                s"Failed to look up key [$key] in secret [${secret.getName}]. key not found",
-              ),
-            )
-
-        val fileWriter: FileWriter = new FileWriterOnce(
-          Paths.get(rootDir, secretId),
-        )
-        // decode the value
-        val encodingAndId = EncodingAndId.from(key)
-        (
-          decodeKey(
-            key      = key,
-            value    = value,
-            encoding = encodingAndId.encoding,
-            writeFileFn = content => {
-              fileWriter.write(key.toLowerCase, content, key).toString
-            },
-          ),
-          getTTL(client, secretId),
-        )
-
-      case Failure(exception) =>
-        throw new ConnectException(
-          s"Failed to look up key [$key] in secret [$secretId] due to [${exception.getMessage}]",
-          exception,
-        )
-    }
 }

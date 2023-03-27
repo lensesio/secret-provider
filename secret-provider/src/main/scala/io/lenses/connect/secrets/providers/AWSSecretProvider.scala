@@ -6,57 +6,47 @@
 
 package io.lenses.connect.secrets.providers
 
-import com.amazonaws.services.secretsmanager.AWSSecretsManager
 import io.lenses.connect.secrets.config.AWSProviderConfig
 import io.lenses.connect.secrets.config.AWSProviderSettings
-import io.lenses.connect.secrets.connect.getSecretsAndExpiry
 import org.apache.kafka.common.config.ConfigData
 import org.apache.kafka.common.config.provider.ConfigProvider
-import org.apache.kafka.connect.errors.ConnectException
-
-import java.time.OffsetDateTime
+import io.lenses.connect.secrets.providers.AWSHelper._
+import java.time.Clock
 import java.util
-import scala.jdk.CollectionConverters._
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient
 
-class AWSSecretProvider() extends ConfigProvider with AWSHelper {
+class AWSSecretProvider(testClient: Option[SecretsManagerClient]) extends ConfigProvider {
 
-  var client:  Option[AWSSecretsManager] = None
-  var rootDir: String                    = ""
-
-  override def get(path: String): ConfigData =
-    new ConfigData(Map.empty[String, String].asJava)
-
-  // path is expected to be the name of the AWS secret
-  // keys are expect to be the keys in the payload
-  override def get(path: String, keys: util.Set[String]): ConfigData =
-    client match {
-      case Some(awsClient) =>
-        //aws client caches so we don't need to check here
-        val (expiry, data) = getSecretsAndExpiry(
-          getSecrets(awsClient, path, keys.asScala.toSet),
-        )
-        expiry.foreach(exp => logger.info(s"Min expiry for TTL set to [${exp.toString}]"))
-        data
-
-      case None => throw new ConnectException("AWS client is not set.")
-    }
-
-  override def close(): Unit = client.foreach(_.shutdown())
-
-  override def configure(configs: util.Map[String, _]): Unit = {
-    val settings = AWSProviderSettings(AWSProviderConfig(props = configs))
-    rootDir = settings.fileDir
-    client  = Some(createClient(settings))
+  def this() = {
+    this(Option.empty);
   }
 
-  def getSecrets(
-    awsClient: AWSSecretsManager,
-    path:      String,
-    keys:      Set[String],
-  ): Map[String, (String, Option[OffsetDateTime])] =
-    keys.map { key =>
-      logger.info(s"Looking up value at [$path] for key [$key]")
-      val (value, expiry) = getSecretValue(awsClient, rootDir, path, key)
-      (key, (value, expiry))
-    }.toMap
+  private implicit val clock: Clock = Clock.systemDefaultZone()
+
+  private var secretProvider: Option[SecretProvider] = None
+
+  override def configure(configs: util.Map[String, _]): Unit = {
+    val settings  = AWSProviderSettings(AWSProviderConfig(props = configs))
+    val awsClient = testClient.getOrElse(createClient(settings))
+    val helper = new AWSHelper(awsClient,
+                               settings.defaultTtl,
+                               fileWriterCreateFn = path => settings.fileWriterOpts.map(_.createFileWriter(path)),
+    )
+    secretProvider = Some(
+      new SecretProvider(
+        "AWSSecretProvider",
+        helper.lookup,
+        helper.close,
+      ),
+    )
+  }
+
+  override def get(path: String): ConfigData =
+    secretProvider.fold(throw new IllegalStateException("No client defined"))(_.get(path))
+
+  override def get(path: String, keys: util.Set[String]): ConfigData =
+    secretProvider.fold(throw new IllegalStateException("No client defined"))(_.get(path, keys))
+
+  override def close(): Unit = secretProvider.foreach(_.close())
+
 }

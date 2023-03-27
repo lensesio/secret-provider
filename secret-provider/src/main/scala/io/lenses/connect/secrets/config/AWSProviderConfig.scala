@@ -6,21 +6,21 @@
 
 package io.lenses.connect.secrets.config
 
-import io.lenses.connect.secrets.connect.AuthMode
 import io.lenses.connect.secrets.connect._
-import org.apache.kafka.common.config.ConfigDef.Importance
-import org.apache.kafka.common.config.ConfigDef.Type
 import org.apache.kafka.common.config.AbstractConfig
 import org.apache.kafka.common.config.ConfigDef
+import org.apache.kafka.common.config.ConfigDef.Importance
+import org.apache.kafka.common.config.ConfigDef.Type
 
 import java.util
 
 object AWSProviderConfig {
 
-  val AWS_REGION:     String = "aws.region"
-  val AWS_ACCESS_KEY: String = "aws.access.key"
-  val AWS_SECRET_KEY: String = "aws.secret.key"
-  val AUTH_METHOD:    String = "aws.auth.method"
+  val AWS_REGION:        String = "aws.region"
+  val AWS_ACCESS_KEY:    String = "aws.access.key"
+  val AWS_SECRET_KEY:    String = "aws.secret.key"
+  val AUTH_METHOD:       String = "aws.auth.method"
+  val ENDPOINT_OVERRIDE: String = "aws.endpoint.override"
 
   val config: ConfigDef = new ConfigDef()
     .define(
@@ -55,11 +55,32 @@ object AWSProviderConfig {
         |""".stripMargin,
     )
     .define(
+      WRITE_FILES,
+      Type.BOOLEAN,
+      false,
+      Importance.MEDIUM,
+      WRITE_FILES_DESC,
+    )
+    .define(
       FILE_DIR,
       Type.STRING,
       "",
       Importance.MEDIUM,
       FILE_DIR_DESC,
+    )
+    .define(
+      SECRET_DEFAULT_TTL,
+      Type.LONG,
+      SECRET_DEFAULT_TTL_DEFAULT,
+      Importance.MEDIUM,
+      "Default TTL to apply in case a secret has no TTL",
+    )
+    .define(
+      ENDPOINT_OVERRIDE,
+      Type.STRING,
+      "",
+      Importance.LOW,
+      "URL of endpoint override (eg for custom Secret Provider implementations)",
     )
 }
 

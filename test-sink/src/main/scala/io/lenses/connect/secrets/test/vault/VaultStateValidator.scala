@@ -1,4 +1,4 @@
-package io.lenses.connect.secrets.test
+package io.lenses.connect.secrets.test.vault
 
 import com.typesafe.scalalogging.LazyLogging
 

@@ -8,6 +8,8 @@ package io.lenses.connect.secrets.config
 
 import io.lenses.connect.secrets.connect.FILE_DIR
 import io.lenses.connect.secrets.connect.FILE_DIR_DESC
+import io.lenses.connect.secrets.connect.SECRET_DEFAULT_TTL
+import io.lenses.connect.secrets.connect.SECRET_DEFAULT_TTL_DEFAULT
 import io.lenses.connect.secrets.connect.WRITE_FILES
 import io.lenses.connect.secrets.connect.WRITE_FILES_DESC
 import org.apache.kafka.common.config.ConfigDef.Importance
@@ -77,9 +79,6 @@ object VaultProviderConfig {
 
   val TOKEN_RENEWAL:         String = "token.renewal.ms"
   val TOKEN_RENEWAL_DEFAULT: Int    = 600000
-
-  val SECRET_DEFAULT_TTL         = "secret.default.ttl"
-  val SECRET_DEFAULT_TTL_DEFAULT = 0L
 
   val config: ConfigDef = new ConfigDef()
     .define(
