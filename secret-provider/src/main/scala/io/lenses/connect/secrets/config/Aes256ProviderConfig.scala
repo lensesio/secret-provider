@@ -15,7 +15,7 @@ object Aes256ProviderConfig {
   val config = new ConfigDef()
     .define(
       SECRET_KEY,
-      Type.STRING,
+      Type.PASSWORD,
       "",
       Importance.MEDIUM,
       "Key used to decode AES256 encoded values",
