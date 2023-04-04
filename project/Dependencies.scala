@@ -12,16 +12,17 @@ trait Dependencies {
     val kafkaVersion         = "3.4.0"
     val vaultVersion         = "5.1.0"
     val azureKeyVaultVersion = "4.5.2"
-    val azureIdentityVersion = "1.8.0"
-    val awsSecretsVersion    = "1.12.420"
+    val azureIdentityVersion = "1.8.1"
+
+    val awsSdkV2Version = "2.20.26"
 
     //test
     val scalaTestVersion = "3.2.15"
     val mockitoVersion   = "3.2.15.0"
-    val byteBuddyVersion = "1.14.1"
+    val byteBuddyVersion = "1.14.2"
     val slf4jVersion     = "2.0.5"
     val commonsIOVersion = "1.3.2"
-    val jettyVersion     = "11.0.13"
+    val jettyVersion     = "11.0.14"
     val flexmarkVersion  = "0.64.0"
 
     val scalaCollectionCompatVersion = "2.8.1"
@@ -44,8 +45,9 @@ trait Dependencies {
     val `azure-key-vault` =
       "com.azure" % "azure-security-keyvault-secrets" % azureKeyVaultVersion
     val `azure-identity` = "com.azure" % "azure-identity" % azureIdentityVersion
-    val `aws-secrets-manager` =
-      "com.amazonaws" % "aws-java-sdk-secretsmanager" % awsSecretsVersion
+
+    lazy val awsSecretsManagerSdkV2 = "software.amazon.awssdk" % "secretsmanager" % awsSdkV2Version
+    lazy val awsIamSdkV2            = "software.amazon.awssdk" % "iam"            % awsSdkV2Version
 
     val `mockito`      = "org.scalatestplus"   %% "mockito-4-6"  % mockitoVersion
     val `scalatest`    = "org.scalatest"       %% "scalatest"    % scalaTestVersion
@@ -67,9 +69,11 @@ trait Dependencies {
       "org.testcontainers" % "kafka" % testContainersVersion
     val `testContainersVault` =
       "org.testcontainers" % "vault" % testContainersVersion
+
     val `json4sNative`  = "org.json4s"    %% "json4s-native"  % json4sVersion
     val `json4sJackson` = "org.json4s"    %% "json4s-jackson" % json4sVersion
     val `cats`          = "org.typelevel" %% "cats-effect"    % catsEffectVersion
+
   }
 
   import Dependencies._
@@ -79,7 +83,8 @@ trait Dependencies {
     `vault-java-driver`,
     `azure-key-vault`,
     `azure-identity` exclude ("javax.activation", "activation"),
-    `aws-secrets-manager`,
+    `awsSecretsManagerSdkV2`,
+    awsIamSdkV2           % IntegrationTest,
     `jakartaServlet`      % Test,
     `mockito`             % Test,
     `byteBuddy`           % Test,
@@ -100,6 +105,8 @@ trait Dependencies {
     `scala-logging`,
     `kafka-connect-api` % Provided,
     `vault-java-driver`,
+    `awsSecretsManagerSdkV2`,
+    `json4sNative`,
     `scalatest` % Test,
   )
 

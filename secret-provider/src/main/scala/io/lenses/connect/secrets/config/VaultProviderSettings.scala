@@ -9,16 +9,18 @@ package io.lenses.connect.secrets.config
 import com.typesafe.scalalogging.StrictLogging
 import io.lenses.connect.secrets.config.AbstractConfigExtensions._
 import io.lenses.connect.secrets.config.VaultAuthMethod.VaultAuthMethod
-import io.lenses.connect.secrets.config.VaultProviderConfig.SECRET_DEFAULT_TTL
 import io.lenses.connect.secrets.config.VaultProviderConfig.TOKEN_RENEWAL
 import io.lenses.connect.secrets.connect._
 import io.lenses.connect.secrets.io.FileWriterOnce
+import org.apache.kafka.common.config.AbstractConfig
 import org.apache.kafka.common.config.types.Password
 import org.apache.kafka.connect.errors.ConnectException
 
 import java.nio.file.Paths
+import java.time.Duration
+import java.time.temporal.ChronoUnit
+import scala.concurrent.duration.DurationInt
 import scala.concurrent.duration.FiniteDuration
-import scala.concurrent.duration._
 import scala.io.Source
 import scala.util.Failure
 import scala.util.Success
@@ -39,6 +41,13 @@ case class AppRole(role: String, secretId: Password)
 case class K8s(role: String, jwt: Password)
 case class Cert(mount: String)
 case class Github(token: Password, mount: String)
+
+object FileWriterOptions {
+  def apply(config: AbstractConfig): Option[FileWriterOptions] =
+    Option.when(config.getBoolean(WRITE_FILES)) {
+      FileWriterOptions(config.getString(FILE_DIR))
+    }
+}
 
 case class FileWriterOptions(
   fileDir: String,
@@ -123,30 +132,29 @@ object VaultSettings extends StrictLogging {
 
     val tokenRenewal = config.getInt(TOKEN_RENEWAL).toInt.milliseconds
     VaultSettings(
-      addr          = addr,
-      namespace     = namespace,
-      token         = token,
-      authMode      = authMode,
-      keystoreLoc   = keystoreLoc,
-      keystorePass  = keystorePass,
-      truststoreLoc = truststoreLoc,
-      pem           = pem,
-      clientPem     = clientPem,
-      engineVersion = engineVersion,
-      appRole       = appRole,
-      awsIam        = awsIam,
-      gcp           = gcp,
-      jwt           = jwt,
-      userPass      = userpass,
-      ldap          = ldap,
-      k8s           = k8s,
-      cert          = cert,
-      github        = github,
-      tokenRenewal  = tokenRenewal,
-      fileWriterOpts = Option.when(config.getBoolean(WRITE_FILES)) {
-        FileWriterOptions(config.getString(FILE_DIR))
-      },
-      defaultTtl = Option(config.getLong(SECRET_DEFAULT_TTL).toLong).filterNot(_ == 0L).map(Duration(_, MILLISECONDS)),
+      addr           = addr,
+      namespace      = namespace,
+      token          = token,
+      authMode       = authMode,
+      keystoreLoc    = keystoreLoc,
+      keystorePass   = keystorePass,
+      truststoreLoc  = truststoreLoc,
+      pem            = pem,
+      clientPem      = clientPem,
+      engineVersion  = engineVersion,
+      appRole        = appRole,
+      awsIam         = awsIam,
+      gcp            = gcp,
+      jwt            = jwt,
+      userPass       = userpass,
+      ldap           = ldap,
+      k8s            = k8s,
+      cert           = cert,
+      github         = github,
+      tokenRenewal   = tokenRenewal,
+      fileWriterOpts = FileWriterOptions(config),
+      defaultTtl =
+        Option(config.getLong(SECRET_DEFAULT_TTL).toLong).filterNot(_ == 0L).map(Duration.of(_, ChronoUnit.MILLIS)),
     )
   }
 

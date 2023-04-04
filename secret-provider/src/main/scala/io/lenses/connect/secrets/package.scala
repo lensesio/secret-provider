@@ -40,6 +40,9 @@ package object connect extends StrictLogging {
       | keystores etc.
       |""".stripMargin
 
+  val SECRET_DEFAULT_TTL         = "secret.default.ttl"
+  val SECRET_DEFAULT_TTL_DEFAULT = 0L
+
   object AuthMode extends Enumeration {
     type AuthMode = Value
     val DEFAULT, CREDENTIALS = Value

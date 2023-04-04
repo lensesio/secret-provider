@@ -1,15 +1,13 @@
 package io.lenses.connect.secrets.cache
 
 import java.time.Clock
+import java.time.Duration
 import java.time.OffsetDateTime
-import java.time.temporal.ChronoUnit
-import scala.concurrent.duration.Duration
-import scala.concurrent.duration.MILLISECONDS
 
 case class Ttl(originalTtl: Duration, expiry: OffsetDateTime) {
 
   def ttlRemaining(implicit clock: Clock): Duration =
-    Duration(expiry.toInstant.toEpochMilli - clock.millis(), MILLISECONDS)
+    Duration.between(clock.instant(), expiry.toInstant)
 
   def isAlive(implicit clock: Clock) = expiry.toInstant.isAfter(clock.instant())
 
@@ -21,7 +19,7 @@ object Ttl {
 
   def ttlToExpiry(ttl: Duration)(implicit clock: Clock): OffsetDateTime = {
     val offset         = clock.getZone.getRules.getOffset(clock.instant())
-    val offsetDateTime = clock.instant().plus(ttl.toMillis, ChronoUnit.MILLIS).atOffset(offset)
+    val offsetDateTime = clock.instant().plus(ttl).atOffset(offset)
     offsetDateTime
   }
 

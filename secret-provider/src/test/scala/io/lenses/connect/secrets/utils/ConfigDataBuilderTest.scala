@@ -5,16 +5,15 @@ import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 
 import java.time.Clock
-import scala.concurrent.duration.Duration
-import scala.concurrent.duration.MINUTES
-
+import java.time.Duration
+import java.time.temporal.ChronoUnit._
 class ConfigDataBuilderTest extends AnyFunSuite with Matchers {
 
   implicit val clock = Clock.systemDefaultZone()
 
   test("Converts to the expected java structure") {
     val map = ValueWithTtl(
-      Option(Duration(1, MINUTES)),
+      Option(Duration.of(1, MINUTES)),
       Option.empty[Duration],
       Map[String, String](
         "secret" -> "12345",

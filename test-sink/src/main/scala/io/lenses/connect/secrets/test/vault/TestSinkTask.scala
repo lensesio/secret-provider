@@ -1,7 +1,7 @@
-package io.lenses.connect.secrets.test
+package io.lenses.connect.secrets.test.vault
 
 import com.typesafe.scalalogging.LazyLogging
-import io.lenses.connect.secrets.test.VaultStateValidator.validateSecret
+import VaultStateValidator.validateSecret
 import org.apache.kafka.connect.sink.SinkRecord
 import org.apache.kafka.connect.sink.SinkTask
 import org.apache.kafka.connect.sink.SinkTaskContext
