@@ -185,7 +185,7 @@ class AWSSecretProviderTest extends AnyWordSpec with Matchers with MockitoSugar 
 
     val data       = provider.get(secretName, Set(secretKey).asJava)
     val outputFile = data.data().get(secretKey)
-    outputFile shouldBe s"$tmp$separator$secretName$separator${secretKey.toLowerCase}"
+    outputFile shouldBe s"$tmp${separator}secrets$separator${secretKey.toLowerCase}"
 
     Using(Source.fromFile(outputFile))(_.getLines().mkString) shouldBe Success(
       secretValue,
@@ -240,7 +240,7 @@ class AWSSecretProviderTest extends AnyWordSpec with Matchers with MockitoSugar 
 
     val data       = provider.get(secretName, Set(secretKey).asJava)
     val outputFile = data.data().get(secretKey)
-    outputFile shouldBe s"$tmp$separator$secretName$separator${secretKey.toLowerCase}"
+    outputFile shouldBe s"$tmp${separator}secrets$separator${secretKey.toLowerCase}"
 
     Using(Source.fromFile(outputFile))(_.getLines().mkString) shouldBe Success(
       secretValue,

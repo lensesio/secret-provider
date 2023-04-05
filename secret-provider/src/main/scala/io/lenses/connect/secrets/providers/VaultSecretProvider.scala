@@ -35,7 +35,7 @@ class VaultSecretProvider() extends ConfigProvider {
     val helper = new VaultHelper(
       vaultClient,
       settings.defaultTtl,
-      fileWriterCreateFn = path => settings.fileWriterOpts.map(_.createFileWriter(path)),
+      fileWriterCreateFn = () => settings.fileWriterOpts.map(_.createFileWriter()),
     )
 
     secretProvider   = Some(new SecretProvider(getClass.getSimpleName, helper.lookup))

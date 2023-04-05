@@ -13,7 +13,7 @@ import io.lenses.connect.secrets.cache.ValueWithTtl
 import io.lenses.connect.secrets.config.AWSProviderSettings
 import io.lenses.connect.secrets.connect.AuthMode
 import io.lenses.connect.secrets.connect.decodeKey
-import io.lenses.connect.secrets.io.FileWriterOnce
+import io.lenses.connect.secrets.io.FileWriter
 import io.lenses.connect.secrets.utils.EncodingAndId
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider
@@ -24,11 +24,11 @@ import software.amazon.awssdk.services.secretsmanager.model.DescribeSecretReques
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest
 
 import java.net.URI
-import java.time.temporal.ChronoUnit
 import java.time.Clock
 import java.time.Duration
 import java.time.OffsetDateTime
 import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 import java.util
 import scala.jdk.CollectionConverters.MapHasAsScala
 import scala.util.Failure
@@ -38,7 +38,7 @@ import scala.util.Try
 class AWSHelper(
   client:             SecretsManagerClient,
   defaultTtl:         Option[Duration],
-  fileWriterCreateFn: String => Option[FileWriterOnce],
+  fileWriterCreateFn: () => Option[FileWriter],
 )(
   implicit
   clock: Clock,
@@ -52,7 +52,7 @@ class AWSHelper(
     for {
       secretTtl         <- getTTL(secretId)
       secretValue       <- getSecretValue(secretId)
-      parsedSecretValue <- parseSecretValue(secretId, secretValue)
+      parsedSecretValue <- parseSecretValue(secretValue)
     } yield ValueWithTtl(secretTtl, parsedSecretValue)
 
   // determine the ttl for the secret
@@ -86,10 +86,9 @@ class AWSHelper(
   }
 
   private def parseSecretValue(
-    secretId:     String,
     secretValues: Map[String, String],
   ): Either[Throwable, Map[String, String]] = {
-    val fileWriterMaybe = fileWriterCreateFn(secretId)
+    val fileWriterMaybe = fileWriterCreateFn()
     Try(
       secretValues.map {
         case (k, v) =>

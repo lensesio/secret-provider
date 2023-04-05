@@ -16,15 +16,15 @@ import io.lenses.connect.secrets.cache.ValueWithTtl
 import io.lenses.connect.secrets.config.VaultAuthMethod
 import io.lenses.connect.secrets.config.VaultSettings
 import io.lenses.connect.secrets.connect.decodeKey
-import io.lenses.connect.secrets.io.FileWriterOnce
+import io.lenses.connect.secrets.io.FileWriter
 import io.lenses.connect.secrets.utils.EncodingAndId
 import io.lenses.connect.secrets.utils.ExceptionUtils.failWithEx
 import org.apache.kafka.connect.errors.ConnectException
 
 import java.io.File
-import java.time.temporal.ChronoUnit
 import java.time.Clock
 import java.time.Duration
+import java.time.temporal.ChronoUnit
 import scala.jdk.CollectionConverters.MapHasAsScala
 import scala.util.Failure
 import scala.util.Success
@@ -33,7 +33,7 @@ import scala.util.Try
 class VaultHelper(
   vaultClient:        Vault,
   defaultTtl:         Option[Duration],
-  fileWriterCreateFn: String => Option[FileWriterOnce],
+  fileWriterCreateFn: () => Option[FileWriter],
 )(
   implicit
   clock: Clock,
@@ -54,17 +54,16 @@ class VaultHelper(
         val ttl =
           Option(response.getLeaseDuration).filterNot(_ == 0L).map(Duration.of(_, ChronoUnit.SECONDS))
         Right(
-          ValueWithTtl(ttl, defaultTtl, parseSuccessfulResponse(path, response)),
+          ValueWithTtl(ttl, defaultTtl, parseSuccessfulResponse(response)),
         )
     }
   }
 
   private def parseSuccessfulResponse(
-    path:     String,
     response: LogicalResponse,
   ) = {
     val secretValues    = response.getData.asScala
-    val fileWriterMaybe = fileWriterCreateFn(path)
+    val fileWriterMaybe = fileWriterCreateFn()
     secretValues.map {
       case (k, v) =>
         (k,
