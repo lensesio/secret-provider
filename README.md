@@ -1,4 +1,5 @@
 ![Action Status](https://github.com/lensesio/secret-provider/workflows/CI/badge.svg)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Flensesio%2Fsecret-provider.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Flensesio%2Fsecret-provider?ref=badge_shield)
 [<img src="https://img.shields.io/badge/docs--orange.svg?"/>](https://docs.lenses.io/4.0/integrations/connectors/secret-providers/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
@@ -37,3 +38,7 @@ To run tests:
 ```bash
 sbt +test
 ```
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Flensesio%2Fsecret-provider.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Flensesio%2Fsecret-provider?ref=badge_large)
