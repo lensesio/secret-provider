@@ -250,6 +250,20 @@ class VaultSecretProviderTest extends AnyWordSpec with Matchers with BeforeAndAf
     settings.appRole.isDefined shouldBe true
   }
 
+  "should be configured for approle auth custom path" in {
+    val props = Map(
+      VaultProviderConfig.VAULT_ADDR         -> "https://127.0.0.1:9998",
+      VaultProviderConfig.VAULT_PEM          -> pemFile,
+      VaultProviderConfig.AUTH_METHOD        -> VaultAuthMethod.APPROLE.toString,
+      VaultProviderConfig.APP_ROLE_PATH      -> "custom/path",
+      VaultProviderConfig.APP_ROLE           -> "some-app-role",
+      VaultProviderConfig.APP_ROLE_SECRET_ID -> "secret",
+    ).asJava
+
+    val settings = VaultSettings(VaultProviderConfig(props))
+    settings.appRole.isDefined shouldBe true
+  }
+
   "should be configured for ssl with pem" in {
     val props = Map(
       VaultProviderConfig.VAULT_ADDR       -> "https://127.0.0.1:9998",

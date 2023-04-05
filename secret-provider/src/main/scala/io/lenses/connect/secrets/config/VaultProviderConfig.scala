@@ -48,6 +48,7 @@ object VaultProviderConfig {
   val KUBERNETES_DEFAULT_TOKEN_PATH: String =
     "/var/run/secrets/kubernetes.io/serviceaccount/token"
 
+  val APP_ROLE_PATH:      String = "app.role.path"
   val APP_ROLE:           String = "app.role.id"
   val APP_ROLE_SECRET_ID: String = "app.role.secret.id"
 
@@ -157,6 +158,13 @@ object VaultProviderConfig {
         |""".stripMargin,
     )
     // app role auth mode
+    .define(
+      APP_ROLE_PATH,
+      Type.STRING,
+      "approle",
+      Importance.HIGH,
+      s"Vault App role path. $AUTH_METHOD must be 'approle'",
+    )
     .define(
       APP_ROLE,
       Type.STRING,
