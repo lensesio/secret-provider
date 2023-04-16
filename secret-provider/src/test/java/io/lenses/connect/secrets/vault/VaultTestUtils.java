@@ -6,8 +6,8 @@
 
 package io.lenses.connect.secrets.vault;
 
-import com.bettercloud.vault.json.Json;
-import com.bettercloud.vault.json.JsonObject;
+import io.github.jopenlibs.vault.json.Json;
+import io.github.jopenlibs.vault.json.JsonObject;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.util.ssl.SslContextFactory;

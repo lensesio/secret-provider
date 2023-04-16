@@ -6,7 +6,7 @@
 
 package io.lenses.connect.secrets.providers
 
-import com.bettercloud.vault.json.JsonObject
+import io.github.jopenlibs.vault.json.JsonObject
 import io.lenses.connect.secrets.TmpDirUtil.getTempDir
 import io.lenses.connect.secrets.config.AWSProviderConfig
 import io.lenses.connect.secrets.config.AWSProviderSettings
