@@ -6,10 +6,10 @@
 
 package io.lenses.connect.secrets.providers
 
-import com.bettercloud.vault.SslConfig
-import com.bettercloud.vault.Vault
-import com.bettercloud.vault.VaultConfig
-import com.bettercloud.vault.response.LogicalResponse
+import io.github.jopenlibs.vault.SslConfig
+import io.github.jopenlibs.vault.Vault
+import io.github.jopenlibs.vault.VaultConfig
+import io.github.jopenlibs.vault.response.LogicalResponse
 import com.typesafe.scalalogging.LazyLogging
 import com.typesafe.scalalogging.StrictLogging
 import io.lenses.connect.secrets.cache.ValueWithTtl
@@ -147,7 +147,7 @@ object VaultHelper extends StrictLogging {
           .map(k8s =>
             vault
               .auth()
-              .loginByKubernetes(k8s.role, k8s.jwt.value())
+              .loginByJwt("kubernetes", k8s.role, k8s.jwt.value(), k8s.authPath)
               .getAuthClientToken,
           )
       case VaultAuthMethod.GCP =>
