@@ -4,9 +4,9 @@ import cats.effect.IO
 import cats.effect.Resource
 import io.github.jopenlibs.vault.Vault
 import io.github.jopenlibs.vault.VaultConfig
-import io.github.jopenlibs.vault.api.mounts.MountPayload
-import io.github.jopenlibs.vault.api.mounts.MountType
-import io.github.jopenlibs.vault.api.mounts.TimeToLive
+import io.github.jopenlibs.vault.api.sys.mounts.MountPayload
+import io.github.jopenlibs.vault.api.sys.mounts.MountType
+import io.github.jopenlibs.vault.api.sys.mounts.TimeToLive
 import io.github.jopenlibs.vault.response.MountResponse
 import com.typesafe.scalalogging.LazyLogging
 import io.lenses.connect.secrets.testcontainers.VaultContainer._
