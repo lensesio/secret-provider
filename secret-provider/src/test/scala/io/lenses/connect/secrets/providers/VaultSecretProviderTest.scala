@@ -235,6 +235,20 @@ class VaultSecretProviderTest extends AnyWordSpec with Matchers with BeforeAndAf
     val settings = VaultSettings(VaultProviderConfig(props))
     settings.k8s.isDefined shouldBe true
   }
+  "should be configured for kubernetes auth custom path" in {
+    val props = Map(
+      VaultProviderConfig.VAULT_ADDR -> "https://127.0.0.1:9998",
+      VaultProviderConfig.VAULT_TOKEN -> "mock_token",
+      VaultProviderConfig.VAULT_PEM -> pemFile,
+      VaultProviderConfig.AUTH_METHOD -> VaultAuthMethod.KUBERNETES.toString,
+      VaultProviderConfig.KUBERNETES_TOKEN_PATH -> k8sToken,
+      VaultProviderConfig.KUBERNETES_ROLE -> "role",
+      VaultProviderConfig.KUBERNETES_AUTH_PATH -> "custom/path",
+    ).asJava
+
+    val settings = VaultSettings(VaultProviderConfig(props))
+    settings.k8s.isDefined shouldBe true
+  }
 
   "should be configured for approle auth" in {
     val props = Map(
