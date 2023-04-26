@@ -11,7 +11,10 @@ import io.github.jopenlibs.vault.json.JsonObject
 import io.lenses.connect.secrets.TmpDirUtil.getTempDir
 import io.lenses.connect.secrets.TmpDirUtil.separator
 import io.lenses.connect.secrets.config.VaultProviderConfig.KUBERNETES_AUTH_PATH_DEFAULT
-import io.lenses.connect.secrets.config.{K8s, VaultAuthMethod, VaultProviderConfig, VaultSettings}
+import io.lenses.connect.secrets.config.K8s
+import io.lenses.connect.secrets.config.VaultAuthMethod
+import io.lenses.connect.secrets.config.VaultProviderConfig
+import io.lenses.connect.secrets.config.VaultSettings
 import io.lenses.connect.secrets.connect
 import io.lenses.connect.secrets.vault.MockVault
 import io.lenses.connect.secrets.vault.VaultTestUtils
@@ -238,13 +241,13 @@ class VaultSecretProviderTest extends AnyWordSpec with Matchers with BeforeAndAf
   }
   "should be configured for kubernetes auth custom path" in {
     val props = Map(
-      VaultProviderConfig.VAULT_ADDR -> "https://127.0.0.1:9998",
-      VaultProviderConfig.VAULT_TOKEN -> "mock_token",
-      VaultProviderConfig.VAULT_PEM -> pemFile,
-      VaultProviderConfig.AUTH_METHOD -> VaultAuthMethod.KUBERNETES.toString,
+      VaultProviderConfig.VAULT_ADDR            -> "https://127.0.0.1:9998",
+      VaultProviderConfig.VAULT_TOKEN           -> "mock_token",
+      VaultProviderConfig.VAULT_PEM             -> pemFile,
+      VaultProviderConfig.AUTH_METHOD           -> VaultAuthMethod.KUBERNETES.toString,
       VaultProviderConfig.KUBERNETES_TOKEN_PATH -> k8sToken,
-      VaultProviderConfig.KUBERNETES_ROLE -> "role",
-      VaultProviderConfig.KUBERNETES_AUTH_PATH -> "custom/path",
+      VaultProviderConfig.KUBERNETES_ROLE       -> "role",
+      VaultProviderConfig.KUBERNETES_AUTH_PATH  -> "custom/path",
     ).asJava
 
     val settings = VaultSettings(VaultProviderConfig(props))

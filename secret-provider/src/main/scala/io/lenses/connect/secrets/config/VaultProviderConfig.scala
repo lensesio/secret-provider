@@ -47,7 +47,7 @@ object VaultProviderConfig {
   val KUBERNETES_TOKEN_PATH: String = "kubernetes.token.path"
   val KUBERNETES_DEFAULT_TOKEN_PATH: String =
     "/var/run/secrets/kubernetes.io/serviceaccount/token"
-  val KUBERNETES_AUTH_PATH: String = "kubernetes.auth.path"
+  val KUBERNETES_AUTH_PATH:         String = "kubernetes.auth.path"
   val KUBERNETES_AUTH_PATH_DEFAULT: String = "auth/kubernetes"
 
   val APP_ROLE_PATH:      String = "app.role.path"
@@ -386,7 +386,7 @@ object VaultProviderConfig {
       Type.STRING,
       KUBERNETES_AUTH_PATH_DEFAULT,
       Importance.MEDIUM,
-      "The mount path of the Vault Kubernetes Auth Method"
+      "The mount path of the Vault Kubernetes Auth Method",
     )
     .define(
       SECRET_DEFAULT_TTL,
