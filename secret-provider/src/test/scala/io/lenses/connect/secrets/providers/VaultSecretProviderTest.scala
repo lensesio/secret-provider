@@ -6,10 +6,12 @@
 
 package io.lenses.connect.secrets.providers
 
-import com.bettercloud.vault.json.JsonArray
-import com.bettercloud.vault.json.JsonObject
+import io.github.jopenlibs.vault.json.JsonArray
+import io.github.jopenlibs.vault.json.JsonObject
 import io.lenses.connect.secrets.TmpDirUtil.getTempDir
 import io.lenses.connect.secrets.TmpDirUtil.separator
+import io.lenses.connect.secrets.config.VaultProviderConfig.KUBERNETES_AUTH_PATH_DEFAULT
+import io.lenses.connect.secrets.config.K8s
 import io.lenses.connect.secrets.config.VaultAuthMethod
 import io.lenses.connect.secrets.config.VaultProviderConfig
 import io.lenses.connect.secrets.config.VaultSettings
@@ -19,8 +21,10 @@ import io.lenses.connect.secrets.vault.VaultTestUtils
 import org.apache.kafka.common.config.provider.ConfigProvider
 import org.apache.kafka.common.config.ConfigData
 import org.apache.kafka.common.config.ConfigTransformer
+import org.apache.kafka.common.config.types.Password
 import org.eclipse.jetty.server.Server
 import org.scalatest.BeforeAndAfterAll
+import org.scalatest.OptionValues.convertOptionToValuable
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
@@ -233,8 +237,25 @@ class VaultSecretProviderTest extends AnyWordSpec with Matchers with BeforeAndAf
     ).asJava
 
     val settings = VaultSettings(VaultProviderConfig(props))
-    settings.k8s.isDefined shouldBe true
+    settings.k8s.value shouldBe K8s("role", new Password(fileToString(k8sToken)), KUBERNETES_AUTH_PATH_DEFAULT)
   }
+  "should be configured for kubernetes auth custom path" in {
+    val props = Map(
+      VaultProviderConfig.VAULT_ADDR            -> "https://127.0.0.1:9998",
+      VaultProviderConfig.VAULT_TOKEN           -> "mock_token",
+      VaultProviderConfig.VAULT_PEM             -> pemFile,
+      VaultProviderConfig.AUTH_METHOD           -> VaultAuthMethod.KUBERNETES.toString,
+      VaultProviderConfig.KUBERNETES_TOKEN_PATH -> k8sToken,
+      VaultProviderConfig.KUBERNETES_ROLE       -> "role",
+      VaultProviderConfig.KUBERNETES_AUTH_PATH  -> "custom/path",
+    ).asJava
+
+    val settings = VaultSettings(VaultProviderConfig(props))
+    settings.k8s.value shouldBe K8s("role", new Password(fileToString(k8sToken)), "custom/path")
+  }
+
+  private def fileToString(k8sTokenFile: String): String =
+    Using(Source.fromFile(k8sTokenFile))(_.getLines().mkString).getOrElse(fail("Unable to load token"))
 
   "should be configured for approle auth" in {
     val props = Map(

@@ -6,7 +6,7 @@
 
 package io.lenses.connect.secrets.providers
 
-import com.bettercloud.vault.Vault
+import io.github.jopenlibs.vault.Vault
 import io.lenses.connect.secrets.async.AsyncFunctionLoop
 import io.lenses.connect.secrets.config.VaultProviderConfig
 import io.lenses.connect.secrets.config.VaultSettings

@@ -10,7 +10,7 @@ trait Dependencies {
 
     val scalaLoggingVersion  = "3.9.5"
     val kafkaVersion         = "3.4.0"
-    val vaultVersion         = "5.1.0"
+    val vaultVersion         = "5.3.0"
     val azureKeyVaultVersion = "4.5.2"
     val azureIdentityVersion = "1.8.1"
 
@@ -41,7 +41,7 @@ trait Dependencies {
       "com.typesafe.scala-logging" %% "scala-logging" % scalaLoggingVersion
     val `kafka-connect-api` = "org.apache.kafka" % "connect-api" % kafkaVersion
     val `vault-java-driver` =
-      "com.bettercloud" % "vault-java-driver" % vaultVersion
+      "io.github.jopenlibs" % "vault-java-driver" % vaultVersion
     val `azure-key-vault` =
       "com.azure" % "azure-security-keyvault-secrets" % azureKeyVaultVersion
     val `azure-identity` = "com.azure" % "azure-identity" % azureIdentityVersion

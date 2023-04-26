@@ -6,7 +6,7 @@
 
 package io.lenses.connect.secrets.vault;
 
-import com.bettercloud.vault.json.JsonObject;
+import io.github.jopenlibs.vault.json.JsonObject;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 

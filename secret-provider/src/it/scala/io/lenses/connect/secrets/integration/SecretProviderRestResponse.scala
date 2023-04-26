@@ -1,6 +1,6 @@
 package io.lenses.connect.secrets.integration
 
-import com.bettercloud.vault.rest.RestResponse
+import io.github.jopenlibs.vault.rest.RestResponse
 import org.json4s.DefaultFormats
 import org.json4s._
 import org.json4s.native.JsonMethods._

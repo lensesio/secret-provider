@@ -35,7 +35,7 @@ case class Jwt(role: String, provider: String, jwt: Password)
 case class UserPass(username: String, password: Password, mount: String)
 case class Ldap(username: String, password: Password, mount: String)
 case class AppRole(path: String, role: String, secretId: Password)
-case class K8s(role: String, jwt: Password)
+case class K8s(role: String, jwt: Password, authPath: String)
 case class Cert(mount: String)
 case class Github(token: Password, mount: String)
 
@@ -180,6 +180,7 @@ object VaultSettings extends StrictLogging {
       config.getStringOrThrowOnNull(VaultProviderConfig.KUBERNETES_ROLE)
     val path =
       config.getStringOrThrowOnNull(VaultProviderConfig.KUBERNETES_TOKEN_PATH)
+    val authPath = config.getStringOrThrowOnNull(VaultProviderConfig.KUBERNETES_AUTH_PATH)
     Using(Source.fromFile(path))(_.getLines().mkString) match {
       case Failure(exception) =>
         throw new ConnectException(
@@ -187,7 +188,7 @@ object VaultSettings extends StrictLogging {
           exception,
         )
       case Success(fileContents) =>
-        K8s(role = role, jwt = new Password(fileContents))
+        K8s(role = role, jwt = new Password(fileContents), authPath)
     }
   }
 

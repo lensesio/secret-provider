@@ -2,12 +2,12 @@ package io.lenses.connect.secrets.testcontainers
 
 import cats.effect.IO
 import cats.effect.Resource
-import com.bettercloud.vault.Vault
-import com.bettercloud.vault.VaultConfig
-import com.bettercloud.vault.api.mounts.MountPayload
-import com.bettercloud.vault.api.mounts.MountType
-import com.bettercloud.vault.api.mounts.TimeToLive
-import com.bettercloud.vault.response.MountResponse
+import io.github.jopenlibs.vault.Vault
+import io.github.jopenlibs.vault.VaultConfig
+import io.github.jopenlibs.vault.api.sys.mounts.MountPayload
+import io.github.jopenlibs.vault.api.sys.mounts.MountType
+import io.github.jopenlibs.vault.api.sys.mounts.TimeToLive
+import io.github.jopenlibs.vault.response.MountResponse
 import com.typesafe.scalalogging.LazyLogging
 import io.lenses.connect.secrets.testcontainers.VaultContainer._
 import org.scalatest.matchers.should.Matchers
