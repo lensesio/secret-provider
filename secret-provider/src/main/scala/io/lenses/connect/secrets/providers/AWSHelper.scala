@@ -50,11 +50,8 @@ class AWSHelper(
   // get the key value and ttl in the specified secret
   override def lookup(secretId: String): Either[Throwable, ValueWithTtl[Map[String, String]]] = {
     val hasAccount = secretId.indexOf("$")
-    val secretName = secretId
-    if (hasAccount > -1) {
-      val secret_array = secretId.split("\\$")
-      val secretName = s"arn:aws:secretsmanager:us-east-1:${secret_array(0)}:secret:${secret_array(1)}"
-    }
+    val secret_array = secretId.split("\\$")
+    val secretName = if (hasAccount > -1) s"arn:aws:secretsmanager:us-east-1:${secret_array(0)}:secret:${secret_array(1)}" else secretId
     for {
       secretTtl         <- getTTL(secretName)
       secretValue       <- getSecretValue(secretName)
