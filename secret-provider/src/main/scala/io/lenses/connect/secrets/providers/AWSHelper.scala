@@ -38,7 +38,8 @@ import scala.util.Try
 class AWSHelper(
   client:             SecretsManagerClient,
   defaultTtl:         Option[Duration],
-  fileWriterCreateFn: () => Option[FileWriter],
+  altRegion:          String,
+  fileWriterCreateFn: () => Option[FileWriter]
 )(
   implicit
   clock: Clock,
@@ -51,7 +52,8 @@ class AWSHelper(
   override def lookup(secretId: String): Either[Throwable, ValueWithTtl[Map[String, String]]] = {
     val hasAccount = secretId.indexOf("$")
     val secret_array = secretId.split("\\$")
-    val secretName = if (hasAccount > -1) s"arn:aws:secretsmanager:us-east-1:${secret_array(0)}:secret:${secret_array(1)}" else secretId
+    val region = if (altRegion.length > 0) altRegion else ""
+    val secretName = if (hasAccount > -1) s"arn:aws:secretsmanager:${region}:${secret_array(0)}:secret:${secret_array(1)}" else secretId
     for {
       secretTtl         <- getTTL(secretName)
       secretValue       <- getSecretValue(secretName)

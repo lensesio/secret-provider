@@ -21,6 +21,7 @@ object AWSProviderConfig {
   val AWS_SECRET_KEY:    String = "aws.secret.key"
   val AUTH_METHOD:       String = "aws.auth.method"
   val ENDPOINT_OVERRIDE: String = "aws.endpoint.override"
+  val AWS_CROSS_ACCOUNT_REGION:        String = "aws.cross.account.region"
 
   val config: ConfigDef = new ConfigDef()
     .define(
@@ -53,6 +54,13 @@ object AWSProviderConfig {
         | or 'default' for the standard AWS provider chain.
         | Default is 'credentials'
         |""".stripMargin,
+    )
+    .define(
+      AWS_CROSS_ACCOUNT_REGION,
+      Type.STRING,
+      "",
+      Importance.MEDIUM,
+      "AWS region the Secrets manager is in when reading from alternate account",
     )
     .define(
       WRITE_FILES,
