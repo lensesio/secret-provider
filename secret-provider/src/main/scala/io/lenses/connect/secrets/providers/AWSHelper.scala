@@ -38,6 +38,7 @@ import scala.util.Try
 class AWSHelper(
   client:             SecretsManagerClient,
   defaultTtl:         Option[Duration],
+  region:             String,
   altRegion:          String,
   fileWriterCreateFn: () => Option[FileWriter]
 )(
@@ -50,15 +51,24 @@ class AWSHelper(
 
   // get the key value and ttl in the specified secret
   override def lookup(secretId: String): Either[Throwable, ValueWithTtl[Map[String, String]]] = {
-    val hasAccount = secretId.indexOf("$")
-    val secret_array = secretId.split("\\$")
-    val region = if (altRegion.length > 0) altRegion else ""
-    val secretName = if (hasAccount > -1) s"arn:aws:secretsmanager:${region}:${secret_array(0)}:secret:${secret_array(1)}" else secretId
+    val secretName = getSecretName(secretId)
     for {
       secretTtl         <- getTTL(secretName)
       secretValue       <- getSecretValue(secretName)
       parsedSecretValue <- parseSecretValue(secretValue)
     } yield ValueWithTtl(secretTtl, parsedSecretValue)
+  }
+
+  private def getSecretName(secretId: String): String = {
+    val hasAccount = secretId.indexOf("$")
+    if (hasAccount > -1) {
+      val secret_region = if (hasAccount > -1 && altRegion.length > 0) altRegion else region
+      val secret_array = secretId.split("\\$")
+      s"arn:aws:secretsmanager:${secret_region}:${secret_array(0)}:secret:${secret_array(1)}"
+    }
+    else {
+      secretId
+    }
   }
 
   // determine the ttl for the secret
