@@ -30,6 +30,7 @@ trait Dependencies {
     val testContainersVersion        = "1.17.6"
     val json4sVersion                = "4.0.6"
     val catsEffectVersion            = "3.4.8"
+    val awsStsVersion                = "1.12.554"
 
   }
 
@@ -48,6 +49,7 @@ trait Dependencies {
 
     lazy val awsSecretsManagerSdkV2 = "software.amazon.awssdk" % "secretsmanager" % awsSdkV2Version
     lazy val awsIamSdkV2            = "software.amazon.awssdk" % "iam"            % awsSdkV2Version
+    lazy val awsStsSdkV2            = "software.amazon.awssdk" % "sts"            % awsSdkV2Version
 
     val `mockito`      = "org.scalatestplus"   %% "mockito-4-6"  % mockitoVersion
     val `scalatest`    = "org.scalatest"       %% "scalatest"    % scalaTestVersion
@@ -56,6 +58,7 @@ trait Dependencies {
     val `flexmark`     = "com.vladsch.flexmark" % "flexmark-all" % flexmarkVersion
     val `slf4j-api`    = "org.slf4j"            % "slf4j-api"    % slf4jVersion
     val `slf4j-simple` = "org.slf4j"            % "slf4j-simple" % slf4jVersion
+    val `play-json`    = "com.typesafe.play"   %% "play-json" % "2.10.1"
 
     val `byteBuddy` = "net.bytebuddy" % "byte-buddy" % byteBuddyVersion
     val `scalaCollectionCompat` =
@@ -84,6 +87,8 @@ trait Dependencies {
     `azure-key-vault`,
     `azure-identity` exclude ("javax.activation", "activation"),
     `awsSecretsManagerSdkV2`,
+    `awsStsSdkV2`,
+    `play-json`,
     awsIamSdkV2           % IntegrationTest,
     `jakartaServlet`      % Test,
     `mockito`             % Test,

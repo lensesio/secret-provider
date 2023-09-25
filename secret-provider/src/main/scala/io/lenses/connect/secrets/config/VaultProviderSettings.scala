@@ -19,17 +19,17 @@ import java.time.temporal.ChronoUnit
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.duration.FiniteDuration
 import scala.io.Source
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Using
+import scala.util.{Failure, Success, Try, Using}
 
 case class AwsIam(
   role:    String,
   url:     String,
-  headers: Password,
+  headers: Option[Password],
   body:    Password,
   mount:   String,
+  iamServerId: Option[String],
 )
+
 case class Gcp(role: String, jwt: Password)
 case class Jwt(role: String, provider: String, jwt: Password)
 case class UserPass(username: String, password: Password, mount: String)
@@ -66,14 +66,12 @@ case class VaultSettings(
 
 object VaultSettings extends StrictLogging {
   def apply(config: VaultProviderConfig): VaultSettings = {
-    val addr        = config.getString(VaultProviderConfig.VAULT_ADDR)
-    val token       = config.getPassword(VaultProviderConfig.VAULT_TOKEN)
-    val namespace   = config.getString(VaultProviderConfig.VAULT_NAMESPACE)
-    val keystoreLoc = config.getString(VaultProviderConfig.VAULT_KEYSTORE_LOC)
-    val keystorePass =
-      config.getPassword(VaultProviderConfig.VAULT_KEYSTORE_PASS)
-    val truststoreLoc =
-      config.getString(VaultProviderConfig.VAULT_TRUSTSTORE_LOC)
+    val addr          = config.getString(VaultProviderConfig.VAULT_ADDR)
+    val token         = config.getPassword(VaultProviderConfig.VAULT_TOKEN)
+    val namespace     = config.getString(VaultProviderConfig.VAULT_NAMESPACE)
+    val keystoreLoc   = config.getString(VaultProviderConfig.VAULT_KEYSTORE_LOC)
+    val keystorePass  = config.getPassword(VaultProviderConfig.VAULT_KEYSTORE_PASS)
+    val truststoreLoc = config.getString(VaultProviderConfig.VAULT_TRUSTSTORE_LOC)
     val pem           = config.getString(VaultProviderConfig.VAULT_PEM)
     val clientPem     = config.getString(VaultProviderConfig.VAULT_CLIENT_PEM)
     val engineVersion = config.getInt(VaultProviderConfig.VAULT_ENGINE_VERSION)
@@ -153,17 +151,18 @@ object VaultSettings extends StrictLogging {
   def getAWS(config: VaultProviderConfig): AwsIam = {
     val role = config.getStringOrThrowOnNull(VaultProviderConfig.AWS_ROLE)
     val url  = config.getStringOrThrowOnNull(VaultProviderConfig.AWS_REQUEST_URL)
-    val headers =
-      config.getPasswordOrThrowOnNull(VaultProviderConfig.AWS_REQUEST_HEADERS)
-    val body =
-      config.getPasswordOrThrowOnNull(VaultProviderConfig.AWS_REQUEST_BODY)
+    val headers = None //config.getPasswordOrThrowOnNull(VaultProviderConfig.AWS_REQUEST_HEADERS)
+    val body = config.getPasswordOrThrowOnNull(VaultProviderConfig.AWS_REQUEST_BODY)
     val mount = config.getStringOrThrowOnNull(VaultProviderConfig.AWS_MOUNT)
+    val iamServerId = Try(config.getString(VaultProviderConfig.AWS_IAM_SERVER_ID)).toOption.filterNot(_.trim.isEmpty)
+
     AwsIam(
       role    = role,
       url     = url,
       headers = headers,
       body    = body,
       mount   = mount,
+      iamServerId = iamServerId,
     )
   }
 

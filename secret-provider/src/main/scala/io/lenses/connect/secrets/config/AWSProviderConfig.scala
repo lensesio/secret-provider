@@ -82,6 +82,7 @@ object AWSProviderConfig {
       Importance.LOW,
       "URL of endpoint override (eg for custom Secret Provider implementations)",
     )
+
 }
 
 case class AWSProviderConfig(props: util.Map[String, _]) extends AbstractConfig(AWSProviderConfig.config, props)

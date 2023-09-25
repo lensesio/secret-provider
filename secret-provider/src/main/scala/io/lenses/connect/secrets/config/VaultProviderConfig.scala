@@ -59,6 +59,7 @@ object VaultProviderConfig {
   val AWS_REQUEST_HEADERS: String = "aws.request.headers"
   val AWS_REQUEST_BODY:    String = "aws.request.body"
   val AWS_MOUNT:           String = "aws.mount"
+  val AWS_IAM_SERVER_ID:   String = "aws.iam.server.id"
 
   val GCP_ROLE: String = "gcp.role"
   val GCP_JWT:  String = "gcp.jwt"
@@ -279,6 +280,13 @@ object VaultProviderConfig {
       "aws",
       Importance.HIGH,
       s"AWS auth mount. $AUTH_METHOD must be 'awsiam'. Default 'aws'",
+    )
+    .define(
+      AWS_IAM_SERVER_ID,
+      Type.STRING,
+      "",
+      Importance.LOW,
+      "AWS IAM Server Id (eg Hashicorp Vault Server)",
     )
     //ldap
     .define(

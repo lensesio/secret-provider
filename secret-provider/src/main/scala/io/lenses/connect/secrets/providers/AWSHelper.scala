@@ -5,6 +5,7 @@
  */
 
 package io.lenses.connect.secrets.providers
+
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.typesafe.scalalogging.LazyLogging
 import com.typesafe.scalalogging.StrictLogging

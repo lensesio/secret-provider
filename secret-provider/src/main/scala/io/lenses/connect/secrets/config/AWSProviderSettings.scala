@@ -26,18 +26,16 @@ case class AWSProviderSettings(
 )
 
 import io.lenses.connect.secrets.config.AbstractConfigExtensions._
+
 object AWSProviderSettings {
   def apply(configs: AWSProviderConfig): AWSProviderSettings = {
     // TODO: Validate all configs in one step and provide all errors together
     val region = configs.getStringOrThrowOnNull(AWSProviderConfig.AWS_REGION)
-    val accessKey =
-      configs.getStringOrThrowOnNull(AWSProviderConfig.AWS_ACCESS_KEY)
-    val secretKey =
-      configs.getPasswordOrThrowOnNull(AWSProviderConfig.AWS_SECRET_KEY)
+    val accessKey = configs.getStringOrThrowOnNull(AWSProviderConfig.AWS_ACCESS_KEY)
+    val secretKey = configs.getPasswordOrThrowOnNull(AWSProviderConfig.AWS_SECRET_KEY)
 
-    val endpointOverride = Try(configs.getString("aws.endpoint.override")).toOption.filterNot(_.trim.isEmpty)
-    val authMode =
-      getAuthenticationMethod(configs.getString(AWSProviderConfig.AUTH_METHOD))
+    val endpointOverride = Try(configs.getString(AWSProviderConfig.ENDPOINT_OVERRIDE)).toOption.filterNot(_.trim.isEmpty)
+    val authMode = getAuthenticationMethod(configs.getString(AWSProviderConfig.AUTH_METHOD))
 
     if (authMode == AuthMode.CREDENTIALS) {
       if (accessKey.isEmpty)
@@ -51,14 +49,13 @@ object AWSProviderSettings {
     }
 
     new AWSProviderSettings(
-      region         = region,
-      accessKey      = accessKey,
-      secretKey      = secretKey,
-      authMode       = authMode,
-      fileWriterOpts = FileWriterOptions(configs),
-      defaultTtl =
-        Option(configs.getLong(SECRET_DEFAULT_TTL).toLong).filterNot(_ == 0L).map(Duration.of(_, ChronoUnit.MILLIS)),
-      endpointOverride,
+      region           = region,
+      accessKey        = accessKey,
+      secretKey        = secretKey,
+      authMode         = authMode,
+      fileWriterOpts   = FileWriterOptions(configs),
+      defaultTtl       = Option(configs.getLong(SECRET_DEFAULT_TTL).toLong).filterNot(_ == 0L).map(Duration.of(_, ChronoUnit.MILLIS)),
+      endpointOverride = endpointOverride,
     )
   }
 }

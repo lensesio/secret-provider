@@ -22,13 +22,21 @@ import io.lenses.connect.secrets.utils.ExceptionUtils.failWithEx
 import org.apache.kafka.connect.errors.ConnectException
 
 import java.io.File
+import java.nio.charset.StandardCharsets
 import java.time.Clock
 import java.time.Duration
 import java.time.temporal.ChronoUnit
-import scala.jdk.CollectionConverters.MapHasAsScala
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
+import software.amazon.awssdk.utils.BinaryUtils
+
+import java.util
+import software.amazon.awssdk.http.{SdkHttpFullRequest, SdkHttpMethod}
+
+import scala.jdk.CollectionConverters._
+import play.api.libs.json.Json
+
 
 class VaultHelper(
   vaultClient:        Vault,
@@ -84,8 +92,7 @@ object VaultHelper extends StrictLogging {
 
   // initialize the vault client
   def createClient(settings: VaultSettings): Vault = {
-    val config =
-      new VaultConfig().address(settings.addr)
+    val config = new VaultConfig().address(settings.addr)
 
     // set ssl if configured
     config.sslConfig(configureSSL(settings))
@@ -136,7 +143,7 @@ object VaultHelper extends StrictLogging {
                 aws.role,
                 aws.url,
                 aws.body.value(),
-                aws.headers.value(),
+                getDynamicHeaders(aws.iamServerId),
                 aws.mount,
               )
               .getAuthClientToken,
@@ -198,6 +205,35 @@ object VaultHelper extends StrictLogging {
     config.token(token.get)
     config.build()
     new Vault(config)
+  }
+
+  // request STS for header
+  private def getDynamicHeaders(serverId: Option[String]): String = {
+    logger.info("invoke getDynamicHeaders")
+
+    val request = SdkHttpFullRequest.builder()
+      .protocol("https")
+      .method(SdkHttpMethod.POST)
+      .host("sts.amazonaws.com")
+      .putHeader("X-Vault-AWS-IAM-Server-ID", serverId.getOrElse(""))
+      .contentStreamProvider(() => new java.io.ByteArrayInputStream("{}".getBytes(StandardCharsets.UTF_8)))
+      .build()
+
+    val payload = Json.toJson(headersToMap(request.headers()).asScala).toString()
+    val base64Headers = BinaryUtils.toBase64(payload.getBytes(StandardCharsets.UTF_8))
+    logger.info("base64header aws getDynamicHeaders :: %s".format(base64Headers))
+
+    base64Headers
+  }
+
+  private def headersToMap(headers: util.Map[String, util.List[String]]): util.Map[String, String] = {
+    val headerMap = new util.HashMap[String, String]()
+    for ((key, value) <- headers.asScala) {
+      val values = new util.ArrayList[String]()
+      values.add(value.toString)
+      headerMap.put(key, Json.toJson(values.asScala).toString())
+    }
+    headerMap
   }
 
   // set up tls
