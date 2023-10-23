@@ -26,8 +26,6 @@ import java.time.Clock
 import java.time.Duration
 import java.time.temporal.ChronoUnit
 import scala.jdk.CollectionConverters.MapHasAsScala
-import scala.util.Failure
-import scala.util.Success
 import scala.util.Try
 
 class VaultHelper(
@@ -39,24 +37,36 @@ class VaultHelper(
   clock: Clock,
 ) extends SecretHelper
     with LazyLogging {
+
+
   override def lookup(path: String): Either[Throwable, ValueWithTtl[Map[String, String]]] = {
     logger.debug(s"Looking up value from Vault at [$path]")
-    Try(vaultClient.logical().read(path)) match {
-      case Failure(ex) =>
+    val lookupFn = if (path.startsWith("database/creds/"))  lookupFromDatabaseEngine _  else lookupFromVault _
+    lookupFn(path) match {
+      case Left(ex) =>
         failWithEx(s"Failed to fetch secrets from path [$path]", ex)
-      case Success(response) if response.getRestResponse.getStatus != 200 =>
+      case Right(response) if response.getRestResponse.getStatus != 200 =>
         failWithEx(
           s"No secrets found at path [$path]. Vault response: ${new String(response.getRestResponse.getBody)}",
         )
-      case Success(response) if response.getData.isEmpty =>
+      case Right(response) if response.getData.isEmpty =>
         failWithEx(s"No secrets found at path [$path]")
-      case Success(response) =>
+      case Right(response) =>
         val ttl =
           Option(response.getLeaseDuration).filterNot(_ == 0L).map(Duration.of(_, ChronoUnit.SECONDS))
         Right(
           ValueWithTtl(ttl, defaultTtl, parseSuccessfulResponse(response)),
         )
     }
+  }
+
+  private def lookupFromVault(path: String): Either[Throwable, LogicalResponse] = {
+    Try(vaultClient.logical().read(path)).toEither
+  }
+
+  private def lookupFromDatabaseEngine(path: String): Either[Throwable, LogicalResponse] = {
+    val parts = path.split("/")
+    Either.cond(parts.length == 3, vaultClient.database().creds(parts(2)), new ConnectException("Database path is invalid. Path must be in the form 'database/creds/<role_name>'"))
   }
 
   private def parseSuccessfulResponse(
