@@ -25,6 +25,7 @@ import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient
 import software.amazon.awssdk.services.secretsmanager.model._
 
 import java.nio.file.FileSystems
+import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.Base64
 import java.util.Date
@@ -327,5 +328,48 @@ class AWSSecretProviderTest extends AnyWordSpec with Matchers with MockitoSugar 
     val data = transformer.transform(props2)
     data.data().get("mykey") shouldBe secretValue
     provider.close()
+  }
+
+  "should not throw exception with secret value in message" in {
+    val props = Map(
+      AWSProviderConfig.AUTH_METHOD    -> AuthMode.CREDENTIALS.toString,
+      AWSProviderConfig.AWS_ACCESS_KEY -> "somekey",
+      AWSProviderConfig.AWS_SECRET_KEY -> "secretkey",
+      AWSProviderConfig.AWS_REGION     -> "someregion",
+    ).asJava
+
+    val secretKey   = "my-secret-key"
+    val secretName  = "my-secret-name"
+    val secretValue = "secret-value"
+
+    val mockClient = mock[SecretsManagerClient]
+    val secretValRequest =
+      GetSecretValueRequest.builder().secretId(secretName).build()
+
+    // Not json, just the string - so should cause json parse exception
+    val secretValResponse = GetSecretValueResponse.builder().name(secretName).secretString(secretValue).build()
+    val now               = Instant.now()
+    val rotationRulesType = RotationRulesType.builder().automaticallyAfterDays(1L).build()
+
+    val describeSecretResponse = DescribeSecretResponse.builder().lastRotatedDate(now).rotationEnabled(
+      true,
+    ).lastRotatedDate(now).rotationRules(rotationRulesType).nextRotationDate(now).build()
+
+    when(mockClient.describeSecret(any[DescribeSecretRequest]))
+      .thenReturn(describeSecretResponse)
+    when(mockClient.getSecretValue(secretValRequest))
+      .thenReturn(secretValResponse)
+
+    Using.resource {
+      val prov = new AWSSecretProvider(Some(mockClient))
+      prov.configure(props)
+      prov
+    } {
+      sp =>
+        intercept[Exception] {
+          sp.get(secretName, Set(secretKey).asJava)
+        }.getMessage should not include secretValue
+    }(_.close())
+
   }
 }

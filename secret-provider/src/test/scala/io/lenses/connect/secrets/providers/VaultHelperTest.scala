@@ -34,7 +34,7 @@ class VaultHelperTest
 
   private val validResponse: LogicalResponse = {
     val sampleResponseData: JavaMap[String, String] = Map("key1" -> "value1", "key2" -> "value2").asJava
-    val sampleResponse: LogicalResponse = mock[LogicalResponse](Answers.RETURNS_DEEP_STUBS)
+    val sampleResponse:     LogicalResponse         = mock[LogicalResponse](Answers.RETURNS_DEEP_STUBS)
     when(sampleResponse.getData).thenReturn(sampleResponseData)
     when(sampleResponse.getRestResponse.getStatus).thenReturn(200)
     sampleResponse
@@ -42,7 +42,7 @@ class VaultHelperTest
 
   private val validDatabaseResponse: DatabaseResponse = {
     val sampleResponseData: JavaMap[String, String] = Map("key1" -> "value1", "key2" -> "value2").asJava
-    val sampleResponse: DatabaseResponse = mock[DatabaseResponse](Answers.RETURNS_DEEP_STUBS)
+    val sampleResponse:     DatabaseResponse        = mock[DatabaseResponse](Answers.RETURNS_DEEP_STUBS)
     when(sampleResponse.getData).thenReturn(sampleResponseData)
     when(sampleResponse.getRestResponse.getStatus).thenReturn(200)
     sampleResponse
@@ -85,7 +85,7 @@ class VaultHelperTest
   }
 
   test("VaultHelper.lookup should handle secrets not found at the specified path") {
-    val vaultClient:      Vault           = mock[Vault](Answers.RETURNS_DEEP_STUBS)
+    val vaultClient: Vault = mock[Vault](Answers.RETURNS_DEEP_STUBS)
     when(vaultClient.logical().read("empty/path")).thenReturn(notFoundResponse)
 
     val vaultHelper: VaultHelper = new VaultHelper(vaultClient, Some(defaultTtl), fileWriterCreateFn)(clock)
