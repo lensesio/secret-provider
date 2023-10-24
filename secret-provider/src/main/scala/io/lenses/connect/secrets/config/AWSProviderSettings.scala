@@ -23,6 +23,7 @@ case class AWSProviderSettings(
   fileWriterOpts:   Option[FileWriterOptions],
   defaultTtl:       Option[Duration],
   endpointOverride: Option[String],
+  altRegion:        String
 )
 
 import io.lenses.connect.secrets.config.AbstractConfigExtensions._
@@ -38,6 +39,8 @@ object AWSProviderSettings {
     val endpointOverride = Try(configs.getString("aws.endpoint.override")).toOption.filterNot(_.trim.isEmpty)
     val authMode =
       getAuthenticationMethod(configs.getString(AWSProviderConfig.AUTH_METHOD))
+
+    val altRegion = configs.getString("aws.cross.account.region")
 
     if (authMode == AuthMode.CREDENTIALS) {
       if (accessKey.isEmpty)
@@ -59,6 +62,7 @@ object AWSProviderSettings {
       defaultTtl =
         Option(configs.getLong(SECRET_DEFAULT_TTL).toLong).filterNot(_ == 0L).map(Duration.of(_, ChronoUnit.MILLIS)),
       endpointOverride,
+      altRegion      = altRegion
     )
   }
 }
