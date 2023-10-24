@@ -38,10 +38,9 @@ class VaultHelper(
 ) extends SecretHelper
     with LazyLogging {
 
-
   override def lookup(path: String): Either[Throwable, ValueWithTtl[Map[String, String]]] = {
     logger.debug(s"Looking up value from Vault at [$path]")
-    val lookupFn = if (path.startsWith("database/creds/"))  lookupFromDatabaseEngine _  else lookupFromVault _
+    val lookupFn = if (path.startsWith("database/creds/")) lookupFromDatabaseEngine _ else lookupFromVault _
     lookupFn(path) match {
       case Left(ex) =>
         failWithEx(s"Failed to fetch secrets from path [$path]", ex)
@@ -60,13 +59,16 @@ class VaultHelper(
     }
   }
 
-  private def lookupFromVault(path: String): Either[Throwable, LogicalResponse] = {
+  private def lookupFromVault(path: String): Either[Throwable, LogicalResponse] =
     Try(vaultClient.logical().read(path)).toEither
-  }
 
   private def lookupFromDatabaseEngine(path: String): Either[Throwable, LogicalResponse] = {
     val parts = path.split("/")
-    Either.cond(parts.length == 3, vaultClient.database().creds(parts(2)), new ConnectException("Database path is invalid. Path must be in the form 'database/creds/<role_name>'"))
+    Either.cond(
+      parts.length == 3,
+      vaultClient.database().creds(parts(2)),
+      new ConnectException("Database path is invalid. Path must be in the form 'database/creds/<role_name>'"),
+    )
   }
 
   private def parseSuccessfulResponse(

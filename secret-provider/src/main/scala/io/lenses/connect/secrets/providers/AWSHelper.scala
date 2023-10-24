@@ -5,6 +5,7 @@
  */
 
 package io.lenses.connect.secrets.providers
+import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.typesafe.scalalogging.LazyLogging
 import com.typesafe.scalalogging.StrictLogging
@@ -122,6 +123,8 @@ class AWSHelper(
       )
     } yield mapFromResponse
     a match {
+      case Failure(_: JsonParseException) =>
+        Left(new IllegalStateException(s"Unable to parse JSON in secret [$secretId}]"))
       case Failure(exception) => Left(exception)
       case Success(value)     => Right(value)
     }
