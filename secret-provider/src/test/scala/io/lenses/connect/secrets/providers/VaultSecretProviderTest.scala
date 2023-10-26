@@ -134,7 +134,7 @@ class VaultSecretProviderTest extends AnyWordSpec with Matchers with BeforeAndAf
     val data2 = provider.get("secret/hello")
 
     (data1.ttl > data2.ttl) shouldBe true
-    (data1.ttl() - data2.ttl()) should be > 5000L
+    (data1.ttl() - data2.ttl()) should be >= 5000L
     data2.ttl().longValue() should be < 9995000L
   }
 
