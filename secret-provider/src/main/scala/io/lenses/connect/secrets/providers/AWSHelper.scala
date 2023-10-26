@@ -18,7 +18,9 @@ import io.lenses.connect.secrets.connect.AuthMode
 import io.lenses.connect.secrets.connect.decodeKey
 import io.lenses.connect.secrets.io.FileWriter
 import io.lenses.connect.secrets.utils.EncodingAndId
+import org.apache.kafka.connect.errors.ConnectException
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.regions.Region
@@ -163,14 +165,20 @@ object AWSHelper extends StrictLogging {
       s"Initializing client with mode [${settings.authMode}]",
     )
 
-    val credentialProvider = settings.authMode match {
+    val credentialProvider: AwsCredentialsProvider = settings.authMode match {
       case AuthMode.CREDENTIALS =>
-        StaticCredentialsProvider.create(
-          AwsBasicCredentials.create(
-            settings.accessKey,
-            settings.secretKey.value(),
-          ),
-        )
+        settings.credentials.map {
+          creds =>
+            StaticCredentialsProvider.create(
+              AwsBasicCredentials.create(
+                creds.accessKey,
+                creds.secretKey.value(),
+              ),
+            )
+        }.getOrElse(throw new ConnectException(
+          "No access key and secret key credentials available for CREDENTIALS mode",
+        ))
+
       case _ =>
         DefaultCredentialsProvider.create()
     }

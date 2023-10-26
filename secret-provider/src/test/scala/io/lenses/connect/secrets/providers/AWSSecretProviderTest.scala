@@ -294,6 +294,21 @@ class AWSSecretProviderTest extends AnyWordSpec with Matchers with MockitoSugar 
     provider.close()
   }
 
+  "should allow default auth mode" in {
+
+    val provSettings = AWSProviderSettings(
+      AWSProviderConfig(
+        Map(
+          AWSProviderConfig.AWS_REGION  -> "someregion",
+          AWSProviderConfig.AUTH_METHOD -> AuthMode.DEFAULT.toString,
+        ).asJava,
+      ),
+    )
+
+    provSettings.authMode should be(AuthMode.DEFAULT)
+    provSettings.credentials should be(empty)
+  }
+
   "should throw an exception if access key not set and not default auth mode" in {
 
     intercept[ConnectException] {
