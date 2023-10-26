@@ -12,6 +12,8 @@ import com.typesafe.scalalogging.StrictLogging
 import io.lenses.connect.secrets.cache.Ttl
 import io.lenses.connect.secrets.cache.ValueWithTtl
 import io.lenses.connect.secrets.config.AWSProviderSettings
+import io.lenses.connect.secrets.config.SecretType
+import io.lenses.connect.secrets.config.SecretType.SecretType
 import io.lenses.connect.secrets.connect.AuthMode
 import io.lenses.connect.secrets.connect.decodeKey
 import io.lenses.connect.secrets.io.FileWriter
@@ -40,6 +42,7 @@ class AWSHelper(
   client:             SecretsManagerClient,
   defaultTtl:         Option[Duration],
   fileWriterCreateFn: () => Option[FileWriter],
+  secretType:         SecretType,
 )(
   implicit
   clock: Clock,
@@ -52,12 +55,20 @@ class AWSHelper(
   override def lookup(secretId: String): Either[Throwable, ValueWithTtl[Map[String, String]]] =
     for {
       secretTtl         <- getTTL(secretId)
-      secretValue       <- getSecretValue(secretId)
-      parsedSecretValue <- parseSecretValue(secretValue)
-    } yield ValueWithTtl(secretTtl, parsedSecretValue)
+      stringSecretValue <- getStringSecretValue(secretId)
+      secretValue <- secretType match {
+        case SecretType.STRING =>
+          Try(ValueWithTtl[Map[String, String]](secretTtl, Map("value" -> stringSecretValue))).toEither
+        case _ =>
+          for {
+            mapSecretValue    <- secretValueToMap(secretId, stringSecretValue)
+            parsedSecretValue <- parseSecretValue(mapSecretValue)
+          } yield ValueWithTtl[Map[String, String]](secretTtl, parsedSecretValue)
+      }
+    } yield secretValue
 
   // determine the ttl for the secret
-  def getTTL(
+  private def getTTL(
     secretId: String,
   )(
     implicit
@@ -107,20 +118,31 @@ class AWSHelper(
     ).toEither
   }
 
-  private def getSecretValue(secretId: String): Either[Throwable, Map[String, String]] = {
-    val a = for {
+  private def getStringSecretValue(
+    secretId: String,
+  ): Either[Throwable, String] = {
+    for {
       secretValueResult <- Try(
         client.getSecretValue(GetSecretValueRequest.builder().secretId(secretId).build()),
       )
       secretString <- Try(secretValueResult.secretString())
-      mapFromResponse <- Try(
-        objectMapper
-          .readValue(
-            secretString,
-            classOf[util.HashMap[String, String]],
-          )
-          .asScala.toMap,
-      )
+    } yield secretString
+  }.toEither
+
+  private def secretValueToMap(
+    secretId:          String,
+    secretValueString: String,
+  ): Either[Throwable, Map[String, String]] = {
+    val a = for {
+      mapFromResponse <-
+        Try(
+          objectMapper
+            .readValue(
+              secretValueString,
+              classOf[util.HashMap[String, String]],
+            )
+            .asScala.toMap,
+        )
     } yield mapFromResponse
     a match {
       case Failure(_: JsonParseException) =>

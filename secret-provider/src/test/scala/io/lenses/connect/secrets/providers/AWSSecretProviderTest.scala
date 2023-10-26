@@ -10,6 +10,7 @@ import io.github.jopenlibs.vault.json.JsonObject
 import io.lenses.connect.secrets.TmpDirUtil.getTempDir
 import io.lenses.connect.secrets.config.AWSProviderConfig
 import io.lenses.connect.secrets.config.AWSProviderSettings
+import io.lenses.connect.secrets.config.SecretTypeConfig
 import io.lenses.connect.secrets.connect._
 import io.lenses.connect.secrets.utils.EncodingAndId
 import org.apache.kafka.common.config.ConfigTransformer
@@ -27,6 +28,7 @@ import software.amazon.awssdk.services.secretsmanager.model._
 import java.nio.file.FileSystems
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import java.util
 import java.util.Base64
 import java.util.Date
 import scala.io.Source
@@ -91,6 +93,47 @@ class AWSSecretProviderTest extends AnyWordSpec with Matchers with MockitoSugar 
     val data = provider.get(secretName, Set(secretKey).asJava)
     data.data().get(secretKey) shouldBe secretValue
     provider.close()
+  }
+
+  "should authenticate with credentials and lookup a secret without a key" in {
+    val props = Map(
+      AWSProviderConfig.AUTH_METHOD    -> AuthMode.CREDENTIALS.toString,
+      AWSProviderConfig.AWS_ACCESS_KEY -> "somekey",
+      AWSProviderConfig.AWS_SECRET_KEY -> "secretkey",
+      AWSProviderConfig.AWS_REGION     -> "someregion",
+      SecretTypeConfig.SECRET_TYPE     -> "string",
+    ).asJava
+
+    val secretName  = "my-secret-name"
+    val secretValue = "secret-value"
+
+    val mockClient = mock[SecretsManagerClient]
+    val secretValRequest =
+      GetSecretValueRequest.builder().secretId(secretName).build()
+    val secretValResponse = GetSecretValueResponse.builder().name(secretName).secretString(secretValue).build()
+
+    val rotationRulesType = RotationRulesType.builder().automaticallyAfterDays(1L).build()
+    val now               = Instant.now()
+    val describeSecretResponse = DescribeSecretResponse.builder().lastRotatedDate(now).rotationEnabled(
+      true,
+    ).lastRotatedDate(now).rotationRules(rotationRulesType).nextRotationDate(now).build()
+
+    when(mockClient.describeSecret(any[DescribeSecretRequest]))
+      .thenReturn(describeSecretResponse)
+    when(mockClient.getSecretValue(secretValRequest))
+      .thenReturn(secretValResponse)
+
+    Using.resource(createSecretProvider(props, mockClient)) {
+      sp =>
+        sp.get(secretName, Set("value").asJava).data().get("value") shouldBe secretValue
+        sp.get(secretName).data().get("value") shouldBe secretValue
+    }(_.close())
+  }
+
+  private def createSecretProvider(props: util.Map[String, String], mockClient: SecretsManagerClient) = {
+    val prov = new AWSSecretProvider(Some(mockClient))
+    prov.configure(props)
+    prov
   }
 
   "should authenticate with credentials and lookup a base64 secret" in {
@@ -360,11 +403,7 @@ class AWSSecretProviderTest extends AnyWordSpec with Matchers with MockitoSugar 
     when(mockClient.getSecretValue(secretValRequest))
       .thenReturn(secretValResponse)
 
-    Using.resource {
-      val prov = new AWSSecretProvider(Some(mockClient))
-      prov.configure(props)
-      prov
-    } {
+    Using.resource(createSecretProvider(props, mockClient)) {
       sp =>
         intercept[Exception] {
           sp.get(secretName, Set(secretKey).asJava)

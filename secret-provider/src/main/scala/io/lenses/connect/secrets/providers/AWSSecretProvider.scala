@@ -31,6 +31,7 @@ class AWSSecretProvider(testClient: Option[SecretsManagerClient]) extends Config
     val helper = new AWSHelper(awsClient,
                                settings.defaultTtl,
                                fileWriterCreateFn = () => settings.fileWriterOpts.map(_.createFileWriter()),
+                               settings.secretType,
     )
     secretProvider = Some(
       new SecretProvider(

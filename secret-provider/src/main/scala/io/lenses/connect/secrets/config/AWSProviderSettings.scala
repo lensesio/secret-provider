@@ -6,6 +6,7 @@
 
 package io.lenses.connect.secrets.config
 
+import io.lenses.connect.secrets.config.SecretType.SecretType
 import io.lenses.connect.secrets.connect.AuthMode.AuthMode
 import io.lenses.connect.secrets.connect._
 import org.apache.kafka.common.config.types.Password
@@ -23,6 +24,7 @@ case class AWSProviderSettings(
   fileWriterOpts:   Option[FileWriterOptions],
   defaultTtl:       Option[Duration],
   endpointOverride: Option[String],
+  secretType:       SecretType,
 )
 
 import io.lenses.connect.secrets.config.AbstractConfigExtensions._
@@ -35,7 +37,8 @@ object AWSProviderSettings {
     val secretKey =
       configs.getPasswordOrThrowOnNull(AWSProviderConfig.AWS_SECRET_KEY)
 
-    val endpointOverride = Try(configs.getString("aws.endpoint.override")).toOption.filterNot(_.trim.isEmpty)
+    val endpointOverride =
+      Try(configs.getString(AWSProviderConfig.ENDPOINT_OVERRIDE)).toOption.filterNot(_.trim.isEmpty)
     val authMode =
       getAuthenticationMethod(configs.getString(AWSProviderConfig.AUTH_METHOD))
 
@@ -50,6 +53,8 @@ object AWSProviderSettings {
         )
     }
 
+    val secretType = SecretTypeConfig.lookupAndValidateSecretTypeValue(configs.getString)
+
     new AWSProviderSettings(
       region         = region,
       accessKey      = accessKey,
@@ -58,7 +63,8 @@ object AWSProviderSettings {
       fileWriterOpts = FileWriterOptions(configs),
       defaultTtl =
         Option(configs.getLong(SECRET_DEFAULT_TTL).toLong).filterNot(_ == 0L).map(Duration.of(_, ChronoUnit.MILLIS)),
-      endpointOverride,
+      endpointOverride = endpointOverride,
+      secretType       = secretType,
     )
   }
 }
