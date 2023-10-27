@@ -24,6 +24,7 @@ trait Dependencies {
     val commonsIOVersion = "1.3.2"
     val jettyVersion     = "11.0.14"
     val flexmarkVersion  = "0.64.0"
+    val jsonSmartVersion = "2.5.0"
 
     val scalaCollectionCompatVersion = "2.8.1"
     val jakartaServletVersion        = "6.0.0"
@@ -75,15 +76,18 @@ trait Dependencies {
     val `json4sJackson` = "org.json4s"    %% "json4s-jackson" % json4sVersion
     val `cats`          = "org.typelevel" %% "cats-effect"    % catsEffectVersion
 
+    val `jsonSmart`= "net.minidev" % "json-smart" % jsonSmartVersion
+
   }
 
   import Dependencies._
   val secretProviderDeps = Seq(
     `scala-logging`,
+    `jsonSmart`,
     `kafka-connect-api` % Provided,
     `vault-java-driver`,
-    `azure-key-vault`,
-    `azure-identity` exclude ("javax.activation", "activation"),
+    `azure-key-vault` exclude ("net.minidev", "json-smart"),
+    `azure-identity` exclude ("javax.activation", "activation") exclude ("net.minidev", "json-smart"),
     `awsSecretsManagerSdkV2`,
     `awsStsSdkV2`,
     `awsIamSdkV2`         % IntegrationTest,
