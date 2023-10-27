@@ -18,8 +18,7 @@ import scala.util.Try
 
 case class AWSProviderSettings(
   region:           String,
-  accessKey:        String,
-  secretKey:        Password,
+  credentials:      Option[AWSCredentials],
   authMode:         AuthMode,
   fileWriterOpts:   Option[FileWriterOptions],
   defaultTtl:       Option[Duration],
@@ -32,33 +31,21 @@ object AWSProviderSettings {
   def apply(configs: AWSProviderConfig): AWSProviderSettings = {
     // TODO: Validate all configs in one step and provide all errors together
     val region = configs.getStringOrThrowOnNull(AWSProviderConfig.AWS_REGION)
-    val accessKey =
-      configs.getStringOrThrowOnNull(AWSProviderConfig.AWS_ACCESS_KEY)
-    val secretKey =
-      configs.getPasswordOrThrowOnNull(AWSProviderConfig.AWS_SECRET_KEY)
 
     val endpointOverride =
       Try(configs.getString(AWSProviderConfig.ENDPOINT_OVERRIDE)).toOption.filterNot(_.trim.isEmpty)
     val authMode =
       getAuthenticationMethod(configs.getString(AWSProviderConfig.AUTH_METHOD))
 
-    if (authMode == AuthMode.CREDENTIALS) {
-      if (accessKey.isEmpty)
-        throw new ConnectException(
-          s"${AWSProviderConfig.AWS_ACCESS_KEY} not set",
-        )
-      if (secretKey.value().isEmpty)
-        throw new ConnectException(
-          s"${AWSProviderConfig.AWS_SECRET_KEY} not set",
-        )
+    val awsCredentials: Option[AWSCredentials] = Option.when(authMode == AuthMode.CREDENTIALS) {
+      AWSCredentials(configs).left.map(throw _).merge
     }
 
     val secretType = SecretTypeConfig.lookupAndValidateSecretTypeValue(configs.getString)
 
     new AWSProviderSettings(
       region         = region,
-      accessKey      = accessKey,
-      secretKey      = secretKey,
+      credentials    = awsCredentials,
       authMode       = authMode,
       fileWriterOpts = FileWriterOptions(configs),
       defaultTtl =

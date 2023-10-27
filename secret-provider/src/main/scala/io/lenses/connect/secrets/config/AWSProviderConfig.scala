@@ -33,14 +33,14 @@ object AWSProviderConfig {
       .define(
         AWS_ACCESS_KEY,
         Type.STRING,
-        null,
+        "",
         Importance.HIGH,
         "AWS access key",
       )
       .define(
         AWS_SECRET_KEY,
         Type.PASSWORD,
-        null,
+        "",
         Importance.HIGH,
         "AWS password key",
       )
