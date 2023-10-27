@@ -7,7 +7,6 @@
 package io.lenses.connect.secrets
 
 import com.typesafe.scalalogging.StrictLogging
-import org.apache.kafka.common.config.ConfigData
 import org.apache.kafka.connect.errors.ConnectException
 
 import java.io.File
@@ -15,7 +14,6 @@ import java.io.FileOutputStream
 import java.time.OffsetDateTime
 import java.util.Base64
 import scala.collection.mutable
-import scala.jdk.CollectionConverters._
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
@@ -150,7 +148,7 @@ package object connect extends StrictLogging {
   //calculate the min expiry for secrets and return the configData and expiry
   def getSecretsAndExpiry(
     secrets: Map[String, (String, Option[OffsetDateTime])],
-  ): (Option[OffsetDateTime], ConfigData) = {
+  ): (Option[OffsetDateTime], Map[String, String]) = {
     val expiryList = mutable.ListBuffer.empty[OffsetDateTime]
 
     val data = secrets
@@ -159,15 +157,12 @@ package object connect extends StrictLogging {
           expiry.foreach(e => expiryList.append(e))
           (key, value)
       })
-      .asJava
 
     if (expiryList.isEmpty) {
-      (None, new ConfigData(data))
+      (None, data)
     } else {
       val minExpiry = expiryList.min
-      val ttl = minExpiry.toInstant.toEpochMilli - OffsetDateTime.now.toInstant
-        .toEpochMilli
-      (Some(minExpiry), new ConfigData(data, ttl))
+      (Some(minExpiry), data)
     }
   }
 

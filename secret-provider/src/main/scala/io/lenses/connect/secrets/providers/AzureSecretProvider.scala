@@ -6,6 +6,8 @@
 
 package io.lenses.connect.secrets.providers
 
+import java.time.Duration
+
 import com.azure.core.credential.TokenCredential
 import com.azure.security.keyvault.secrets.SecretClient
 import com.azure.security.keyvault.secrets.SecretClientBuilder
@@ -25,7 +27,7 @@ class AzureSecretProvider() extends ConfigProvider with AzureHelper {
   private var rootDir:     String                            = _
   private var credentials: Option[TokenCredential]           = None
   val clientMap:           mutable.Map[String, SecretClient] = mutable.Map.empty
-  val cache = mutable.Map.empty[String, (Option[OffsetDateTime], ConfigData)]
+  val cache = mutable.Map.empty[String, (Option[OffsetDateTime], Map[String, String])]
 
   // configure the vault client
   override def configure(configs: util.Map[String, _]): Unit = {
@@ -62,32 +64,19 @@ class AzureSecretProvider() extends ConfigProvider with AzureHelper {
 
     clientMap += (keyVaultUrl -> client)
 
+    val now = OffsetDateTime.now()
+
     val (expiry, data) = cache.get(keyVaultUrl) match {
       case Some((expiresAt, data)) =>
         // we have all the keys and are before the expiry
-        val now = OffsetDateTime.now()
 
         if (
-          keys.asScala.subsetOf(data.data().asScala.keySet) && (expiresAt
+          keys.asScala.subsetOf(data.keySet) && expiresAt
             .getOrElse(now.plusSeconds(1))
-            .isAfter(now))
+            .isAfter(now)
         ) {
           logger.info("Fetching secrets from cache")
-          (
-            expiresAt,
-            new ConfigData(
-              data
-                .data()
-                .asScala
-                .view
-                .filter {
-                  case (k, _) => keys.contains(k)
-                }
-                .toMap
-                .asJava,
-              data.ttl(),
-            ),
-          )
+          (expiresAt, data.view.filterKeys(k => keys.contains(k)).toMap)
         } else {
           // missing some or expired so reload
           getSecretsAndExpiry(getSecrets(client, keys.asScala.toSet))
@@ -97,9 +86,13 @@ class AzureSecretProvider() extends ConfigProvider with AzureHelper {
         getSecretsAndExpiry(getSecrets(client, keys.asScala.toSet))
     }
 
-    expiry.foreach(exp => logger.info(s"Min expiry for TTL set to [${exp.toString}]"))
-    cache += (keyVaultUrl -> (expiry, data))
-    data
+    var ttl = 0L
+    expiry.foreach { exp =>
+      ttl = Duration.between(now, exp).toMillis
+      logger.info(s"Min expiry for TTL set to [${exp.toString}]")
+    }
+    cache.put(keyVaultUrl, (expiry, data))
+    new ConfigData(data.asJava, ttl)
   }
 
   override def close(): Unit = {}
