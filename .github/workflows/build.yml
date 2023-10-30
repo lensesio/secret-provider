@@ -15,3 +15,30 @@ jobs:
           java-version: openjdk@1.14
       - name: Test
         run: sbt +test
+
+  dependency-check:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Scala
+        uses: olafurpg/setup-scala@v11
+        with:
+          java-version: openjdk@1.14
+      - name: Assembly
+        run: sbt "project secret-provider;set assembly / test := {}" assembly
+      - name: Dependency Check
+        uses: dependency-check/Dependency-Check_Action@1.1.0
+        env:
+          # actions/setup-java@v1 changes JAVA_HOME so it needs to be reset to match the depcheck image
+          JAVA_HOME: /opt/jdk
+        with:
+          project: secret-provider-deps
+          path: secret-provider/target/libs/
+          format: 'HTML'
+      - name: Upload Test results
+        uses: actions/upload-artifact@master
+        with:
+          name: secret-provider-depcheck-results
+          path: ${{github.workspace}}/reports

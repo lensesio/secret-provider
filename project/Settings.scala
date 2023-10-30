@@ -101,6 +101,7 @@ object Settings extends Dependencies {
             }
           },
           assembly / assemblyMergeStrategy := {
+            case PathList("META-INF", "maven", ps @ _*) => MergeStrategy.discard
             case PathList("META-INF", "MANIFEST.MF") => MergeStrategy.discard
             case p if excludeFileFilter(p)           => MergeStrategy.discard
             case PathList(ps @ _*) if ps.last == "module-info.class" =>
