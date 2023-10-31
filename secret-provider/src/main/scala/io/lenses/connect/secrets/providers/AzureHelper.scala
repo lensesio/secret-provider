@@ -37,9 +37,9 @@ trait AzureHelper extends StrictLogging {
         val value = secret.getValue
         val props = secret.getProperties
 
-        // check if the file-encoding
+        // check the file-encoding
         val encoding =
-          Encoding.withName(
+          Encoding.withoutHyphensInsensitiveOpt(
             Option(props.getTags)
               .map(_.getOrDefault(FILE_ENCODING, Encoding.UTF8.toString))
               .getOrElse(Encoding.UTF8.toString)
