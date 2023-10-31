@@ -10,13 +10,17 @@ import com.azure.core.credential.TokenCredential
 import com.azure.identity.ClientSecretCredentialBuilder
 import com.azure.identity.DefaultAzureCredentialBuilder
 import com.azure.security.keyvault.secrets.SecretClient
+import com.azure.security.keyvault.secrets.models.SecretProperties
 import com.typesafe.scalalogging.StrictLogging
 import io.lenses.connect.secrets.config.AzureProviderSettings
+import io.lenses.connect.secrets.connect
+import io.lenses.connect.secrets.connect.Encoding.Encoding
 import io.lenses.connect.secrets.connect._
 import org.apache.kafka.connect.errors.ConnectException
 
 import java.nio.file.FileSystems
 import java.time.OffsetDateTime
+import scala.jdk.CollectionConverters.MapHasAsScala
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
@@ -37,16 +41,7 @@ trait AzureHelper extends StrictLogging {
         val value = secret.getValue
         val props = secret.getProperties
 
-        // check the file-encoding
-        val encoding =
-          Encoding.withoutHyphensInsensitiveOpt(
-            Option(props.getTags)
-              .map(_.getOrDefault(FILE_ENCODING, Encoding.UTF8.toString))
-              .getOrElse(Encoding.UTF8.toString)
-              .toUpperCase,
-          )
-
-        val content = encoding match {
+        val content = retrieveEncodingFromTags(props) match {
           case Encoding.UTF8 =>
             value
 
@@ -85,6 +80,16 @@ trait AzureHelper extends StrictLogging {
           e,
         )
     }
+
+  private def retrieveEncodingFromTags(props: SecretProperties): connect.Encoding.Value =
+    // check the file-encoding
+    {
+      for {
+        propsMap                 <- Option(props.getTags.asScala)
+        fileEncodingFromPropsMap <- propsMap.get(FILE_ENCODING)
+        enc                      <- Encoding.withoutHyphensInsensitiveOpt(fileEncodingFromPropsMap)
+      } yield enc
+    }.getOrElse(Encoding.UTF8)
 
   // setup azure credentials
   def createCredentials(settings: AzureProviderSettings): TokenCredential = {
