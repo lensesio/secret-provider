@@ -192,7 +192,7 @@ object Settings extends Dependencies {
               targetDir.mkdirs()
 
               val propertiesFileChanged = createPomPropertiesIfChanged(groupId, artifactId, version, targetDir)
-              if(propertiesFileChanged) {
+              if (propertiesFileChanged) {
                 createPomXml(log, targetDir, pomUrl)
               }
             }
