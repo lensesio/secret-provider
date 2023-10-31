@@ -51,6 +51,8 @@ package object connect extends StrictLogging {
     type Encoding = Value
     val BASE64, BASE64_FILE, UTF8, UTF8_FILE = Value
     def withNameOpt(s: String): Option[Value] = values.find(_.toString == s)
+
+    def withoutHyphensInsensitiveOpt(s: String): Option[Value] = withNameOpt(s.replace("-", "").toUpperCase)
   }
 
   // get the authmethod
