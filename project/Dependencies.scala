@@ -76,7 +76,7 @@ trait Dependencies {
     val `json4sJackson` = "org.json4s"    %% "json4s-jackson" % json4sVersion
     val `cats`          = "org.typelevel" %% "cats-effect"    % catsEffectVersion
 
-    val `jsonSmart`= "net.minidev" % "json-smart" % jsonSmartVersion
+    val `jsonSmart` = "net.minidev" % "json-smart" % jsonSmartVersion
 
   }
 

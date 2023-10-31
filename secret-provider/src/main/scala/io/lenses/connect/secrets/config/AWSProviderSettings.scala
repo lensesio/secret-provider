@@ -9,8 +9,6 @@ package io.lenses.connect.secrets.config
 import io.lenses.connect.secrets.config.SecretType.SecretType
 import io.lenses.connect.secrets.connect.AuthMode.AuthMode
 import io.lenses.connect.secrets.connect._
-import org.apache.kafka.common.config.types.Password
-import org.apache.kafka.connect.errors.ConnectException
 
 import java.time.Duration
 import java.time.temporal.ChronoUnit
