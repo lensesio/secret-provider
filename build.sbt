@@ -1,10 +1,9 @@
 import Settings.modulesSettings
 import Settings.secretProviderDeps
-import Settings.artifactVersion
 import Settings.AssemblyConfigurator
+import Settings.MavenDescriptorConfigurator
 import Settings.testSinkDeps
 import Settings.scala213
-import Settings.Dependencies.`jsonSmart`
 import sbt.Project.projectToLocalProject
 
 name := "secret-provider"
@@ -38,12 +37,10 @@ lazy val `secret-provider` = (project in file("secret-provider"))
         description := "Kafka Connect compatible connectors to move data between Kafka and popular data stores",
         publish / skip := true,
         libraryDependencies ++= secretProviderDeps,
-        dependencyOverrides ++= Seq(
-          `jsonSmart`,
-        )
       ),
   )
   .configureAssembly()
+  .configureMavenDescriptor()
   .configs(IntegrationTest)
   .settings(Defaults.itSettings: _*)
 
@@ -67,3 +64,5 @@ addCommandAlias(
   "formatAll",
   ";scalafmt;scalafmtSbt;test:scalafmt;it:scalafmt;",
 )
+
+val generateMetaInfMaven = taskKey[Unit]("Generate META-INF/maven directory")
