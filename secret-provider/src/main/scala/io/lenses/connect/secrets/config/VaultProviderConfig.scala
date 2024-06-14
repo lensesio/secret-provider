@@ -34,6 +34,7 @@ object VaultProviderConfig {
   val VAULT_CLIENT_PEM: String = "vault.client.pem"
   val VAULT_PEM:        String = "vault.pem"
   val VAULT_ENGINE_VERSION = "vault.engine.version"
+  val VAULT_PREFIX_DEPTH   = "vault.prefix.depth"
   val AUTH_METHOD: String = "vault.auth.method"
 
   val VAULT_TRUSTSTORE_LOC: String =
@@ -146,6 +147,18 @@ object VaultProviderConfig {
       2,
       Importance.HIGH,
       "KV Secrets Engine version of the Vault server instance. Defaults to 2",
+    )
+    .define(
+      VAULT_PREFIX_DEPTH,
+      Type.INT,
+      1,
+      Importance.HIGH,
+      """
+        |Set the path depth of the KV Secrets Engine prefix path.
+        |Normally this is just 1, to correspond to one path element in the prefix path.
+        |To use a longer prefix path, set this value
+        |
+        |""".stripMargin,
     )
     // auth mode
     .define(

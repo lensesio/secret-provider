@@ -324,6 +324,47 @@ class VaultSecretProviderTest extends AnyWordSpec with Matchers with BeforeAndAf
     response.getData.asScala("value") shouldBe "mock"
   }
 
+  "should be configured for vault engine prefix depth" in {
+
+    val props = Map(
+      VaultProviderConfig.VAULT_ADDR         -> "https://127.0.0.1:9998",
+      VaultProviderConfig.VAULT_TOKEN        -> "mock_token",
+      VaultProviderConfig.AUTH_METHOD        -> VaultAuthMethod.TOKEN.toString(),
+      VaultProviderConfig.VAULT_PEM          -> pemFile,
+      VaultProviderConfig.VAULT_CLIENT_PEM   -> pemFile,
+      VaultProviderConfig.VAULT_PREFIX_DEPTH -> 2,
+    ).asJava
+
+    val config   = VaultProviderConfig(props)
+    val settings = VaultSettings(config)
+
+    settings.prefixDepth shouldBe 2
+    val provider = new VaultSecretProvider()
+    provider.configure(props)
+    val response = provider.getClient.get.logical.read("secret/hello")
+    response.getData.asScala("value") shouldBe "mock"
+  }
+
+  "should be configured for default vault engine prefix depth" in {
+
+    val props = Map(
+      VaultProviderConfig.VAULT_ADDR         -> "https://127.0.0.1:9998",
+      VaultProviderConfig.VAULT_TOKEN        -> "mock_token",
+      VaultProviderConfig.AUTH_METHOD        -> VaultAuthMethod.TOKEN.toString(),
+      VaultProviderConfig.VAULT_PEM          -> pemFile,
+      VaultProviderConfig.VAULT_CLIENT_PEM   -> pemFile,
+    ).asJava
+
+    val config   = VaultProviderConfig(props)
+    val settings = VaultSettings(config)
+
+    settings.prefixDepth shouldBe 1
+    val provider = new VaultSecretProvider()
+    provider.configure(props)
+    val response = provider.getClient.get.logical.read("secret/hello")
+    response.getData.asScala("value") shouldBe "mock"
+  }
+
   "should get values at a path" in {
 
     val props = Map(
