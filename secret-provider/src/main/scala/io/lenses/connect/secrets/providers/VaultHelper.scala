@@ -110,6 +110,9 @@ object VaultHelper extends StrictLogging {
     logger.info(s"Setting engine version to ${settings.engineVersion}")
     config.engineVersion(settings.engineVersion)
 
+    logger.info(s"Setting prefix path depth to ${settings.prefixDepth}")
+    config.prefixPathDepth(settings.prefixDepth)
+
     val vault = new Vault(config.build())
 
     logger.info(
