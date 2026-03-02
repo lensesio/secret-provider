@@ -20,7 +20,7 @@ import java.nio.file.Paths
 
 object Settings extends Dependencies {
 
-  val scala213 = "2.13.10"
+  val scala213 = "2.13.18"
   val scala3   = "3.2.2"
 
   val nextVersion = "2.3.1"

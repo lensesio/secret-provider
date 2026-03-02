@@ -348,11 +348,11 @@ class VaultSecretProviderTest extends AnyWordSpec with Matchers with BeforeAndAf
   "should be configured for default vault engine prefix depth" in {
 
     val props = Map(
-      VaultProviderConfig.VAULT_ADDR         -> "https://127.0.0.1:9998",
-      VaultProviderConfig.VAULT_TOKEN        -> "mock_token",
-      VaultProviderConfig.AUTH_METHOD        -> VaultAuthMethod.TOKEN.toString(),
-      VaultProviderConfig.VAULT_PEM          -> pemFile,
-      VaultProviderConfig.VAULT_CLIENT_PEM   -> pemFile,
+      VaultProviderConfig.VAULT_ADDR       -> "https://127.0.0.1:9998",
+      VaultProviderConfig.VAULT_TOKEN      -> "mock_token",
+      VaultProviderConfig.AUTH_METHOD      -> VaultAuthMethod.TOKEN.toString(),
+      VaultProviderConfig.VAULT_PEM        -> pemFile,
+      VaultProviderConfig.VAULT_CLIENT_PEM -> pemFile,
     ).asJava
 
     val config   = VaultProviderConfig(props)

@@ -25,6 +25,7 @@ trait Dependencies {
     val jettyVersion     = "11.0.14"
     val flexmarkVersion  = "0.64.0"
     val jsonSmartVersion = "2.5.0"
+    val dotenvVersion    = "3.0.0"
 
     val scalaCollectionCompatVersion = "2.8.1"
     val jakartaServletVersion        = "6.0.0"
@@ -76,7 +77,8 @@ trait Dependencies {
     val `json4sJackson` = "org.json4s"    %% "json4s-jackson" % json4sVersion
     val `cats`          = "org.typelevel" %% "cats-effect"    % catsEffectVersion
 
-    val `jsonSmart` = "net.minidev" % "json-smart" % jsonSmartVersion
+    val `jsonSmart` = "net.minidev"         % "json-smart"  % jsonSmartVersion
+    val `dotenv`    = "io.github.cdimascio" % "dotenv-java" % dotenvVersion
 
   }
 
@@ -84,6 +86,7 @@ trait Dependencies {
   val secretProviderDeps = Seq(
     `scala-logging`,
     `jsonSmart`,
+    `dotenv`,
     `kafka-connect-api` % Provided,
     `vault-java-driver`,
     `azure-key-vault` exclude ("net.minidev", "json-smart"),

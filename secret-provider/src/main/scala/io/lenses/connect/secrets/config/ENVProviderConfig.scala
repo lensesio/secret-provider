@@ -16,12 +16,20 @@ import org.apache.kafka.common.config.ConfigDef
 import java.util
 
 object ENVProviderConfig {
+  val ENV_FILE: String = "env.file"
+
   val config = new ConfigDef().define(
     FILE_DIR,
     Type.STRING,
     "",
     Importance.MEDIUM,
     FILE_DIR_DESC,
+  ).define(
+    ENV_FILE,
+    Type.STRING,
+    "",
+    Importance.MEDIUM,
+    "Path to a .env file to load environment variables from. When set, only values from the file are used.",
   )
 }
 

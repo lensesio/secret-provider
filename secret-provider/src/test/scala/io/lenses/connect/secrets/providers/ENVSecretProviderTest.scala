@@ -6,13 +6,20 @@
 
 package io.lenses.connect.secrets.providers
 
+import io.lenses.connect.secrets.config.ENVProviderConfig
+import io.lenses.connect.secrets.connect.FILE_DIR
 import org.apache.kafka.common.config.ConfigTransformer
 import org.apache.kafka.common.config.provider.ConfigProvider
+import org.apache.kafka.connect.errors.ConnectException
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
 import java.nio.file.FileSystems
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.nio.charset.StandardCharsets
 import java.util.Base64
+import java.util.UUID
 import scala.io.Source
 import scala.jdk.CollectionConverters._
 import scala.util.Success
@@ -81,5 +88,52 @@ class ENVSecretProviderTest extends AnyWordSpec with Matchers {
     val data = transformer.transform(props2)
     data.data().containsKey("value")
     data.data().get("mykey") shouldBe "secret"
+  }
+
+  "should load variables from .env file only when configured" in {
+    val envDir = Paths.get(tmp)
+    Files.createDirectories(envDir)
+    val envFile = envDir.resolve(s"env-${UUID.randomUUID().toString}.env")
+
+    val content =
+      """# comment
+        |CONNECT_PASSWORD=secret
+        |BASE64=ENV-base64:bm90LXJlYWwtYmFzZTY0
+        |QUOTED="quoted value"
+        |""".stripMargin
+
+    Files.write(envFile, content.getBytes(StandardCharsets.UTF_8))
+
+    val provider = new ENVSecretProvider()
+    provider.configure(
+      Map(
+        ENVProviderConfig.ENV_FILE -> envFile.toString,
+        FILE_DIR                   -> tmp,
+      ).asJava,
+    )
+
+    provider.get("", Set("CONNECT_PASSWORD").asJava).data().get("CONNECT_PASSWORD") shouldBe "secret"
+    provider.get("", Set("QUOTED").asJava).data().get("QUOTED") shouldBe "quoted value"
+    provider.get("", Set("BASE64").asJava).data().get("BASE64") shouldBe "not-real-base64"
+
+    intercept[ConnectException] {
+      provider.get("", Set("PATH").asJava)
+    }
+  }
+
+  "should throw when file.dir is not set for file-backed values" in {
+    val provider = new ENVSecretProvider()
+    provider.vars = Map(
+      "BASE64_FILE" -> s"ENV-mounted-base64:${Base64.getEncoder.encodeToString("my-base64-secret".getBytes)}",
+      "UTF8_FILE"   -> "ENV-mounted:my-secret",
+    )
+
+    intercept[ConnectException] {
+      provider.get("", Set("BASE64_FILE").asJava)
+    }
+
+    intercept[ConnectException] {
+      provider.get("", Set("UTF8_FILE").asJava)
+    }
   }
 }
