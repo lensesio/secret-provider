@@ -12,7 +12,7 @@ jobs:
       - name: Setup Scala
         uses: olafurpg/setup-scala@v11
         with:
-          java-version: openjdk@1.14
+          java-version: openjdk@1.17
       - name: Test
         run: sbt +test
 
