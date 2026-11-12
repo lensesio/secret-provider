@@ -54,7 +54,7 @@ trait Dependencies {
     val `mockito`      = "org.scalatestplus"   %% "mockito-4-6"  % mockitoVersion
     val `scalatest`    = "org.scalatest"       %% "scalatest"    % scalaTestVersion
     val `jetty`        = "org.eclipse.jetty"    % "jetty-server" % jettyVersion
-    val `commons-io`   = "commons-io"           % "commons-io"   % commonsIOVersion
+    val commonsIo      = "commons-io"           % "commons-io"   % commonsIOVersion
     val `flexmark`     = "com.vladsch.flexmark" % "flexmark-all" % flexmarkVersion
     val `slf4j-api`    = "org.slf4j"            % "slf4j-api"    % slf4jVersion
     val `slf4j-simple` = "org.slf4j"            % "slf4j-simple" % slf4jVersion
@@ -96,7 +96,7 @@ trait Dependencies {
     `byteBuddy`           % Test,
     `scalatest`           % Test,
     `jetty`               % Test,
-    `commons-io`          % Test,
+    commonsIo             % Test,
     `flexmark`            % Test,
     `slf4j-api`           % Test,
     `slf4j-simple`        % Test,
