@@ -47,9 +47,13 @@ trait Dependencies {
       "com.azure" % "azure-security-keyvault-secrets" % azureKeyVaultVersion
     val `azure-identity` = "com.azure" % "azure-identity" % azureIdentityVersion
 
-    lazy val awsSecretsManagerSdkV2 = "software.amazon.awssdk" % "secretsmanager" % awsSdkV2Version
-    lazy val awsIamSdkV2            = "software.amazon.awssdk" % "iam"            % awsSdkV2Version
-    lazy val awsStsSdkV2            = "software.amazon.awssdk" % "sts"            % awsSdkV2Version
+    // AWS clients are synchronous; omit the unused async transport and its older Netty modules.
+    lazy val awsSecretsManagerSdkV2 =
+      "software.amazon.awssdk" % "secretsmanager" % awsSdkV2Version exclude ("software.amazon.awssdk", "netty-nio-client")
+    lazy val awsIamSdkV2 =
+      "software.amazon.awssdk" % "iam" % awsSdkV2Version exclude ("software.amazon.awssdk", "netty-nio-client")
+    lazy val awsStsSdkV2 =
+      "software.amazon.awssdk" % "sts" % awsSdkV2Version exclude ("software.amazon.awssdk", "netty-nio-client")
 
     val `mockito`      = "org.scalatestplus"   %% "mockito-4-6"  % mockitoVersion
     val `scalatest`    = "org.scalatest"       %% "scalatest"    % scalaTestVersion
