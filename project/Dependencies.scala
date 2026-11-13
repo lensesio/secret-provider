@@ -12,7 +12,7 @@ trait Dependencies {
     val kafkaVersion         = "3.4.0"
     val vaultVersion         = "5.3.0"
     val azureKeyVaultVersion = "4.5.2"
-    val azureIdentityVersion = "1.8.1"
+    val azureIdentityVersion = "1.19.0"
 
     val awsSdkV2Version = "2.20.26"
 
@@ -21,10 +21,10 @@ trait Dependencies {
     val mockitoVersion   = "3.2.15.0"
     val byteBuddyVersion = "1.14.2"
     val slf4jVersion     = "2.0.5"
-    val commonsIOVersion = "1.3.2"
-    val jettyVersion     = "11.0.14"
+    val commonsIOVersion = "2.22.0"
+    val jettyVersion     = "12.0.41"
     val flexmarkVersion  = "0.64.0"
-    val jsonSmartVersion = "2.5.0"
+    val jsonSmartVersion = "2.6.1"
 
     val scalaCollectionCompatVersion = "2.8.1"
     val jakartaServletVersion        = "6.0.0"
@@ -47,14 +47,18 @@ trait Dependencies {
       "com.azure" % "azure-security-keyvault-secrets" % azureKeyVaultVersion
     val `azure-identity` = "com.azure" % "azure-identity" % azureIdentityVersion
 
-    lazy val awsSecretsManagerSdkV2 = "software.amazon.awssdk" % "secretsmanager" % awsSdkV2Version
-    lazy val awsIamSdkV2            = "software.amazon.awssdk" % "iam"            % awsSdkV2Version
-    lazy val awsStsSdkV2            = "software.amazon.awssdk" % "sts"            % awsSdkV2Version
+    // AWS clients are synchronous; omit the unused async transport and its older Netty modules.
+    lazy val awsSecretsManagerSdkV2 =
+      "software.amazon.awssdk" % "secretsmanager" % awsSdkV2Version exclude ("software.amazon.awssdk", "netty-nio-client")
+    lazy val awsIamSdkV2 =
+      "software.amazon.awssdk" % "iam" % awsSdkV2Version exclude ("software.amazon.awssdk", "netty-nio-client")
+    lazy val awsStsSdkV2 =
+      "software.amazon.awssdk" % "sts" % awsSdkV2Version exclude ("software.amazon.awssdk", "netty-nio-client")
 
     val `mockito`      = "org.scalatestplus"   %% "mockito-4-6"  % mockitoVersion
     val `scalatest`    = "org.scalatest"       %% "scalatest"    % scalaTestVersion
     val `jetty`        = "org.eclipse.jetty"    % "jetty-server" % jettyVersion
-    val `commons-io`   = "org.apache.commons"   % "commons-io"   % commonsIOVersion
+    val commonsIo      = "commons-io"           % "commons-io"   % commonsIOVersion
     val `flexmark`     = "com.vladsch.flexmark" % "flexmark-all" % flexmarkVersion
     val `slf4j-api`    = "org.slf4j"            % "slf4j-api"    % slf4jVersion
     val `slf4j-simple` = "org.slf4j"            % "slf4j-simple" % slf4jVersion
@@ -96,7 +100,7 @@ trait Dependencies {
     `byteBuddy`           % Test,
     `scalatest`           % Test,
     `jetty`               % Test,
-    `commons-io`          % Test,
+    commonsIo             % Test,
     `flexmark`            % Test,
     `slf4j-api`           % Test,
     `slf4j-simple`        % Test,

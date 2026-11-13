@@ -20,10 +20,10 @@ import java.nio.file.Paths
 
 object Settings extends Dependencies {
 
-  val scala213 = "2.13.10"
+  val scala213 = "2.13.16"
   val scala3   = "3.2.2"
 
-  val nextVersion = "2.3.1"
+  val nextVersion = "2.4.0"
   val artifactVersion: String = {
     sys.env.get("LENSES_TAG_NAME") match {
       case Some(tag) => tag
